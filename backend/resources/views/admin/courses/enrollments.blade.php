@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="container px-6 mx-auto">
+    <!-- Header -->
     <div class="flex justify-between items-center mb-6">
         <div class="flex items-center gap-4">
             <a href="{{ route('admin.courses.show', $course->id) }}" 
@@ -16,121 +17,91 @@
         </div>
     </div>
 
-    <!-- Search and Filters -->
-    <div class="mb-6">
-        <form action="{{ route('admin.courses.enrollments', $course->id) }}" method="GET" 
-              class="space-y-4 md:space-y-0 md:grid md:grid-cols-4 md:gap-4">
-            <!-- Search -->
-            <div class="relative">
-                <input type="text" 
-                       name="search" 
-                       value="{{ request('search') }}"
-                       placeholder="Search students..." 
-                       class="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
-            </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <!-- Search and Filters -->
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+            <form action="{{ route('admin.courses.enrollments', $course->id) }}" method="GET" 
+                  class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Search -->
+                <div class="relative">
+                    <input type="text" 
+                           name="search" 
+                           value="{{ request('search') }}"
+                           placeholder="Search students..." 
+                           class="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                </div>
 
-            <!-- Status Filter -->
-            <select name="status" 
-                    class="px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                <option value="">All Status</option>
-                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>
-                    Active
-                </option>
-                <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>
-                    Pending
-                </option>
-                <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>
-                    Completed
-                </option>
-                <option value="dropped" {{ request('status') === 'dropped' ? 'selected' : '' }}>
-                    Dropped
-                </option>
-            </select>
-
-            <!-- Payment Status Filter -->
-            <select name="payment_status" 
-                    class="px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                <option value="">All Payment Status</option>
-                <option value="fully_paid" {{ request('payment_status') === 'fully_paid' ? 'selected' : '' }}>
-                    Fully Paid
-                </option>
-                <option value="partially_paid" {{ request('payment_status') === 'partially_paid' ? 'selected' : '' }}>
-                    Partially Paid
-                </option>
-                <option value="unpaid" {{ request('payment_status') === 'unpaid' ? 'selected' : '' }}>
-                    Unpaid
-                </option>
-            </select>
-
-            <!-- Sort -->
-            <div class="flex gap-2">
-                <select name="sort_by" 
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                    <option value="enrolled_at" {{ request('sort_by') === 'enrolled_at' ? 'selected' : '' }}>
-                        Enrollment Date
-                    </option>
-                    <option value="progress" {{ request('sort_by') === 'progress' ? 'selected' : '' }}>
-                        Progress
-                    </option>
-                </select>
-                <select name="sort_order" 
+                <!-- Status Filter -->
+                <select name="status" 
                         class="px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                    <option value="desc" {{ request('sort_order', 'desc') === 'desc' ? 'selected' : '' }}>
-                        Desc
-                    </option>
-                    <option value="asc" {{ request('sort_order') === 'asc' ? 'selected' : '' }}>
-                        Asc
-                    </option>
+                    <option value="">All Status</option>
+                    <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
+                    <option value="dropped" {{ request('status') === 'dropped' ? 'selected' : '' }}>Dropped</option>
                 </select>
-                <button type="submit" 
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Filter
-                </button>
-            </div>
-        </form>
-    </div>
 
-    <!-- Add this after the search filters and before the list -->
-    <div class="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-        <div x-data="{ showBulkActions: false, selectedEnrollments: [] }">
-            <!-- Bulk Actions -->
-            <div class="flex items-center justify-between">
+                <!-- Payment Status Filter -->
+                <select name="payment_status" 
+                        class="px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">All Payment Status</option>
+                    <option value="fully_paid" {{ request('payment_status') === 'fully_paid' ? 'selected' : '' }}>Fully Paid</option>
+                    <option value="partially_paid" {{ request('payment_status') === 'partially_paid' ? 'selected' : '' }}>Partially Paid</option>
+                    <option value="unpaid" {{ request('payment_status') === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
+                </select>
+
+                <!-- Sort -->
+                <div class="flex gap-2">
+                    <select name="sort_by" 
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <option value="enrolled_at" {{ request('sort_by') === 'enrolled_at' ? 'selected' : '' }}>Date</option>
+                        <option value="progress" {{ request('sort_by') === 'progress' ? 'selected' : '' }}>Progress</option>
+                    </select>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="p-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+            <div class="flex flex-wrap items-center justify-between gap-4">
                 <label class="flex items-center">
                     <input type="checkbox" 
-                           class="form-checkbox rounded border-gray-300"
-                           x-on:change="$event.target.checked ? selectedEnrollments = enrollments.map(e => e.id) : selectedEnrollments = []">
-                    <span class="ml-2">Select All</span>
+                           id="selectAll"
+                           class="form-checkbox rounded border-gray-300">
+                    <span class="ml-2 text-sm">Select All</span>
                 </label>
                 
-                <div class="flex items-center gap-4" x-show="selectedEnrollments.length > 0">
-                    <span class="text-sm text-gray-600">
-                        <span x-text="selectedEnrollments.length"></span> selected
+                <div id="bulkActionsContainer" class="flex flex-wrap items-center gap-2" style="display: none;">
+                    <span class="text-sm text-gray-600 dark:text-gray-300">
+                        <span id="selectedCount">0</span> selected
                     </span>
                     
                     <!-- Status Update -->
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open"
-                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                            Update Status
+                    <div class="relative">
+                        <button onclick="toggleDropdown('statusDropdown')"
+                                class="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                            Status
                         </button>
-                        <div x-show="open" 
-                             @click.away="open = false"
-                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10">
+                        <div id="statusDropdown" class="hidden absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg z-10">
                             <div class="py-1">
-                                <button @click="updateBulkEnrollments('status', 'active')"
-                                        class="block w-full px-4 py-2 text-left hover:bg-gray-100">
+                                <button onclick="updateBulkEnrollments('status', 'active')"
+                                        class="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
                                     Set Active
                                 </button>
-                                <button @click="updateBulkEnrollments('status', 'pending')"
-                                        class="block w-full px-4 py-2 text-left hover:bg-gray-100">
+                                <button onclick="updateBulkEnrollments('status', 'pending')"
+                                        class="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
                                     Set Pending
                                 </button>
-                                <button @click="updateBulkEnrollments('status', 'completed')"
-                                        class="block w-full px-4 py-2 text-left hover:bg-gray-100">
+                                <button onclick="updateBulkEnrollments('status', 'completed')"
+                                        class="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
                                     Set Completed
                                 </button>
-                                <button @click="updateBulkEnrollments('status', 'dropped')"
-                                        class="block w-full px-4 py-2 text-left hover:bg-gray-100">
+                                <button onclick="updateBulkEnrollments('status', 'dropped')"
+                                        class="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
                                     Set Dropped
                                 </button>
                             </div>
@@ -138,50 +109,53 @@
                     </div>
 
                     <!-- Payment Status Update -->
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open"
-                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                            Update Payment
+                    <div class="relative">
+                        <button onclick="toggleDropdown('paymentStatusDropdown')"
+                                class="px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700">
+                            Payment
                         </button>
-                        <div x-show="open" 
-                             @click.away="open = false"
-                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10">
+                        <div id="paymentStatusDropdown" class="hidden absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg z-10">
                             <div class="py-1">
-                                <button @click="updateBulkEnrollments('payment_status', 'fully_paid')"
-                                        class="block w-full px-4 py-2 text-left hover:bg-gray-100">
-                                    Set Fully Paid
+                                <button onclick="updateBulkEnrollments('payment_status', 'fully_paid')"
+                                        class="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
+                                    Fully Paid
                                 </button>
-                                <button @click="updateBulkEnrollments('payment_status', 'partially_paid')"
-                                        class="block w-full px-4 py-2 text-left hover:bg-gray-100">
-                                    Set Partially Paid
+                                <button onclick="updateBulkEnrollments('payment_status', 'partially_paid')"
+                                        class="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
+                                    Partially Paid
                                 </button>
-                                <button @click="updateBulkEnrollments('payment_status', 'unpaid')"
-                                        class="block w-full px-4 py-2 text-left hover:bg-gray-100">
-                                    Set Unpaid
+                                <button onclick="updateBulkEnrollments('payment_status', 'unpaid')"
+                                        class="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
+                                    Unpaid
                                 </button>
                             </div>
                         </div>
                     </div>
 
                     <!-- Progress Update -->
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open"
-                                class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-                            Update Progress
+                    <div class="relative">
+                        <button onclick="toggleDropdown('progressDropdown')"
+                                class="px-3 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700">
+                            Progress
                         </button>
-                        <div x-show="open" 
-                             @click.away="open = false"
-                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10">
-                            <div class="p-4">
+                        <div id="progressDropdown" class="hidden absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg z-10">
+                            <div class="py-1">
                                 <input type="number" 
                                        min="0" 
                                        max="100" 
-                                       class="w-full px-3 py-2 border rounded-lg"
+                                       class="w-full px-3 py-2 text-sm border rounded-lg"
                                        placeholder="Enter progress %"
-                                       x-ref="progressInput">
-                                <button @click="updateBulkEnrollments('progress', $refs.progressInput.value)"
-                                        class="w-full mt-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-                                    Update
+                                       id="progressInput">
+                                <button id="progressUpdateBtn"
+                                        onclick="updateBulkEnrollments('progress', document.getElementById('progressInput').value)"
+                                        class="w-full mt-2 px-3 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700">
+                                    <span class="inline-flex items-center">
+                                        <span class="update-text">Update</span>
+                                        <svg class="hidden loading-spinner ml-2 w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    </span>
                                 </button>
                             </div>
                         </div>
@@ -189,109 +163,120 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Enrollments List -->
-    @if($enrollments->isEmpty())
-        <p class="text-gray-500 text-center py-4">No students enrolled yet.</p>
-    @else
-        <!-- Mobile View (Card Layout) -->
-        <div class="block md:hidden space-y-4">
-            @foreach($enrollments as $enrollment)
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                    <div class="flex items-center gap-3 mb-3">
-                        <img class="h-10 w-10 rounded-full" 
-                             src="{{ $enrollment->user->avatar ?? 'https://ui-avatars.com/api/?name='.urlencode($enrollment->user->name) }}" 
-                             alt="{{ $enrollment->user->name }}">
-                        <div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">
-                                {{ $enrollment->user->name }}
-                            </div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">
-                                {{ $enrollment->user->email }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="space-y-2">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-500">Enrolled:</span>
-                            <span class="text-sm">{{ $enrollment->enrolled_at ? date('M d, Y', strtotime($enrollment->enrolled_at)) : 'N/A' }}</span>
-                        </div>
-
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-500">Progress:</span>
-                            <div class="flex items-center gap-2">
-                                <div class="w-24 h-2 bg-gray-200 rounded">
-                                    <div class="h-full bg-blue-600 rounded" 
-                                         style="width: {{ $enrollment->progress }}%">
-                                    </div>
+        <!-- Enrollments List -->
+        @if($enrollments->isEmpty())
+            <div class="p-4 text-center">
+                <p class="text-gray-500 dark:text-gray-400">No students enrolled yet.</p>
+            </div>
+        @else
+            <!-- Mobile View (Card Layout) -->
+            <div class="block md:hidden">
+                @foreach($enrollments as $enrollment)
+                    <div class="p-4 border-b border-gray-200 dark:border-gray-600">
+                        <div class="flex items-center gap-3 mb-3">
+                            <input type="checkbox" 
+                                   class="enrollment-checkbox form-checkbox rounded border-gray-300"
+                                   value="{{ $enrollment->id }}">
+                            <img class="h-10 w-10 rounded-full" 
+                                 src="{{ $enrollment->user->avatar ?? 'https://ui-avatars.com/api/?name='.urlencode($enrollment->user->first_name.' '.$enrollment->user->last_name) }}" 
+                                 alt="{{ $enrollment->user->first_name }}">
+                            <div>
+                                <div class="font-medium text-gray-900 dark:text-gray-100">
+                                    {{ $enrollment->user->first_name }} {{ $enrollment->user->last_name }}
                                 </div>
-                                <span class="text-sm">{{ number_format($enrollment->progress, 1) }}%</span>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">
+                                    {{ $enrollment->user->email }}
+                                </div>
                             </div>
                         </div>
 
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-500">Status:</span>
-                            <span class="px-2 text-xs font-semibold rounded-full 
-                                {{ $enrollment->status === 'completed' ? 'bg-green-100 text-green-800' : 
-                                   ($enrollment->status === 'active' ? 'bg-blue-100 text-blue-800' : 
-                                   ($enrollment->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                   'bg-red-100 text-red-800')) }}">
-                                {{ ucfirst($enrollment->status) }}
-                            </span>
-                        </div>
+                        <div class="space-y-2 pl-8">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Enrolled:</span>
+                                <span class="text-sm">{{ $enrollment->enrolled_at ? date('M d, Y', strtotime($enrollment->enrolled_at)) : 'N/A' }}</span>
+                            </div>
 
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-500">Payment:</span>
-                            <span class="px-2 text-xs font-semibold rounded-full 
-                                {{ $enrollment->payment_status === 'fully_paid' ? 'bg-green-100 text-green-800' : 
-                                   ($enrollment->payment_status === 'partially_paid' ? 'bg-yellow-100 text-yellow-800' : 
-                                   'bg-red-100 text-red-800') }}">
-                                {{ str_replace('_', ' ', ucfirst($enrollment->payment_status)) }}
-                            </span>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Progress:</span>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-24 h-2 bg-gray-200 rounded">
+                                        <div class="h-full bg-blue-600 rounded" 
+                                             style="width: {{ $enrollment->progress }}%">
+                                        </div>
+                                    </div>
+                                    <span class="text-sm">{{ number_format($enrollment->progress, 1) }}%</span>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Status:</span>
+                                <span class="px-2 text-xs font-semibold rounded-full 
+                                    {{ $enrollment->status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                       ($enrollment->status === 'active' ? 'bg-blue-100 text-blue-800' : 
+                                       ($enrollment->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                       'bg-red-100 text-red-800')) }}">
+                                    {{ ucfirst($enrollment->status) }}
+                                </span>
+                            </div>
+
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Payment:</span>
+                                <span class="px-2 text-xs font-semibold rounded-full 
+                                    {{ $enrollment->payment_status === 'fully_paid' ? 'bg-green-100 text-green-800' : 
+                                       ($enrollment->payment_status === 'partially_paid' ? 'bg-yellow-100 text-yellow-800' : 
+                                       'bg-red-100 text-red-800') }}">
+                                    {{ str_replace('_', ' ', ucfirst($enrollment->payment_status)) }}
+                                </span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            @endforeach
-        </div>
+                @endforeach
+            </div>
 
-        <!-- Desktop View (Table Layout) -->
-        <div class="hidden md:block">
-            <div class="overflow-x-auto">
-                <table class="min-w-full bg-white dark:bg-gray-800 rounded-lg overflow-hidden">
+            <!-- Desktop View (Table Layout) -->
+            <div class="hidden md:block">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            <th scope="col" class="w-12 px-6 py-3">
+                                <span class="sr-only">Select</span>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                 Student
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                 Enrolled Date
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                 Progress
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                 Status
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                 Payment Status
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
                         @foreach($enrollments as $enrollment)
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4">
+                                    <input type="checkbox" 
+                                           class="enrollment-checkbox form-checkbox rounded border-gray-300"
+                                           value="{{ $enrollment->id }}">
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-10 w-10">
                                             <img class="h-10 w-10 rounded-full" 
-                                                 src="{{ $enrollment->user->avatar ?? 'https://ui-avatars.com/api/?name='.urlencode($enrollment->user->name) }}" 
-                                                 alt="{{ $enrollment->user->name }}">
+                                                 src="{{ $enrollment->user->avatar ?? 'https://ui-avatars.com/api/?name='.urlencode($enrollment->user->first_name.' '.$enrollment->user->last_name) }}" 
+                                                 alt="{{ $enrollment->user->first_name }}">
                                         </div>
                                         <div class="ml-4">
                                             <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                {{ $enrollment->user->name }}
+                                                {{ $enrollment->user->first_name }} {{ $enrollment->user->last_name }}
                                             </div>
                                             <div class="text-sm text-gray-500 dark:text-gray-400">
                                                 {{ $enrollment->user->email }}
@@ -303,14 +288,16 @@
                                     {{ $enrollment->enrolled_at ? date('M d, Y', strtotime($enrollment->enrolled_at)) : 'N/A' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="relative w-48 h-2 bg-gray-200 rounded">
-                                        <div class="absolute top-0 left-0 h-full bg-blue-600 rounded" 
-                                             style="width: {{ $enrollment->progress }}%">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-24 h-2 bg-gray-200 rounded">
+                                            <div class="h-full bg-blue-600 rounded" 
+                                                 style="width: {{ $enrollment->progress }}%">
+                                            </div>
                                         </div>
+                                        <span class="text-sm text-gray-500 dark:text-gray-400">
+                                            {{ number_format($enrollment->progress, 1) }}%
+                                        </span>
                                     </div>
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ number_format($enrollment->progress, 1) }}%
-                                    </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
@@ -334,48 +321,131 @@
                     </tbody>
                 </table>
             </div>
-        </div>
+        @endif
 
         <!-- Pagination -->
-        <div class="mt-4">
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700">
             {{ $enrollments->links() }}
         </div>
-    @endif
+    </div>
 </div>
 
 @push('scripts')
 <script>
-function updateBulkEnrollments(action, value) {
-    if (!selectedEnrollments.length) {
-        showNotification('Error', 'Please select enrollments to update', 'error');
-        return;
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const enrollmentCheckboxes = document.querySelectorAll('.enrollment-checkbox');
+    const selectedCountElement = document.getElementById('selectedCount');
+    const bulkActionsContainer = document.getElementById('bulkActionsContainer');
+    let selectedEnrollments = [];
+
+    // Handle "Select All" checkbox
+    selectAllCheckbox.addEventListener('change', function() {
+        enrollmentCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+            handleCheckboxChange(checkbox);
+        });
+    });
+
+    // Handle individual checkboxes
+    enrollmentCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            handleCheckboxChange(this);
+            updateSelectAllCheckbox();
+        });
+    });
+
+    function handleCheckboxChange(checkbox) {
+        if (checkbox.checked) {
+            if (!selectedEnrollments.includes(checkbox.value)) {
+                selectedEnrollments.push(checkbox.value);
+            }
+        } else {
+            selectedEnrollments = selectedEnrollments.filter(id => id !== checkbox.value);
+        }
+        updateSelectedCount();
     }
 
-    fetch(`{{ route('admin.courses.enrollments.bulk-update', $course->id) }}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        },
-        body: JSON.stringify({
-            enrollment_ids: selectedEnrollments,
-            action: action,
-            value: value
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Success', 'Enrollments updated successfully');
-            setTimeout(() => window.location.reload(), 1500);
-        } else {
-            throw new Error(data.message || 'Failed to update enrollments');
+    function updateSelectAllCheckbox() {
+        selectAllCheckbox.checked = selectedEnrollments.length === enrollmentCheckboxes.length;
+    }
+
+    function updateSelectedCount() {
+        selectedCountElement.textContent = selectedEnrollments.length;
+        bulkActionsContainer.style.display = selectedEnrollments.length > 0 ? 'flex' : 'none';
+    }
+
+    // Toggle dropdowns
+    window.toggleDropdown = function(dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        document.querySelectorAll('.relative > div').forEach(el => {
+            if (el.id !== dropdownId) el.classList.add('hidden');
+        });
+        dropdown.classList.toggle('hidden');
+    };
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.relative')) {
+            document.querySelectorAll('.relative > div').forEach(el => {
+                el.classList.add('hidden');
+            });
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error', error.message, 'error');
     });
-}
+
+    // Bulk update function
+    window.updateBulkEnrollments = function(action, value) {
+        if (selectedEnrollments.length === 0) {
+            showNotification('Error', 'Please select enrollments to update', 'error');
+            return;
+        }
+
+        // Get the button and show loading state
+        const button = action === 'progress' ? document.getElementById('progressUpdateBtn') : null;
+        if (button) {
+            const updateText = button.querySelector('.update-text');
+            const loadingSpinner = button.querySelector('.loading-spinner');
+            updateText.textContent = 'Updating...';
+            loadingSpinner.classList.remove('hidden');
+            button.disabled = true;
+        }
+
+        fetch(`{{ route('admin.courses.enrollments.bulk-update', $course->id) }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                enrollment_ids: selectedEnrollments,
+                action: action,
+                value: value
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Success', 'Enrollments updated successfully');
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                throw new Error(data.message || 'Failed to update enrollments');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error', error.message, 'error');
+            
+            // Reset button state on error
+            if (button) {
+                const updateText = button.querySelector('.update-text');
+                const loadingSpinner = button.querySelector('.loading-spinner');
+                updateText.textContent = 'Update';
+                loadingSpinner.classList.add('hidden');
+                button.disabled = false;
+            }
+        });
+    };
+});
 </script>
-@endpush 
+@endpush
+@endsection 

@@ -11,10 +11,6 @@
         <p style="margin: 5px 0;">To: {{ str_replace('_', ' ', ucfirst($newValue)) }}</p>
     </div>
 
-    <x-mail.button :url="route('student.courses.show', $course->id)">
-        View Course
-    </x-mail.button>
-
     <x-slot:closing>
         If you have any questions, please don't hesitate to contact us.
     </x-slot:closing>
