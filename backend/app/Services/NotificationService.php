@@ -30,10 +30,10 @@ class NotificationService
 
         // Attach notification to users
         foreach ($users as $user) {
-            \Log::info('Attaching notification to user:', [
-                'notification_id' => $notification->id,
-                'user_id' => $user->id
-            ]);
+            // \Log::info('Attaching notification to user:', [
+            //     'notification_id' => $notification->id,
+            //     'user_id' => $user->id
+            // ]);
 
             $notification->users()->attach($user->id, [
                 'id' => Str::uuid(),

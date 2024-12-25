@@ -426,20 +426,20 @@ Route::middleware('auth:sanctum')->get('/test-broadcast-auth', function (Request
 });
 
 Route::middleware('auth:sanctum')->post('/broadcasting/auth', function (Request $request) {
-    \Log::info('Broadcasting auth request', [
-        'user' => $request->user()->id,
-        'headers' => $request->headers->all(),
-        'socketId' => $request->socket_id,
-        'channel' => $request->channel_name
-    ]);
+    // \Log::info('Broadcasting auth request', [
+    //     'user' => $request->user()->id,
+    //     'headers' => $request->headers->all(),
+    //     'socketId' => $request->socket_id,
+    //     'channel' => $request->channel_name
+    // ]);
 
     try {
         return Broadcast::auth($request);
     } catch (\Exception $e) {
-        \Log::error('Broadcasting auth error', [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
+        // \Log::error('Broadcasting auth error', [
+        //     'error' => $e->getMessage(),
+        //     'trace' => $e->getTraceAsString()
+        // ]);
         
         return response()->json([
             'error' => $e->getMessage()

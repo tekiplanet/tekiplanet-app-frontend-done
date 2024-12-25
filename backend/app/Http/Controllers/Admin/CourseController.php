@@ -53,7 +53,7 @@ class CourseController extends Controller
     public function store(Request $request)
     {
         try {
-            \Log::info('Course creation request:', $request->all());
+            // \Log::info('Course creation request:', $request->all());
 
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
@@ -251,6 +251,12 @@ class CourseController extends Controller
             foreach ($enrollments as $enrollment) {
                 $oldValue = $enrollment->{$request->action};
                 $enrollment->{$request->action} = $request->value;
+
+                // If status is set to completed, set progress to 100
+                if ($request->action === 'status' && $request->value === 'completed') {
+                    $enrollment->progress = 100;
+                }
+
                 $enrollment->save();
 
                 try {
@@ -285,15 +291,15 @@ class CourseController extends Controller
                         ]
                     ];
 
-                    \Log::info('Attempting to dispatch jobs', [
-                        'user_id' => $enrollment->user->id,
-                        'email' => $enrollment->user->email,
-                        'action' => $request->action
-                    ]);
+                    // \Log::info('Attempting to dispatch jobs', [
+                    //     'user_id' => $enrollment->user->id,
+                    //     'email' => $enrollment->user->email,
+                    //     'action' => $request->action
+                    // ]);
 
                     // Check if jobs table exists
                     if (!\Schema::hasTable('jobs')) {
-                        \Log::error('Jobs table does not exist!');
+                        // \Log::error('Jobs table does not exist!');
                         throw new \Exception('Jobs table not found');
                     }
 
@@ -314,17 +320,17 @@ class CourseController extends Controller
                     \Log::info('Jobs dispatched successfully');
 
                 } catch (\Exception $e) {
-                    \Log::error('Failed to queue jobs', [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
-                    ]);
+                    // \Log::error('Failed to queue jobs', [
+                    //     'error' => $e->getMessage(),
+                    //     'trace' => $e->getTraceAsString()
+                    // ]);
                     continue;
                 }
             }
 
             // Check jobs count
             $jobsCount = \DB::table('jobs')->count();
-            \Log::info('Current jobs in queue', ['count' => $jobsCount]);
+            // \Log::info('Current jobs in queue', ['count' => $jobsCount]);
 
             return response()->json([
                 'success' => true,
@@ -334,7 +340,7 @@ class CourseController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Bulk update error: ' . $e->getMessage());
+            // \Log::error('Bulk update error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update enrollments: ' . $e->getMessage()

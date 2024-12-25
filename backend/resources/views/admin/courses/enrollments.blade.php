@@ -90,21 +90,45 @@
                             <div id="statusDropdown" 
                                  class="hidden absolute left-0 sm:right-0 sm:left-auto mt-2 w-full sm:w-48 bg-white rounded-lg shadow-lg z-10">
                                 <div class="py-1">
-                                    <button onclick="updateBulkEnrollments('status', 'active')"
-                                            class="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
-                                        Set Active
+                                    <button onclick="updateBulkEnrollments('status', 'active', this)"
+                                            class="status-btn block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
+                                        <span class="inline-flex items-center">
+                                            <span class="status-text">Set Active</span>
+                                            <svg class="hidden loading-spinner ml-2 w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        </span>
                                     </button>
-                                    <button onclick="updateBulkEnrollments('status', 'pending')"
-                                            class="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
-                                        Set Pending
+                                    <button onclick="updateBulkEnrollments('status', 'pending', this)"
+                                            class="status-btn block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
+                                        <span class="inline-flex items-center">
+                                            <span class="status-text">Set Pending</span>
+                                            <svg class="hidden loading-spinner ml-2 w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        </span>
                                     </button>
-                                    <button onclick="updateBulkEnrollments('status', 'completed')"
-                                            class="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
-                                        Set Completed
+                                    <button onclick="updateBulkEnrollments('status', 'completed', this)"
+                                            class="status-btn block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
+                                        <span class="inline-flex items-center">
+                                            <span class="status-text">Set Completed</span>
+                                            <svg class="hidden loading-spinner ml-2 w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        </span>
                                     </button>
-                                    <button onclick="updateBulkEnrollments('status', 'dropped')"
-                                            class="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
-                                        Set Dropped
+                                    <button onclick="updateBulkEnrollments('status', 'dropped', this)"
+                                            class="status-btn block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
+                                        <span class="inline-flex items-center">
+                                            <span class="status-text">Set Dropped</span>
+                                            <svg class="hidden loading-spinner ml-2 w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        </span>
                                     </button>
                                 </div>
                             </div>
@@ -119,17 +143,35 @@
                             <div id="paymentStatusDropdown" 
                                  class="hidden absolute left-0 sm:right-0 sm:left-auto mt-2 w-full sm:w-48 bg-white rounded-lg shadow-lg z-10">
                                 <div class="py-1">
-                                    <button onclick="updateBulkEnrollments('payment_status', 'fully_paid')"
-                                            class="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
-                                        Fully Paid
+                                    <button onclick="updateBulkEnrollments('payment_status', 'fully_paid', this)"
+                                            class="payment-btn block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
+                                        <span class="inline-flex items-center">
+                                            <span class="payment-text">Fully Paid</span>
+                                            <svg class="hidden loading-spinner ml-2 w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        </span>
                                     </button>
-                                    <button onclick="updateBulkEnrollments('payment_status', 'partially_paid')"
-                                            class="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
-                                        Partially Paid
+                                    <button onclick="updateBulkEnrollments('payment_status', 'partially_paid', this)"
+                                            class="payment-btn block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
+                                        <span class="inline-flex items-center">
+                                            <span class="payment-text">Partially Paid</span>
+                                            <svg class="hidden loading-spinner ml-2 w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        </span>
                                     </button>
-                                    <button onclick="updateBulkEnrollments('payment_status', 'unpaid')"
-                                            class="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
-                                        Unpaid
+                                    <button onclick="updateBulkEnrollments('payment_status', 'unpaid', this)"
+                                            class="payment-btn block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
+                                        <span class="inline-flex items-center">
+                                            <span class="payment-text">Unpaid</span>
+                                            <svg class="hidden loading-spinner ml-2 w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        </span>
                                     </button>
                                 </div>
                             </div>
@@ -405,37 +447,36 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Bulk update function
-    window.updateBulkEnrollments = function(action, value) {
+    window.updateBulkEnrollments = function(action, value, buttonElement = null) {
         if (selectedEnrollments.length === 0) {
             showNotification('Error', 'Please select enrollments to update', 'error');
             return;
         }
 
-        // Validate progress value if it's a progress update
-        if (action === 'progress') {
-            const progress = parseFloat(value);
-            if (isNaN(progress) || progress < 0 || progress > 100) {
-                showNotification('Error', 'Progress must be a number between 0 and 100', 'error');
-                return;
-            }
-        }
-
         // Get the button and show loading state
-        const button = action === 'progress' ? document.getElementById('progressUpdateBtn') : null;
+        const button = action === 'progress' ? 
+            document.getElementById('progressUpdateBtn') : 
+            (buttonElement || null);
+
         if (button) {
-            const updateText = button.querySelector('.update-text');
+            const updateText = button.querySelector('.status-text, .payment-text, .update-text');
             const loadingSpinner = button.querySelector('.loading-spinner');
+            const originalText = updateText.textContent;
             updateText.textContent = 'Updating...';
             loadingSpinner.classList.remove('hidden');
             button.disabled = true;
-        }
 
-        // Log the data being sent
-        console.log('Sending update:', {
-            enrollment_ids: selectedEnrollments,
-            action: action,
-            value: value
-        });
+            // Disable all related buttons while updating
+            if (action === 'status') {
+                document.querySelectorAll('.status-btn').forEach(btn => {
+                    btn.disabled = true;
+                });
+            } else if (action === 'payment_status') {
+                document.querySelectorAll('.payment-btn').forEach(btn => {
+                    btn.disabled = true;
+                });
+            }
+        }
 
         fetch(`{{ route('admin.courses.enrollments.bulk-update', $course->id) }}`, {
             method: 'POST',
@@ -473,11 +514,22 @@ document.addEventListener('DOMContentLoaded', function() {
         .finally(() => {
             // Reset button state
             if (button) {
-                const updateText = button.querySelector('.update-text');
+                const updateText = button.querySelector('.status-text, .payment-text, .update-text');
                 const loadingSpinner = button.querySelector('.loading-spinner');
-                updateText.textContent = 'Update';
+                updateText.textContent = originalText;
                 loadingSpinner.classList.add('hidden');
                 button.disabled = false;
+
+                // Re-enable all related buttons
+                if (action === 'status') {
+                    document.querySelectorAll('.status-btn').forEach(btn => {
+                        btn.disabled = false;
+                    });
+                } else if (action === 'payment_status') {
+                    document.querySelectorAll('.payment-btn').forEach(btn => {
+                        btn.disabled = false;
+                    });
+                }
             }
         });
     };
