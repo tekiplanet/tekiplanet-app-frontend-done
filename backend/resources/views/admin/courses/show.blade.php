@@ -163,7 +163,7 @@
                 <div x-show="activeTab === 'modules'">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-semibold">Course Modules</h3>
-                        <button @click="$dispatch('open-module-modal')" 
+                        <button onclick="openModuleModal()" 
                                 class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                             Add Module
                         </button>
@@ -176,14 +176,14 @@
                             @foreach($course->modules as $module)
                                 <div class="border rounded-lg p-4 relative">
                                     <div class="absolute top-4 right-4 flex items-center gap-2">
-                                        <button @click="$dispatch('edit-module', { id: '{{ $module->id }}' })"
+                                        <button onclick="openModuleModal('{{ $module->id }}')"
                                                 class="text-blue-600 hover:text-blue-800">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                             </svg>
                                         </button>
-                                        <button @click="$dispatch('delete-module', { id: '{{ $module->id }}' })"
+                                        <button onclick="deleteModule('{{ $module->id }}')"
                                                 class="text-red-600 hover:text-red-800">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -196,7 +196,7 @@
                                     <p class="text-sm text-gray-600 mb-4">{{ $module->description }}</p>
                                     <div class="flex justify-between items-center mb-4">
                                         <span class="text-sm text-gray-500">{{ $module->duration_hours }} hours</span>
-                                        <button @click="$dispatch('add-lesson', { moduleId: '{{ $module->id }}' })"
+                                        <button onclick="openLessonModal('{{ $module->id }}')"
                                                 class="text-sm text-blue-600 hover:text-blue-800">
                                             + Add Lesson
                                         </button>
@@ -211,14 +211,14 @@
                                                     {{ $lesson->title }}
                                                     <div class="flex items-center gap-2">
                                                         <span class="text-xs text-gray-500">{{ $lesson->duration_minutes }}min</span>
-                                                        <button @click="$dispatch('edit-lesson', { id: '{{ $lesson->id }}' })"
+                                                        <button onclick="openLessonModal('{{ $module->id }}', '{{ $lesson->id }}')"
                                                                 class="text-blue-600 hover:text-blue-800">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                                                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                             </svg>
                                                         </button>
-                                                        <button @click="$dispatch('delete-lesson', { id: '{{ $lesson->id }}' })"
+                                                        <button onclick="deleteLesson('{{ $lesson->id }}')"
                                                                 class="text-red-600 hover:text-red-800">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -278,10 +278,135 @@
 
     @include('admin.courses.partials.edit-modal')
     @include('admin.courses.partials.module-modal')
+    @include('admin.courses.partials.lesson-modal')
 </div>
 
 @push('scripts')
 <script>
+let currentLessonId = null;
+let isEditingLesson = false;
+
+function openLessonModal(moduleId, lessonId = null) {
+    const modal = document.getElementById('lessonModal');
+    const form = document.getElementById('lessonForm');
+    const modalTitle = document.getElementById('lessonModalTitle');
+    const modalAction = document.getElementById('lessonModalAction');
+    
+    currentLessonId = lessonId;
+    isEditingLesson = !!lessonId;
+    
+    // Set module ID
+    document.getElementById('lessonModuleId').value = moduleId;
+    
+    // Update modal title and action button
+    modalTitle.textContent = isEditingLesson ? 'Edit Lesson' : 'Add New Lesson';
+    modalAction.textContent = isEditingLesson ? 'Update Lesson' : 'Create Lesson';
+    
+    // Reset form
+    form.reset();
+    
+    if (lessonId) {
+        loadLesson(lessonId);
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+function closeLessonModal() {
+    const modal = document.getElementById('lessonModal');
+    modal.classList.add('hidden');
+}
+
+function loadLesson(lessonId) {
+    fetch(`/admin/courses/{{ $course->id }}/lessons/${lessonId}/edit`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const form = document.getElementById('lessonForm');
+                form.title.value = data.lesson.title;
+                form.description.value = data.lesson.description;
+                form.content_type.value = data.lesson.content_type;
+                form.duration_minutes.value = data.lesson.duration_minutes;
+                form.resource_url.value = data.lesson.resource_url || '';
+                form.is_preview.checked = data.lesson.is_preview;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading lesson:', error);
+            showNotification('Error', 'Failed to load lesson data', 'error');
+        });
+}
+
+function handleLessonSubmit(event) {
+    const form = event.target;
+    const moduleId = document.getElementById('lessonModuleId').value;
+    console.log('Module ID:', moduleId);
+
+    const url = isEditingLesson
+        ? `/admin/courses/{{ $course->id }}/lessons/${currentLessonId}`
+        : `/admin/courses/{{ $course->id }}/modules/${moduleId}/lessons`;
+    console.log('Request URL:', url);
+
+    const method = isEditingLesson ? 'PUT' : 'POST';
+    console.log('Request Method:', method);
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    const loadingSpinner = submitButton.querySelector('.loading-spinner');
+    
+    submitButton.disabled = true;
+    loadingSpinner.classList.remove('hidden');
+
+    const formData = new FormData(form);
+    const data = {
+        module_id: moduleId,
+        title: formData.get('title'),
+        description: formData.get('description'),
+        content_type: formData.get('content_type'),
+        duration_minutes: formData.get('duration_minutes'),
+        resource_url: formData.get('resource_url'),
+        is_preview: formData.get('is_preview') === 'on'
+    };
+
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                console.error('Response:', text);
+                try {
+                    const json = JSON.parse(text);
+                    throw new Error(json.message || 'Network response was not ok');
+                } catch (e) {
+                    throw new Error(`HTTP ${response.status}: ${text || 'Network response was not ok'}`);
+                }
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification('Success', `Lesson ${isEditingLesson ? 'updated' : 'created'} successfully`);
+            closeLessonModal();
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error', `Failed to ${isEditingLesson ? 'update' : 'create'} lesson`, 'error');
+    })
+    .finally(() => {
+        submitButton.disabled = false;
+        loadingSpinner.classList.add('hidden');
+    });
+}
+
 function loadCourse(courseId) {
     fetch(`/admin/courses/${courseId}/edit`)
         .then(response => response.json())
@@ -377,6 +502,68 @@ function updateCourse(e) {
     .finally(() => {
         submitButton.disabled = false;
         loadingSpinner.classList.add('hidden');
+    });
+}
+
+function deleteModule(moduleId) {
+    if (!confirm('Are you sure you want to delete this module? This will also delete all lessons within this module.')) {
+        return;
+    }
+
+    fetch(`/admin/courses/{{ $course->id }}/modules/${moduleId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification('Success', 'Module deleted successfully');
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error', 'Failed to delete module', 'error');
+    });
+}
+
+function deleteLesson(lessonId) {
+    if (!confirm('Are you sure you want to delete this lesson?')) {
+        return;
+    }
+
+    fetch(`/admin/courses/{{ $course->id }}/lessons/${lessonId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification('Success', 'Lesson deleted successfully');
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error', 'Failed to delete lesson', 'error');
     });
 }
 </script>

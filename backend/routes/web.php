@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\BusinessController;
 use App\Http\Controllers\Admin\ProfessionalController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\CourseModuleController;
+use App\Http\Controllers\Admin\CourseLessonController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,5 +61,47 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth:admin']], function () 
     // Course Modules Routes
     Route::prefix('courses/{course}')->name('admin.courses.')->group(function () {
         Route::resource('modules', CourseModuleController::class)->except(['index', 'create', 'show']);
+        
+        // Lesson Routes - Flattened structure
+        Route::post('modules/{module}/lessons', [CourseLessonController::class, 'store'])
+            ->name('modules.lessons.store')
+            ->where('course', '[0-9a-f-]+')
+            ->where('module', '[0-9a-f-]+');
+
+        Route::get('lessons/{lesson}/edit', [CourseLessonController::class, 'edit'])
+            ->name('lessons.edit')
+            ->where('course', '[0-9a-f-]+')
+            ->where('lesson', '[0-9a-f-]+');
+
+        Route::put('lessons/{lesson}', [CourseLessonController::class, 'update'])
+            ->name('lessons.update')
+            ->where('course', '[0-9a-f-]+')
+            ->where('lesson', '[0-9a-f-]+');
+
+        Route::delete('lessons/{lesson}', [CourseLessonController::class, 'destroy'])
+            ->name('lessons.destroy')
+            ->where('course', '[0-9a-f-]+')
+            ->where('lesson', '[0-9a-f-]+');
     });
 });
+
+// Temporary debug route list
+Route::get('/debug-routes', function () {
+    $routes = collect(\Route::getRoutes())->map(function ($route) {
+        return [
+            'uri' => $route->uri(),
+            'methods' => $route->methods(),
+            'name' => $route->getName()
+        ];
+    });
+    dd($routes->toArray());
+});
+
+// Temporary debug route
+Route::get('/test-lesson-route/{course}/{module}', function ($course, $module) {
+    return response()->json([
+        'message' => 'Route is accessible',
+        'course' => $course,
+        'module' => $module
+    ]);
+})->where(['course' => '[0-9a-f-]+', 'module' => '[0-9a-f-]+']);

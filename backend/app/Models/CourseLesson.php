@@ -11,13 +11,14 @@ class CourseLesson extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'module_id', 
-        'title', 
-        'description', 
-        'content_type', 
-        'duration_minutes', 
-        'order', 
-        'resource_url', 
+        'id',
+        'module_id',
+        'title',
+        'description',
+        'content_type',
+        'duration_minutes',
+        'order',
+        'resource_url',
         'is_preview'
     ];
 
