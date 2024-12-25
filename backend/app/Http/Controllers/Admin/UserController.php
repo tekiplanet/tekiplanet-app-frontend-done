@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Transaction;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use App\Notifications\TransactionNotification;
 
 class UserController extends Controller
 {
@@ -106,6 +107,11 @@ class UserController extends Controller
                 'notes' => 'nullable|string|max:1000',
             ]);
 
+            // Check balance for debit transactions
+            if ($validated['type'] === 'debit' && $user->wallet_balance < $validated['amount']) {
+                throw new \Exception('Insufficient balance for debit transaction.');
+            }
+
             // Generate reference number
             $validated['reference_number'] = 'TXN-' . strtoupper(uniqid());
             $validated['status'] = 'completed';
@@ -118,11 +124,11 @@ class UserController extends Controller
             if ($validated['type'] === 'credit') {
                 $user->increment('wallet_balance', $validated['amount']);
             } else {
-                if ($user->wallet_balance < $validated['amount']) {
-                    throw new \Exception('Insufficient balance for debit transaction.');
-                }
                 $user->decrement('wallet_balance', $validated['amount']);
             }
+
+            // Send notification to user
+            $user->notify(new TransactionNotification($transaction));
 
             return redirect()
                 ->route('admin.users.show', $user)
