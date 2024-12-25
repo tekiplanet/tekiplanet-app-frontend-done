@@ -64,6 +64,7 @@
         .email-body {
             padding: 32px 24px;
             background-color: #ffffff;
+            color: #111827;
         }
 
         .email-footer {
@@ -107,7 +108,7 @@
             display: inline-block;
             padding: 12px 24px;
             background-color: {{ config('app.primary_color', '#4f46e5') }};
-            color: #ffffff;
+            color: #ffffff !important;
             text-decoration: none;
             border-radius: 6px;
             font-weight: 600;
@@ -131,6 +132,7 @@
             
             .email-content {
                 background-color: #111827;
+                border: 1px solid #374151;
             }
             
             .email-body {
@@ -141,10 +143,34 @@
             .email-footer {
                 background-color: #1f2937;
                 color: #9ca3af;
+                border-top: 1px solid #374151;
             }
 
             .text-gray {
                 color: #9ca3af;
+            }
+
+            .button {
+                background-color: {{ config('app.primary_color', '#4f46e5') }};
+                color: #ffffff !important;
+            }
+
+            .link {
+                color: {{ config('app.primary_color', '#4f46e5') }};
+            }
+
+            /* Fix for dark mode text colors */
+            .email-body p, 
+            .email-body strong, 
+            .email-body li,
+            .email-body td {
+                color: #f9fafb;
+            }
+
+            /* Background for info boxes in dark mode */
+            .info-box {
+                background-color: #1f2937 !important;
+                border: 1px solid #374151;
             }
         }
 

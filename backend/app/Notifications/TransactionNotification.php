@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\Transaction;
+use App\Models\Setting;
 
 class TransactionNotification extends Notification implements ShouldQueue
 {
@@ -24,10 +25,16 @@ class TransactionNotification extends Notification implements ShouldQueue
 
     public function toMail($notifiable)
     {
+        $currency = [
+            'code' => Setting::getSetting('default_currency', 'USD'),
+            'symbol' => Setting::getSetting('currency_symbol', '$')
+        ];
+
         return (new MailMessage)
             ->view('emails.transaction', [
                 'user' => $notifiable,
-                'transaction' => $this->transaction
+                'transaction' => $this->transaction,
+                'currency' => $currency
             ]);
     }
 } 

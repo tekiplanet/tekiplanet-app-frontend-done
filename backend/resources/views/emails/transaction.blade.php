@@ -11,7 +11,7 @@
         A new {{ $transaction->type }} transaction has been processed on your account.
     </p>
 
-    <div style="background-color: #f3f4f6; border-radius: 8px; padding: 16px; margin: 24px 0;">
+    <div class="info-box" style="background-color: #f3f4f6; border-radius: 8px; padding: 16px; margin: 24px 0;">
         <table style="width: 100%;">
             <tr>
                 <td style="padding: 8px 0;">
@@ -19,7 +19,7 @@
                 </td>
                 <td style="text-align: right; padding: 8px 0;">
                     <span style="color: {{ $transaction->type === 'credit' ? '#059669' : '#DC2626' }};">
-                        {{ $transaction->type === 'credit' ? '+' : '-' }}{{ config('app.currency_symbol', '$') }}{{ number_format($transaction->amount, 2) }}
+                        {{ $transaction->type === 'credit' ? '+' : '-' }}{{ $currency['symbol'] }}{{ number_format($transaction->amount, 2) }}
                     </span>
                 </td>
             </tr>
@@ -59,7 +59,7 @@
     </div>
 
     <p class="text-base">
-        Your current wallet balance is <strong>{{ config('app.currency_symbol', '$') }}{{ number_format($user->wallet_balance, 2) }}</strong>
+        Your current wallet balance is <strong>{{ $currency['symbol'] }}{{ number_format($user->wallet_balance, 2) }}</strong>
     </p>
 
     @if($transaction->description)
@@ -69,7 +69,7 @@
         </p>
     @endif
 
-    <x-mail.button url="{{ config('app.frontend_url') }}/user/wallet">
+    <x-mail.button url="{{ config('app.frontend_url') }}/dashboard/wallet">
         View Transaction
     </x-mail.button>
 
