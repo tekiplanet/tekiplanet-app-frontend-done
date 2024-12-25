@@ -81,9 +81,10 @@
         </div>
     </div>
 
-    <!-- Users Table -->
+    <!-- Users List -->
     <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
-        <div class="overflow-x-auto">
+        <!-- Desktop Table (hidden on mobile) -->
+        <div class="hidden md:block overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>
@@ -152,8 +153,8 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div class="flex justify-end space-x-2">
-                                    <a href="#" class="text-primary hover:text-primary-dark">View</a>
-                                    <a href="#" class="text-primary hover:text-primary-dark">Edit</a>
+                                    <a href="{{ route('admin.users.show', $user) }}" class="text-primary hover:text-primary-dark">View</a>
+                                    <a href="{{ route('admin.users.edit', $user) }}" class="text-primary hover:text-primary-dark">Edit</a>
                                     <button class="text-red-600 hover:text-red-900">Delete</button>
                                 </div>
                             </td>
@@ -168,7 +169,89 @@
                 </tbody>
             </table>
         </div>
-        
+
+        <!-- Mobile Card View -->
+        <div class="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
+            @forelse($users as $user)
+                <div class="p-4 space-y-3">
+                    <!-- User Info -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                @if($user->avatar)
+                                    <img class="h-10 w-10 rounded-full" src="{{ $user->avatar }}" alt="">
+                                @else
+                                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gray-500">
+                                        <span class="text-sm font-medium leading-none text-white">
+                                            {{ strtoupper(substr($user->first_name, 0, 1)) }}
+                                        </span>
+                                    </span>
+                                @endif
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ $user->first_name }} {{ $user->last_name }}
+                                </div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">
+                                    {{ $user->email }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex items-center space-x-2">
+                            <a href="{{ route('admin.users.show', $user) }}" 
+                               class="inline-flex items-center p-2 text-primary hover:text-primary-dark"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </a>
+                            <a href="{{ route('admin.users.edit', $user) }}" 
+                               class="inline-flex items-center p-2 text-primary hover:text-primary-dark"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </a>
+                            <button class="inline-flex items-center p-2 text-red-600 hover:text-red-900">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Status Badges -->
+                    <div class="flex flex-wrap gap-2">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ 
+                            $user->businessProfile ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 
+                            ($user->professional ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : 
+                            'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200') 
+                        }}">
+                            {{ $user->businessProfile ? 'Business' : ($user->professional ? 'Professional' : 'Student') }}
+                        </span>
+
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ 
+                            $user->status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
+                            'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                        }}">
+                            {{ ucfirst($user->status) }}
+                        </span>
+
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                            Joined {{ $user->created_at->format('M d, Y') }}
+                        </span>
+                    </div>
+                </div>
+            @empty
+                <div class="p-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+                    No users found.
+                </div>
+            @endforelse
+        </div>
+
         <!-- Pagination -->
         <div class="bg-white dark:bg-gray-800 px-4 py-3 border-t border-gray-200 dark:border-gray-700 sm:px-6">
             {{ $users->links() }}
