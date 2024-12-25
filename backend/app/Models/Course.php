@@ -13,7 +13,8 @@ class Course extends Model
     protected $fillable = [
         'title', 
         'description', 
-        'category', 
+        'category',
+        'category_id', 
         'level', 
         'price', 
         'instructor', 
@@ -94,5 +95,13 @@ class Course extends Model
         ]);
 
         return $this;
+    }
+
+    /**
+     * Get the category that owns the course.
+     */
+    public function category()
+    {
+        return $this->belongsTo(CourseCategory::class);
     }
 }

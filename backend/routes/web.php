@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\BusinessController;
 use App\Http\Controllers\Admin\ProfessionalController;
+use App\Http\Controllers\Admin\CourseController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,7 +36,24 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth:admin']], function () 
     Route::resource('businesses', BusinessController::class)->except(['create', 'store', 'destroy']);
     Route::post('businesses/{business}/toggle-status', [BusinessController::class, 'toggleStatus'])
         ->name('businesses.toggle-status');
-    Route::resource('professionals', ProfessionalController::class)->except(['create', 'store', 'destroy']);
+    Route::resource('professionals', ProfessionalController::class)
+        ->except(['create', 'store', 'destroy'])
+        ->names([
+            'index' => 'admin.professionals.index',
+            'show' => 'admin.professionals.show',
+            'edit' => 'admin.professionals.edit',
+            'update' => 'admin.professionals.update',
+        ]);
     Route::post('professionals/{professional}/toggle-status', [ProfessionalController::class, 'toggleStatus'])
-        ->name('professionals.toggle-status');
+        ->name('admin.professionals.toggle-status');
+    Route::resource('courses', CourseController::class)
+        ->names([
+            'index' => 'admin.courses.index',
+            'show' => 'admin.courses.show',
+            'edit' => 'admin.courses.edit',
+            'update' => 'admin.courses.update',
+            'create' => 'admin.courses.create',
+            'store' => 'admin.courses.store',
+            'destroy' => 'admin.courses.destroy',
+        ]);
 });
