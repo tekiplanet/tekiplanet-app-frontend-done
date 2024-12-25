@@ -11,13 +11,17 @@ class CustomNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    protected $title;
-    protected $message;
+    public $title;
+    public $message;
+    public $type;
+    public $emailContent;
 
-    public function __construct($title, $message)
+    public function __construct($title, $message, $type, $emailContent = null)
     {
         $this->title = $title;
         $this->message = $message;
+        $this->type = $type;
+        $this->emailContent = $emailContent ?? $message;
     }
 
     public function via($notifiable)
@@ -29,13 +33,9 @@ class CustomNotification extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->subject($this->title)
-            ->greeting('Hello ' . $notifiable->first_name . '!')
-            ->view('emails.custom-notification', [
-                'user' => $notifiable,
-                'title' => $this->title,
-                'content' => $this->message,
-                'actionText' => 'View Dashboard',
-                'actionUrl' => url('/dashboard')
+            ->view('components.mail.layout', [
+                'slot' => $this->emailContent,
+                'greeting' => 'Hello ' . $notifiable->name . '!'
             ]);
     }
 } 

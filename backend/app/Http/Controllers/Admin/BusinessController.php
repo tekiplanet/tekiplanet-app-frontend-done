@@ -6,9 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\BusinessProfile;
 use Illuminate\Http\Request;
 use App\Notifications\CustomNotification;
+use Illuminate\Support\HtmlString;
+use App\Services\NotificationService;
 
 class BusinessController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     public function index(Request $request)
     {
         $businesses = BusinessProfile::query()
@@ -63,15 +72,44 @@ class BusinessController extends Controller
         $business->status = $newStatus;
         $business->save();
 
+        // Prepare notification content
+        $title = 'Business Status Update';
         $message = $newStatus === 'active' 
             ? "Your business account has been activated successfully."
             : "Your business account has been deactivated. Reason: " . $request->input('reason');
 
-        // Send notification to the business owner
+        // Prepare email content with more details
+        $emailContent = new HtmlString("
+            <p>Dear {$business->user->name},</p>
+            <p>{$message}</p>
+            <p><strong>Business Details:</strong></p>
+            <ul>
+                <li>Business Name: {$business->business_name}</li>
+                <li>Business Email: {$business->business_email}</li>
+                <li>Current Status: " . ucfirst($newStatus) . "</li>
+            </ul>
+            " . ($newStatus === 'inactive' ? "
+            <p><strong>Reason for Deactivation:</strong><br>
+            {$request->input('reason')}</p>
+            " : "") . "
+            <p>If you have any questions, please contact our support team.</p>
+        ");
+
+        // Send in-app notification
+        $this->notificationService->send([
+            'type' => 'business',
+            'title' => $title,
+            'message' => $message,
+            'icon' => 'business',
+            'action_url' => '/business/profile'
+        ], $business->user);
+
+        // Send email notification
         $business->user->notify(new CustomNotification(
-            'Business Status Update',
+            $title,
             $message,
-            'business-status'
+            'business-status',
+            $emailContent
         ));
 
         return response()->json([
