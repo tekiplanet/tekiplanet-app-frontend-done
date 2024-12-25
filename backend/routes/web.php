@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ProfessionalController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\CourseModuleController;
 use App\Http\Controllers\Admin\CourseLessonController;
+use App\Http\Controllers\Admin\CourseTopicController;
 
 /*
 |--------------------------------------------------------------------------
@@ -82,6 +83,12 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth:admin']], function () 
             ->name('lessons.destroy')
             ->where('course', '[0-9a-f-]+')
             ->where('lesson', '[0-9a-f-]+');
+
+        // Course Topics Routes
+        Route::post('modules/{module}/topics', [CourseTopicController::class, 'store'])->name('modules.topics.store');
+        Route::get('topics/{topic}/edit', [CourseTopicController::class, 'edit'])->name('topics.edit');
+        Route::put('topics/{topic}', [CourseTopicController::class, 'update'])->name('topics.update');
+        Route::delete('topics/{topic}', [CourseTopicController::class, 'destroy'])->name('topics.destroy');
     });
 });
 

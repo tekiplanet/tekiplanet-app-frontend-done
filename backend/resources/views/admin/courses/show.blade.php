@@ -205,7 +205,7 @@
                                     @if($module->lessons->isEmpty())
                                         <p class="text-sm text-gray-500">No lessons added yet.</p>
                                     @else
-                                        <ul class="space-y-2 border-t pt-4">
+                                        <ul class="space-y-2 border-t pt-4 mb-4">
                                             @foreach($module->lessons as $lesson)
                                                 <li class="text-sm text-gray-600 dark:text-gray-400 flex justify-between items-center">
                                                     {{ $lesson->title }}
@@ -230,6 +230,58 @@
                                             @endforeach
                                         </ul>
                                     @endif
+
+                                    <!-- Topics Section -->
+                                    <div class="mt-6 border-t pt-4">
+                                        <div class="flex justify-between items-center mb-4">
+                                            <h4 class="font-semibold">Topics</h4>
+                                            <button onclick="openTopicModal('{{ $module->id }}')"
+                                                    class="text-sm text-blue-600 hover:text-blue-800">
+                                                + Add Topic
+                                            </button>
+                                        </div>
+
+                                        @if($module->topics->isEmpty())
+                                            <p class="text-sm text-gray-500">No topics added yet.</p>
+                                        @else
+                                            <div class="space-y-4">
+                                                @foreach($module->topics as $topic)
+                                                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                                        <div class="flex justify-between items-start mb-2">
+                                                            <h5 class="font-medium">{{ $topic->title }}</h5>
+                                                            <div class="flex items-center gap-2">
+                                                                <button onclick="openTopicModal('{{ $module->id }}', '{{ $topic->id }}')"
+                                                                        class="text-blue-600 hover:text-blue-800">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                                    </svg>
+                                                                </button>
+                                                                <button onclick="deleteTopic('{{ $topic->id }}')"
+                                                                        class="text-red-600 hover:text-red-800">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">{{ $topic->description }}</p>
+                                                        @if($topic->learning_outcomes)
+                                                            <div class="space-y-1">
+                                                                <h6 class="text-sm font-medium text-gray-700 dark:text-gray-300">Learning Outcomes:</h6>
+                                                                <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-400">
+                                                                    @foreach(json_decode($topic->learning_outcomes) as $outcome)
+                                                                        <li>{{ $outcome }}</li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
                             @endforeach
                         </div>
@@ -279,6 +331,7 @@
     @include('admin.courses.partials.edit-modal')
     @include('admin.courses.partials.module-modal')
     @include('admin.courses.partials.lesson-modal')
+    @include('admin.courses.partials.topic-modal')
 </div>
 
 @push('scripts')
@@ -564,6 +617,157 @@ function deleteLesson(lessonId) {
     .catch(error => {
         console.error('Error:', error);
         showNotification('Error', 'Failed to delete lesson', 'error');
+    });
+}
+
+// Topic Management Variables
+let currentTopicId = null;
+let isEditingTopic = false;
+
+function openTopicModal(moduleId, topicId = null) {
+    const modal = document.getElementById('topicModal');
+    const form = document.getElementById('topicForm');
+    const modalTitle = document.getElementById('topicModalTitle');
+    const modalAction = document.getElementById('topicModalAction');
+    
+    currentTopicId = topicId;
+    isEditingTopic = !!topicId;
+    
+    // Set module ID
+    document.getElementById('topicModuleId').value = moduleId;
+    
+    // Update modal title and action button
+    modalTitle.textContent = isEditingTopic ? 'Edit Topic' : 'Add New Topic';
+    modalAction.textContent = isEditingTopic ? 'Update Topic' : 'Create Topic';
+    
+    // Reset form
+    form.reset();
+    
+    if (topicId) {
+        loadTopic(topicId);
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+function closeTopicModal() {
+    const modal = document.getElementById('topicModal');
+    modal.classList.add('hidden');
+}
+
+function loadTopic(topicId) {
+    fetch(`/admin/courses/{{ $course->id }}/topics/${topicId}/edit`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const form = document.getElementById('topicForm');
+                form.title.value = data.topic.title;
+                form.description.value = data.topic.description;
+                form.order.value = data.topic.order;
+                
+                // Handle learning outcomes (convert JSON array to newline-separated string)
+                const learningOutcomes = JSON.parse(data.topic.learning_outcomes);
+                form.learning_outcomes.value = learningOutcomes.join('\n');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading topic:', error);
+            showNotification('Error', 'Failed to load topic data', 'error');
+        });
+}
+
+function handleTopicSubmit(event) {
+    const form = event.target;
+    const moduleId = document.getElementById('topicModuleId').value;
+    const submitButton = form.querySelector('button[type="submit"]');
+    const loadingSpinner = submitButton.querySelector('.loading-spinner');
+    
+    submitButton.disabled = true;
+    loadingSpinner.classList.remove('hidden');
+
+    const url = isEditingTopic
+        ? `/admin/courses/{{ $course->id }}/topics/${currentTopicId}`
+        : `/admin/courses/{{ $course->id }}/modules/${moduleId}/topics`;
+
+    const method = isEditingTopic ? 'PUT' : 'POST';
+
+    const formData = new FormData(form);
+    const data = {
+        module_id: moduleId,
+        title: formData.get('title'),
+        description: formData.get('description'),
+        order: parseInt(formData.get('order')),
+        learning_outcomes: formData.get('learning_outcomes')
+    };
+
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                console.error('Response:', text);
+                try {
+                    const json = JSON.parse(text);
+                    throw new Error(json.message || 'Network response was not ok');
+                } catch (e) {
+                    throw new Error(`HTTP ${response.status}: ${text || 'Network response was not ok'}`);
+                }
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification('Success', `Topic ${isEditingTopic ? 'updated' : 'created'} successfully`);
+            closeTopicModal();
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error', `Failed to ${isEditingTopic ? 'update' : 'create'} topic`, 'error');
+    })
+    .finally(() => {
+        submitButton.disabled = false;
+        loadingSpinner.classList.add('hidden');
+    });
+}
+
+function deleteTopic(topicId) {
+    if (!confirm('Are you sure you want to delete this topic?')) {
+        return;
+    }
+
+    fetch(`/admin/courses/{{ $course->id }}/topics/${topicId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification('Success', 'Topic deleted successfully');
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error', 'Failed to delete topic', 'error');
     });
 }
 </script>
