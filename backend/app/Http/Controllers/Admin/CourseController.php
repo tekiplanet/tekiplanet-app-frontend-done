@@ -63,8 +63,11 @@ class CourseController extends Controller
                 'status' => 'required|in:draft,active,archived',
             ]);
 
+            $category = CourseCategory::find($validated['category_id']);
+
             $course = Course::create([
                 ...$validated,
+                'category' => $category->name,
                 'rating' => 0,
                 'total_reviews' => 0,
                 'total_students' => 0,
