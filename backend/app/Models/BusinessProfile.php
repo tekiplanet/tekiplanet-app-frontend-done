@@ -34,6 +34,16 @@ class BusinessProfile extends Model
 
     protected $appends = ['logo_url'];
 
+    public function business_customers()
+    {
+        return $this->hasMany(BusinessCustomer::class, 'business_id');
+    }
+
+    public function business_invoices()
+    {
+        return $this->hasMany(BusinessInvoice::class, 'business_id');
+    }
+
     public function isActive()
     {
         return $this->status === 'active';

@@ -72,13 +72,13 @@
                 <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
                     <p class="text-sm text-gray-600 dark:text-gray-400">Total Customers</p>
                     <p class="text-2xl font-semibold text-gray-800 dark:text-gray-200">
-                        {{ $business->customers()->count() }}
+                        {{ $business->business_customers()->count() }}
                     </p>
                 </div>
                 <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
                     <p class="text-sm text-gray-600 dark:text-gray-400">Total Invoices</p>
                     <p class="text-2xl font-semibold text-gray-800 dark:text-gray-200">
-                        {{ $business->invoices()->count() }}
+                        {{ $business->business_invoices()->count() }}
                     </p>
                 </div>
             </div>
@@ -87,28 +87,101 @@
 </div>
 
 <!-- Edit Modal -->
-<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden">
-    <div class="flex items-center justify-center min-h-screen px-4">
-        <div class="bg-white rounded-lg shadow-xl dark:bg-gray-800 w-full max-w-2xl">
+<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[60]">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl dark:bg-gray-800 w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div class="p-6">
                 <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">
                     Edit Business Details
                 </h3>
-                <form id="editForm" class="space-y-4">
-                    <div>
-                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Business Name</label>
-                        <input type="text" name="business_name" value="{{ $business->business_name }}"
-                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Business Email</label>
-                        <input type="email" name="business_email" value="{{ $business->business_email }}"
-                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
-                    </div>
-                    <!-- Add other fields similar to above -->
-                </form>
+                <div class="overflow-y-auto max-h-[calc(90vh-12rem)] pr-2">
+                    <form id="editForm" class="space-y-4">
+                        <!-- Basic Information -->
+                        <div>
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Business Name</label>
+                            <input type="text" name="business_name" value="{{ $business->business_name }}"
+                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Business Email</label>
+                            <input type="email" name="business_email" value="{{ $business->business_email }}"
+                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Phone Number</label>
+                            <input type="text" name="phone_number" value="{{ $business->phone_number }}"
+                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                        </div>
+                        
+                        <!-- Registration Details -->
+                        <div>
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Registration Number</label>
+                            <input type="text" name="registration_number" value="{{ $business->registration_number }}"
+                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Tax Number</label>
+                            <input type="text" name="tax_number" value="{{ $business->tax_number }}"
+                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Website</label>
+                            <input type="url" name="website" value="{{ $business->website }}"
+                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                        </div>
+                        
+                        <!-- Business Type -->
+                        <div>
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Business Type</label>
+                            <p class="text-gray-800 dark:text-gray-200">{{ $business->business_type }}</p>
+                        </div>
+                        
+                        <!-- Address Information -->
+                        <div>
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Address</label>
+                            <textarea name="address" rows="2"
+                                      class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">{{ $business->address }}</textarea>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">City</label>
+                                <input type="text" name="city" value="{{ $business->city }}"
+                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">State</label>
+                                <select name="state" 
+                                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                                    @foreach([
+                                        'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 
+                                        'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 
+                                        'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 
+                                        'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 
+                                        'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'
+                                    ] as $state)
+                                        <option value="{{ $state }}" {{ $business->state === $state ? 'selected' : '' }}>
+                                            {{ $state }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Country</label>
+                                <p class="text-gray-800 dark:text-gray-200">Nigeria</p>
+                                <input type="hidden" name="country" value="Nigeria">
+                            </div>
+                        </div>
+                        
+                        <!-- Description -->
+                        <div>
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Description</label>
+                            <textarea name="description" rows="3"
+                                      class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">{{ $business->description }}</textarea>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 rounded-b-lg flex justify-end gap-4">
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 rounded-b-lg flex justify-end gap-4 mt-auto">
                 <button onclick="closeEditModal()" 
                         class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-700">
                     Cancel
@@ -126,6 +199,17 @@
 
 @push('scripts')
 <script>
+function showNotification(title, message, type = 'success') {
+    const event = new CustomEvent('notify', {
+        detail: {
+            title: title,
+            message: message,
+            type: type
+        }
+    });
+    window.dispatchEvent(event);
+}
+
 function openEditModal() {
     document.getElementById('editModal').classList.remove('hidden');
 }
@@ -137,7 +221,7 @@ function closeEditModal() {
 async function submitEdit() {
     try {
         const form = document.getElementById('editForm');
-        const response = await fetch('{{ route("admin.businesses.update", $business) }}', {
+        const response = await fetch('{{ route("admin.businesses.update", ["business" => $business]) }}', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -162,7 +246,7 @@ async function submitEdit() {
 
 async function toggleStatus() {
     try {
-        const response = await fetch('{{ route("admin.businesses.toggle-status", $business) }}', {
+        const response = await fetch('{{ route("admin.businesses.toggle-status", ["business" => $business]) }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

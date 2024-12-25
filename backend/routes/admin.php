@@ -35,6 +35,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
                 'index' => 'businesses.index',
                 'show' => 'businesses.show',
                 'update' => 'businesses.update',
+            ])->parameters([
+                'business-profiles' => 'business'
             ]);
             Route::post('business-profiles/{business}/toggle-status', [BusinessController::class, 'toggleStatus'])
                 ->name('businesses.toggle-status');

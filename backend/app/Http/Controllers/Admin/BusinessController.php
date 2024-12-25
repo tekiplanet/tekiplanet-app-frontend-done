@@ -45,10 +45,10 @@ class BusinessController extends Controller
             'website' => 'nullable|url',
             'description' => 'nullable|string',
             'city' => 'required|string',
-            'state' => 'required|string',
-            'country' => 'required|string',
-            'business_type' => 'required|string',
+            'state' => 'required|string|in:Abia,Adamawa,Akwa Ibom,Anambra,Bauchi,Bayelsa,Benue,Borno,Cross River,Delta,Ebonyi,Edo,Ekiti,Enugu,FCT,Gombe,Imo,Jigawa,Kaduna,Kano,Katsina,Kebbi,Kogi,Kwara,Lagos,Nasarawa,Niger,Ogun,Ondo,Osun,Oyo,Plateau,Rivers,Sokoto,Taraba,Yobe,Zamfara',
         ]);
+
+        $validated['country'] = 'Nigeria';
 
         $business->update($validated);
 
