@@ -11,6 +11,8 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\EnrollmentUpdated;
 use App\Services\NotificationService;
+use App\Jobs\SendEnrollmentNotification;
+use App\Jobs\SendEnrollmentEmail;
 
 class CourseController extends Controller
 {
@@ -256,7 +258,7 @@ class CourseController extends Controller
                     $formattedOldValue = $request->action === 'progress' ? $oldValue . '%' : $oldValue;
                     $formattedNewValue = $request->action === 'progress' ? $request->value . '%' : $request->value;
 
-                    // Prepare notification data with different messages based on action
+                    // Prepare notification data
                     $notificationData = [
                         'type' => 'enrollment_update',
                         'title' => match($request->action) {
@@ -283,26 +285,52 @@ class CourseController extends Controller
                         ]
                     ];
 
-                    app(NotificationService::class)->send($notificationData, $enrollment->user);
+                    \Log::info('Attempting to dispatch jobs', [
+                        'user_id' => $enrollment->user->id,
+                        'email' => $enrollment->user->email,
+                        'action' => $request->action
+                    ]);
 
-                    // Send email with appropriate context
-                    Mail::to($enrollment->user)->queue(new EnrollmentUpdated(
+                    // Check if jobs table exists
+                    if (!\Schema::hasTable('jobs')) {
+                        \Log::error('Jobs table does not exist!');
+                        throw new \Exception('Jobs table not found');
+                    }
+
+                    // Dispatch notification job
+                    $notificationJob = new SendEnrollmentNotification($notificationData, $enrollment->user);
+                    dispatch($notificationJob);
+
+                    // Dispatch email job
+                    $emailJob = new SendEnrollmentEmail(
                         $enrollment,
                         $course,
                         $request->action,
                         $formattedOldValue,
                         $formattedNewValue
-                    ));
+                    );
+                    dispatch($emailJob);
+
+                    \Log::info('Jobs dispatched successfully');
+
                 } catch (\Exception $e) {
-                    \Log::error('Failed to send notification/email: ' . $e->getMessage());
+                    \Log::error('Failed to queue jobs', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
                     continue;
                 }
             }
 
+            // Check jobs count
+            $jobsCount = \DB::table('jobs')->count();
+            \Log::info('Current jobs in queue', ['count' => $jobsCount]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Enrollments updated successfully',
-                'count' => $enrollments->count()
+                'count' => $enrollments->count(),
+                'jobs_queued' => $jobsCount
             ]);
 
         } catch (\Exception $e) {

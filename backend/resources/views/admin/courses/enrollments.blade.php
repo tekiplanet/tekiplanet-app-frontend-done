@@ -84,11 +84,11 @@
                         <!-- Status Update -->
                         <div class="relative w-full sm:w-auto">
                             <button onclick="toggleDropdown('statusDropdown')"
-                                    class="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                                    class="w-full sm:w-auto px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
                                 Status
                             </button>
                             <div id="statusDropdown" 
-                                 class="hidden absolute right-0 md:right-auto left-0 md:left-auto mt-2 w-64 md:w-40 bg-white rounded-lg shadow-lg z-10">
+                                 class="hidden absolute left-0 sm:right-0 sm:left-auto mt-2 w-full sm:w-48 bg-white rounded-lg shadow-lg z-10">
                                 <div class="py-1">
                                     <button onclick="updateBulkEnrollments('status', 'active')"
                                             class="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
@@ -113,11 +113,11 @@
                         <!-- Payment Status Update -->
                         <div class="relative w-full sm:w-auto">
                             <button onclick="toggleDropdown('paymentStatusDropdown')"
-                                    class="px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700">
+                                    class="w-full sm:w-auto px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700">
                                 Payment
                             </button>
                             <div id="paymentStatusDropdown" 
-                                 class="hidden absolute right-0 md:right-auto left-0 md:left-auto mt-2 w-64 md:w-40 bg-white rounded-lg shadow-lg z-10">
+                                 class="hidden absolute left-0 sm:right-0 sm:left-auto mt-2 w-full sm:w-48 bg-white rounded-lg shadow-lg z-10">
                                 <div class="py-1">
                                     <button onclick="updateBulkEnrollments('payment_status', 'fully_paid')"
                                             class="block w-full px-4 py-2 text-sm text-left hover:bg-gray-100">
@@ -138,11 +138,11 @@
                         <!-- Progress Update -->
                         <div class="relative w-full sm:w-auto">
                             <button onclick="toggleDropdown('progressDropdown')"
-                                    class="px-3 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700">
+                                    class="w-full sm:w-auto px-3 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700">
                                 Progress
                             </button>
                             <div id="progressDropdown" 
-                                 class="hidden absolute right-0 md:right-auto left-0 md:left-auto mt-2 w-64 md:w-40 bg-white rounded-lg shadow-lg z-10">
+                                 class="hidden absolute left-0 sm:right-0 sm:left-auto mt-2 w-full sm:w-48 bg-white rounded-lg shadow-lg z-10">
                                 <div class="p-3">
                                     <input type="number" 
                                            min="0" 
