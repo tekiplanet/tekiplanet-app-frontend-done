@@ -108,6 +108,73 @@ class CourseController extends Controller
     public function show(Course $course)
     {
         $course->load(['instructor', 'category', 'modules.lessons', 'reviews']);
-        return view('admin.courses.show', compact('course'));
+        $categories = CourseCategory::orderBy('name')->get();
+        $instructors = Instructor::orderBy('first_name')->get();
+        return view('admin.courses.show', compact('course', 'categories', 'instructors'));
+    }
+
+    public function edit(Course $course)
+    {
+        return response()->json([
+            'success' => true,
+            'course' => $course,
+            'categories' => CourseCategory::orderBy('name')->get(),
+            'instructors' => Instructor::orderBy('first_name')->get()
+        ]);
+    }
+
+    /**
+     * Update the specified course.
+     */
+    public function update(Request $request, Course $course)
+    {
+        try {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'category_id' => 'required|uuid|exists:course_categories,id',
+                'instructor_id' => 'required|uuid|exists:instructors,id',
+                'level' => 'required|in:beginner,intermediate,advanced',
+                'price' => 'required|numeric|min:0',
+                'duration_hours' => 'required|numeric|min:1|max:24',
+                'image_url' => 'nullable|url',
+                'prerequisites' => 'nullable|array',
+                'learning_outcomes' => 'nullable|array',
+                'status' => 'required|in:draft,active,archived',
+            ]);
+
+            // Convert arrays to JSON strings before saving
+            if (isset($validated['prerequisites'])) {
+                $validated['prerequisites'] = json_encode($validated['prerequisites']);
+            }
+            if (isset($validated['learning_outcomes'])) {
+                $validated['learning_outcomes'] = json_encode($validated['learning_outcomes']);
+            }
+
+            // Get category name
+            $category = CourseCategory::find($validated['category_id']);
+            $validated['category'] = $category->name;
+
+            $course->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Course updated successfully',
+                'course' => $course->fresh()
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update course',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 } 
