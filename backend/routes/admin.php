@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
@@ -20,7 +21,11 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
 
         // User management routes - accessible by super admin and admin
         Route::middleware('admin.roles:super_admin,admin')->group(function () {
-            // Add user management routes here
+            Route::get('users', [UserController::class, 'index'])->name('users.index');
+            Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
+            Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+            Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
+            Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
         });
 
         // Course management routes - accessible by super admin, admin, and tutor

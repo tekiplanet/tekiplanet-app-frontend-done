@@ -31,6 +31,7 @@ class User extends Authenticatable
         'password',
         'username',
         'avatar',
+        'status',
         'dark_mode',
         'email_notifications',
         'push_notifications',
@@ -82,6 +83,7 @@ class User extends Authenticatable
         'push_notifications' => true,
         'marketing_notifications' => true,
         'profile_visibility' => 'public',
+        'status' => 'active',
     ];
 
     /**
@@ -178,5 +180,28 @@ class User extends Authenticatable
     {
         return $this->notifications()
             ->wherePivot('read', false);
+    }
+
+    // Add status constants
+    const STATUS_ACTIVE = 'active';
+    const STATUS_INACTIVE = 'inactive';
+
+    /**
+     * Get the valid status options
+     */
+    public static function getStatusOptions(): array
+    {
+        return [
+            self::STATUS_ACTIVE => 'Active',
+            self::STATUS_INACTIVE => 'Inactive',
+        ];
+    }
+
+    /**
+     * Check if user is active
+     */
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
     }
 }

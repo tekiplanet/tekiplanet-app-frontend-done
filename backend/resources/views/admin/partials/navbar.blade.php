@@ -3,7 +3,7 @@
     <button 
         type="button" 
         class="-m-2.5 p-2.5 text-gray-700 dark:text-gray-300 lg:hidden" 
-        @click="$root.querySelector('[x-data]').__x.$data.open = true"
+        @click="mobileMenuOpen = true"
     >
         <span class="sr-only">Open sidebar</span>
         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
