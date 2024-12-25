@@ -22,6 +22,10 @@
                 }}">
                     {{ ucfirst($course->status) }}
                 </span>
+                <a href="{{ route('admin.courses.enrollments', $course->id) }}"
+                   class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    View Enrollments
+                </a>
                 <button @click="open = true; courseId = '{{ $course->id }}'"
                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                     Edit Course
@@ -144,11 +148,6 @@
                             :class="{ 'border-blue-500 text-blue-600': activeTab === 'modules' }"
                             class="px-3 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300">
                         Modules & Lessons
-                    </button>
-                    <button @click="activeTab = 'students'"
-                            :class="{ 'border-blue-500 text-blue-600': activeTab === 'students' }"
-                            class="px-3 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300">
-                        Enrolled Students
                     </button>
                     <button @click="activeTab = 'reviews'"
                             :class="{ 'border-blue-500 text-blue-600': activeTab === 'reviews' }"
@@ -284,17 +283,6 @@
                                     </div>
                                 </div>
                             @endforeach
-                        </div>
-                    @endif
-                </div>
-
-                <!-- Students Tab -->
-                <div x-show="activeTab === 'students'">
-                    @if($course->enrollments->isEmpty())
-                        <p class="text-gray-500 text-center py-4">No students enrolled yet.</p>
-                    @else
-                        <div class="space-y-4">
-                            <!-- Student list will go here -->
                         </div>
                     @endif
                 </div>

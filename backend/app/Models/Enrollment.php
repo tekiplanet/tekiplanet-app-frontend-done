@@ -27,7 +27,9 @@ class Enrollment extends Model
 
     protected $casts = [
         'progress' => 'float',
-        'payment_status' => 'string'
+        'payment_status' => 'string',
+        'enrolled_at' => 'datetime',
+        'completed_at' => 'datetime'
     ];
 
     protected static function boot()

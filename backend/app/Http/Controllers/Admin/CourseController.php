@@ -8,6 +8,9 @@ use App\Models\CourseCategory;
 use App\Models\Instructor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\EnrollmentUpdated;
+use App\Services\NotificationService;
 
 class CourseController extends Controller
 {
@@ -105,12 +108,23 @@ class CourseController extends Controller
     /**
      * Display the specified course.
      */
-    public function show(Course $course)
+    public function show(Course $course, Request $request)
     {
-        $course->load(['instructor', 'category', 'modules.lessons', 'reviews']);
+        $course->load([
+            'instructor', 
+            'category', 
+            'modules.lessons', 
+            'reviews'
+        ]);
+
         $categories = CourseCategory::orderBy('name')->get();
         $instructors = Instructor::orderBy('first_name')->get();
-        return view('admin.courses.show', compact('course', 'categories', 'instructors'));
+        
+        return view('admin.courses.show', compact(
+            'course', 
+            'categories', 
+            'instructors'
+        ));
     }
 
     public function edit(Course $course)
@@ -176,5 +190,97 @@ class CourseController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Display course enrollments.
+     */
+    public function enrollments(Course $course, Request $request)
+    {
+        $enrollments = $course->enrollments()
+            ->with('user')
+            ->when($request->search, function($query, $search) {
+                $query->whereHas('user', function($q) use ($search) {
+                    $q->where(function($subQuery) use ($search) {
+                        $subQuery->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+                });
+            })
+            ->when($request->status, function($query, $status) {
+                if ($status === 'completed') {
+                    $query->where('status', 'completed');
+                } else if ($status === 'active') {
+                    $query->where('status', 'active');
+                } else if ($status === 'pending') {
+                    $query->where('status', 'pending');
+                } else if ($status === 'dropped') {
+                    $query->where('status', 'dropped');
+                }
+            })
+            ->when($request->payment_status, function($query, $paymentStatus) {
+                $query->where('payment_status', $paymentStatus);
+            })
+            ->orderBy($request->sort_by ?? 'enrolled_at', $request->sort_order ?? 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin.courses.enrollments', compact('course', 'enrollments'));
+    }
+
+    /**
+     * Update bulk enrollments.
+     */
+    public function bulkUpdateEnrollments(Course $course, Request $request)
+    {
+        $request->validate([
+            'enrollment_ids' => 'required|array',
+            'enrollment_ids.*' => 'required|uuid|exists:enrollments,id',
+            'action' => 'required|in:status,payment_status,progress',
+            'value' => 'required|string'
+        ]);
+
+        $enrollments = $course->enrollments()
+            ->whereIn('id', $request->enrollment_ids)
+            ->with('user')
+            ->get();
+
+        foreach ($enrollments as $enrollment) {
+            $oldValue = $enrollment->{$request->action};
+            $enrollment->{$request->action} = $request->value;
+            $enrollment->save();
+
+            // Prepare notification data
+            $notificationData = [
+                'type' => 'enrollment_update',
+                'title' => 'Course Enrollment Update',
+                'message' => "Your enrollment status for {$course->title} has been updated.",
+                'icon' => 'bell',
+                'action_url' => route('student.courses.show', $course->id),
+                'extra_data' => [
+                    'course_id' => $course->id,
+                    'field_updated' => $request->action,
+                    'old_value' => $oldValue,
+                    'new_value' => $request->value
+                ]
+            ];
+
+            // Send notification
+            app(NotificationService::class)->send($notificationData, $enrollment->user);
+
+            // Send email
+            Mail::to($enrollment->user)->send(new EnrollmentUpdated(
+                $enrollment,
+                $course,
+                $request->action,
+                $oldValue,
+                $request->value
+            ));
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Enrollments updated successfully'
+        ]);
     }
 } 

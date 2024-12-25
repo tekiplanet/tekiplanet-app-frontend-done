@@ -112,3 +112,9 @@ Route::get('/test-lesson-route/{course}/{module}', function ($course, $module) {
         'module' => $module
     ]);
 })->where(['course' => '[0-9a-f-]+', 'module' => '[0-9a-f-]+']);
+
+Route::get('/admin/courses/{course}/enrollments', [CourseController::class, 'enrollments'])
+    ->name('admin.courses.enrollments');
+
+Route::post('/admin/courses/{course}/enrollments/bulk-update', [CourseController::class, 'bulkUpdateEnrollments'])
+    ->name('admin.courses.enrollments.bulk-update');
