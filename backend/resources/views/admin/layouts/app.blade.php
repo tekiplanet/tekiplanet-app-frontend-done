@@ -97,6 +97,6 @@
     @endauth
 
     @stack('scripts')
-    <x-toast />
+    @include('components.notification')
 </body>
 </html> 

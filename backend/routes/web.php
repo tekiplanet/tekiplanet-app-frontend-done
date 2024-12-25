@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\BusinessController;
+use App\Http\Controllers\Admin\ProfessionalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,4 +35,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth:admin']], function () 
     Route::resource('businesses', BusinessController::class)->except(['create', 'store', 'destroy']);
     Route::post('businesses/{business}/toggle-status', [BusinessController::class, 'toggleStatus'])
         ->name('businesses.toggle-status');
+    Route::resource('professionals', ProfessionalController::class)->except(['create', 'store', 'destroy']);
+    Route::post('professionals/{professional}/toggle-status', [ProfessionalController::class, 'toggleStatus'])
+        ->name('professionals.toggle-status');
 });

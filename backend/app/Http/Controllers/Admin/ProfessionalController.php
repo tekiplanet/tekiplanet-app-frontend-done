@@ -46,23 +46,36 @@ class ProfessionalController extends Controller
     public function show(Professional $professional)
     {
         $professional->load(['user', 'category']);
-        return view('admin.professionals.show', compact('professional'));
+        $categories = ProfessionalCategory::orderBy('name')->get();
+        return view('admin.professionals.show', compact('professional', 'categories'));
     }
 
     public function update(Request $request, Professional $professional)
     {
         $validated = $request->validate([
-            'professional_category_id' => 'required|exists:professional_categories,id',
-            'phone_number' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'city' => 'required|string',
-            'state' => 'required|string|in:Abia,Adamawa,Akwa Ibom,Anambra,Bauchi,Bayelsa,Benue,Borno,Cross River,Delta,Ebonyi,Edo,Ekiti,Enugu,FCT,Gombe,Imo,Jigawa,Kaduna,Kano,Katsina,Kebbi,Kogi,Kwara,Lagos,Nasarawa,Niger,Ogun,Ondo,Osun,Oyo,Plateau,Rivers,Sokoto,Taraba,Yobe,Zamfara',
-            'bio' => 'nullable|string',
+            'category_id' => 'required|exists:professional_categories,id',
+            'title' => 'required|string|max:255',
+            'specialization' => 'required|string|max:255',
+            'expertise_areas' => 'nullable|string',
             'years_of_experience' => 'required|integer|min:0',
             'hourly_rate' => 'required|numeric|min:0',
+            'availability_status' => 'required|string|in:available,unavailable',
+            'bio' => 'nullable|string',
+            'certifications' => 'nullable|string',
+            'linkedin_url' => 'nullable|url',
+            'github_url' => 'nullable|url',
+            'portfolio_url' => 'nullable|url',
+            'preferred_contact_method' => 'required|string|in:email,phone',
+            'timezone' => 'nullable|string',
+            'languages' => 'nullable|string',
         ]);
 
-        $validated['country'] = 'Nigeria';
+        // Convert comma-separated strings to arrays
+        foreach(['expertise_areas', 'certifications', 'languages'] as $field) {
+            if (isset($validated[$field])) {
+                $validated[$field] = array_map('trim', explode(',', $validated[$field]));
+            }
+        }
 
         $professional->update($validated);
 
