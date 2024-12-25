@@ -33,6 +33,17 @@
                 Business Information
             </h3>
             <div class="space-y-4">
+                <!-- Basic Information -->
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-400">Business Type</label>
+                    <p class="text-gray-800 dark:text-gray-200">{{ $business->business_type }}</p>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-400">Phone Number</label>
+                    <p class="text-gray-800 dark:text-gray-200">{{ $business->phone_number ?? 'N/A' }}</p>
+                </div>
+                
+                <!-- Registration Details -->
                 <div>
                     <label class="text-sm text-gray-600 dark:text-gray-400">Registration Number</label>
                     <p class="text-gray-800 dark:text-gray-200">{{ $business->registration_number ?? 'N/A' }}</p>
@@ -40,10 +51,6 @@
                 <div>
                     <label class="text-sm text-gray-600 dark:text-gray-400">Tax Number</label>
                     <p class="text-gray-800 dark:text-gray-200">{{ $business->tax_number ?? 'N/A' }}</p>
-                </div>
-                <div>
-                    <label class="text-sm text-gray-600 dark:text-gray-400">Phone</label>
-                    <p class="text-gray-800 dark:text-gray-200">{{ $business->phone ?? 'N/A' }}</p>
                 </div>
                 <div>
                     <label class="text-sm text-gray-600 dark:text-gray-400">Website</label>
@@ -57,9 +64,33 @@
                         @endif
                     </p>
                 </div>
+                
+                <!-- Location Information -->
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-400">Location</label>
+                    <p class="text-gray-800 dark:text-gray-200">
+                        {{ $business->city }}, {{ $business->state }}, {{ $business->country }}
+                    </p>
+                </div>
                 <div>
                     <label class="text-sm text-gray-600 dark:text-gray-400">Address</label>
                     <p class="text-gray-800 dark:text-gray-200">{{ $business->address ?? 'N/A' }}</p>
+                </div>
+                
+                <!-- Additional Information -->
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-400">Description</label>
+                    <p class="text-gray-800 dark:text-gray-200 whitespace-pre-line">{{ $business->description ?? 'N/A' }}</p>
+                </div>
+                
+                <!-- Status Information -->
+                <div>
+                    <label class="text-sm text-gray-600 dark:text-gray-400">Status</label>
+                    <p class="mt-1">
+                        <span class="px-2 py-1 text-sm rounded-full {{ $business->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                            {{ ucfirst($business->status) }}
+                        </span>
+                    </p>
                 </div>
             </div>
         </div>
@@ -80,6 +111,70 @@
                     <p class="text-2xl font-semibold text-gray-800 dark:text-gray-200">
                         {{ $business->business_invoices()->count() }}
                     </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Owner Information Card -->
+        <div class="bg-white rounded-lg shadow-md dark:bg-gray-800 p-6">
+            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">
+                Business Owner
+            </h3>
+            <div class="space-y-4">
+                <div class="flex items-center gap-4">
+                    @if($business->user->avatar)
+                        <img src="{{ Storage::url($business->user->avatar) }}" 
+                             alt="Owner Avatar" 
+                             class="h-12 w-12 rounded-full object-cover">
+                    @else
+                        <div class="h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                            <span class="text-lg font-semibold text-gray-600 dark:text-gray-300">
+                                {{ strtoupper(substr($business->user->name, 0, 1)) }}
+                            </span>
+                        </div>
+                    @endif
+                    <div>
+                        <h4 class="text-base font-medium text-gray-900 dark:text-gray-100">
+                            {{ $business->user->name }}
+                        </h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            {{ $business->user->email }}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-sm text-gray-600 dark:text-gray-400">Phone</label>
+                            <p class="text-gray-800 dark:text-gray-200">{{ $business->user->phone ?? 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-600 dark:text-gray-400">Account Status</label>
+                            <p class="mt-1">
+                                <span class="px-2 py-1 text-sm rounded-full {{ $business->user->status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    {{ $business->user->status ? 'Active' : 'Inactive' }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label class="text-sm text-gray-600 dark:text-gray-400">Member Since</label>
+                        <p class="text-gray-800 dark:text-gray-200">
+                            {{ $business->user->created_at->format('M d, Y') }}
+                        </p>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{{ route('admin.users.show', $business->user) }}" 
+                           class="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                            <span>View Full Profile</span>
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
