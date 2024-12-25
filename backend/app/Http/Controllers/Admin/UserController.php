@@ -8,9 +8,18 @@ use App\Models\Transaction;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use App\Notifications\TransactionNotification;
+use App\Services\NotificationService;
+use App\Models\Notification;
 
 class UserController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     public function index(Request $request)
     {
         $query = User::query()
@@ -107,6 +116,12 @@ class UserController extends Controller
                 'notes' => 'nullable|string|max:1000',
             ]);
 
+            // Get currency settings
+            $currency = [
+                'code' => Setting::getSetting('default_currency', 'USD'),
+                'symbol' => Setting::getSetting('currency_symbol', '$')
+            ];
+
             // Check balance for debit transactions
             if ($validated['type'] === 'debit' && $user->wallet_balance < $validated['amount']) {
                 throw new \Exception('Insufficient balance for debit transaction.');
@@ -127,7 +142,22 @@ class UserController extends Controller
                 $user->decrement('wallet_balance', $validated['amount']);
             }
 
-            // Send notification to user
+            // Create transaction notification
+            $this->notificationService->send([
+                'type' => Notification::TYPE_PAYMENT,
+                'title' => ucfirst($transaction->type) . ' Transaction',
+                'message' => "A {$transaction->type} transaction of {$currency['symbol']}{$transaction->amount} has been processed on your account.",
+                'icon' => $transaction->type === 'credit' ? 'arrow-up' : 'arrow-down',
+                'action_url' => '/dashboard/wallet',
+                'extra_data' => [
+                    'transaction_id' => $transaction->id,
+                    'amount' => $transaction->amount,
+                    'type' => $transaction->type,
+                    'reference' => $transaction->reference_number
+                ]
+            ], $user);
+
+            // Send email notification
             $user->notify(new TransactionNotification($transaction));
 
             return response()->json([
