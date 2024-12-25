@@ -26,10 +26,13 @@ class AccountStatusNotification extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('Account Status Update')
+            ->subject('Account Status Updated')
+            ->greeting('Hello ' . $notifiable->first_name . '!')
             ->view('emails.account-status', [
                 'user' => $notifiable,
-                'status' => $this->status
+                'status' => $this->status,
+                'actionText' => 'View Dashboard',
+                'actionUrl' => url('/dashboard')
             ]);
     }
 } 

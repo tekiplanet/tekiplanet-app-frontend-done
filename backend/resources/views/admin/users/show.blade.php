@@ -57,7 +57,7 @@
             <!-- Status Toggle Button -->
             <button 
                 type="button" 
-                @click="$dispatch('open-modal', 'update-status')"
+                onclick="openStatusModal()"
                 class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             >
                 <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -603,104 +603,53 @@
     </div>
 </div>
 
-<!-- Update Status Modal -->
-<div x-data="{ 
-    show: false,
-    isSubmitting: false,
-    formData: {
-        status: '{{ $user->status === 'active' ? 'inactive' : 'active' }}'
-    },
-    async submitForm() {
-        if (this.isSubmitting) return;
-        this.isSubmitting = true;
-        
-        try {
-            const response = await fetch('{{ route('admin.users.status', $user) }}', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify(this.formData)
-            });
-
-            const result = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(result.message || 'Failed to update status');
-            }
-
-            window.dispatchEvent(new CustomEvent('notify', {
-                detail: { type: 'success', message: 'User status updated successfully' }
-            }));
-
-            this.show = false;
-            window.location.reload();
-
-        } catch (error) {
-            window.dispatchEvent(new CustomEvent('notify', {
-                detail: { type: 'error', message: error.message }
-            }));
-        } finally {
-            this.isSubmitting = false;
-        }
-    }
-}"
-x-show="show"
-x-on:open-modal.window="if ($event.detail === 'update-status') show = true"
-class="relative z-50"
->
+<!-- Status Update Modal -->
+<div id="updateStatusModal" class="fixed inset-0 z-50 hidden">
     <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
     <div class="fixed inset-0 z-10 overflow-y-auto">
-        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
-                <form @submit.prevent="submitForm">
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 px-6 py-5 text-left shadow-xl transition-all w-full max-w-lg">
+                <form id="statusForm" onsubmit="submitStatusForm(event)">
                     <div>
-                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full" :class="formData.status === 'active' ? 'bg-red-100' : 'bg-green-100'">
-                            <svg class="h-6 w-6" :class="formData.status === 'active' ? 'text-red-600' : 'text-green-600'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full" id="statusIcon">
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <div class="mt-3 text-center sm:mt-5">
+                        <div class="mt-3 text-center">
                             <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">
                                 Confirm Status Change
                             </h3>
                             <div class="mt-2">
                                 <p class="text-sm text-gray-500 dark:text-gray-400">
-                                    Are you sure you want to 
-                                    <span class="font-semibold" x-text="formData.status === 'active' ? 'deactivate' : 'activate'"></span> 
-                                    this user's account? This will 
-                                    <span x-text="formData.status === 'active' ? 'prevent' : 'allow'"></span>
-                                    them from accessing the platform.
+                                    Are you sure you want to <span id="actionText"></span> this user's account? 
+                                    This will <span id="consequenceText"></span> them from accessing the platform.
                                 </p>
                             </div>
                         </div>
                     </div>
-                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3">
-                        <button 
-                            type="submit"
-                            class="inline-flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 sm:col-start-2 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                            :class="formData.status === 'active' ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500' : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'"
-                            :disabled="isSubmitting"
-                        >
-                            <span class="flex items-center">
-                                <template x-if="isSubmitting">
-                                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                </template>
-                                <span x-text="isSubmitting ? 'Processing...' : (formData.status === 'active' ? 'Deactivate Account' : 'Activate Account')"></span>
-                            </span>
-                        </button>
+                    <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                         <button 
                             type="button"
-                            class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 sm:col-start-1 sm:mt-0 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                            @click="show = false"
-                            :disabled="isSubmitting"
+                            onclick="closeStatusModal()"
+                            class="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 sm:text-sm"
+                            id="statusCancelButton"
                         >
                             Cancel
+                        </button>
+                        <button 
+                            type="submit"
+                            id="statusSubmitButton"
+                            class="inline-flex justify-center items-center rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <span id="statusSpinner" class="hidden">
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                            <span id="statusButtonText"></span>
                         </button>
                     </div>
                 </form>
@@ -1085,6 +1034,108 @@ class="relative z-50"
     document.getElementById('createTransactionModal').addEventListener('click', function(event) {
         if (event.target === this) {
             closeTransactionModal();
+        }
+    });
+
+    const currentStatus = '{{ $user->status }}';
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+
+    function updateStatusUI() {
+        const isDeactivating = currentStatus === 'active';
+        const submitButton = document.getElementById('statusSubmitButton');
+        const statusIcon = document.getElementById('statusIcon');
+        const actionText = document.getElementById('actionText');
+        const consequenceText = document.getElementById('consequenceText');
+        const buttonText = document.getElementById('statusButtonText');
+
+        // Update colors and text
+        if (isDeactivating) {
+            submitButton.classList.add('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
+            submitButton.classList.remove('bg-green-600', 'hover:bg-green-700', 'focus:ring-green-500');
+            statusIcon.classList.add('bg-red-100', 'text-red-600');
+            statusIcon.classList.remove('bg-green-100', 'text-green-600');
+        } else {
+            submitButton.classList.add('bg-green-600', 'hover:bg-green-700', 'focus:ring-green-500');
+            submitButton.classList.remove('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
+            statusIcon.classList.add('bg-green-100', 'text-green-600');
+            statusIcon.classList.remove('bg-red-100', 'text-red-600');
+        }
+
+        actionText.textContent = isDeactivating ? 'deactivate' : 'activate';
+        consequenceText.textContent = isDeactivating ? 'prevent' : 'allow';
+        buttonText.textContent = isDeactivating ? 'Deactivate Account' : 'Activate Account';
+    }
+
+    function openStatusModal() {
+        document.getElementById('updateStatusModal').classList.remove('hidden');
+        updateStatusUI();
+    }
+
+    function closeStatusModal() {
+        document.getElementById('updateStatusModal').classList.add('hidden');
+    }
+
+    function submitStatusForm(event) {
+        event.preventDefault();
+        const submitButton = document.getElementById('statusSubmitButton');
+        const cancelButton = document.getElementById('statusCancelButton');
+        const spinner = document.getElementById('statusSpinner');
+        const buttonText = document.getElementById('statusButtonText');
+
+        // Disable buttons and show loading state
+        submitButton.disabled = true;
+        cancelButton.disabled = true;
+        spinner.classList.remove('hidden');
+        buttonText.textContent = 'Processing...';
+
+        fetch('{{ route('admin.users.status', $user) }}', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
+        })
+        .then(async response => {
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.message || 'Failed to update status');
+            }
+            return result;
+        })
+        .then(result => {
+            window.dispatchEvent(new CustomEvent('notify', {
+                detail: { 
+                    type: 'success', 
+                    message: result.message 
+                }
+            }));
+            
+            closeStatusModal();
+            window.location.reload();
+        })
+        .catch(error => {
+            window.dispatchEvent(new CustomEvent('notify', {
+                detail: { 
+                    type: 'error', 
+                    message: error.message || 'Failed to update status' 
+                }
+            }));
+        })
+        .finally(() => {
+            // Reset button state
+            submitButton.disabled = false;
+            cancelButton.disabled = false;
+            spinner.classList.add('hidden');
+            updateStatusUI();
+        });
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('updateStatusModal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeStatusModal();
         }
     });
 </script>

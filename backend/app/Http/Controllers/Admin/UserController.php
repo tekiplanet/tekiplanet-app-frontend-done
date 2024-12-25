@@ -11,6 +11,7 @@ use App\Notifications\TransactionNotification;
 use App\Services\NotificationService;
 use App\Models\Notification;
 use App\Notifications\CustomNotification;
+use App\Notifications\AccountStatusNotification;
 
 class UserController extends Controller
 {
