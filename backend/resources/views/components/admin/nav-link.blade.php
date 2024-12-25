@@ -9,10 +9,7 @@ $classes = $active
 <li>
     <a {{ $attributes->merge(['class' => $classes]) }}>
         @if($icon)
-            <x-dynamic-component 
-                :component="'heroicon-o-'.$icon"
-                class="h-6 w-6 shrink-0"
-            />
+            @svg('heroicon-o-'.$icon, 'h-6 w-6 shrink-0')
         @endif
         {{ $slot }}
     </a>
