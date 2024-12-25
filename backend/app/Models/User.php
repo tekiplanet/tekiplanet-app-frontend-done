@@ -12,10 +12,11 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Models\Transaction;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     public $incrementing = false;
     protected $keyType = 'string';
@@ -137,6 +138,17 @@ class User extends Authenticatable
             if (empty($model->{$model->getKeyName()})) {
                 $model->{$model->getKeyName()} = Str::uuid()->toString();
             }
+        });
+
+        static::deleting(function($user) {
+            // Delete related records
+            $user->transactions()->delete();
+            $user->userNotifications()->delete();
+            $user->businessProfile()->delete();
+            $user->professional()->delete();
+            $user->courses()->detach();
+            $user->enrollments()->delete();
+            // Add any other related models that should be deleted
         });
     }
 

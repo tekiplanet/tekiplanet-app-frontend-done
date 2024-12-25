@@ -171,4 +171,108 @@ class UserController extends Controller
             ], 422);
         }
     }
+
+    public function updateStatus(Request $request, User $user)
+    {
+        try {
+            $validated = $request->validate([
+                'status' => 'required|in:active,inactive'
+            ]);
+
+            $user->update($validated);
+
+            // Send notification to user
+            $this->notificationService->send([
+                'type' => Notification::TYPE_PROFILE,
+                'title' => 'Account Status Updated',
+                'message' => "Your account has been marked as {$validated['status']}.",
+                'icon' => 'user-circle',
+                'action_url' => '/dashboard'
+            ], $user);
+
+            // Send email notification
+            $user->notify(new AccountStatusNotification($validated['status']));
+
+            return response()->json([
+                'message' => 'User status updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
+    public function update(Request $request, User $user)
+    {
+        try {
+            $validated = $request->validate([
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email,' . $user->id,
+                'username' => 'required|string|unique:users,username,' . $user->id,
+                'phone' => 'nullable|string|max:20'
+            ]);
+
+            $user->update($validated);
+
+            return response()->json([
+                'message' => 'User updated successfully',
+                'user' => $user->fresh()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
+    public function sendNotification(Request $request, User $user)
+    {
+        try {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'message' => 'required|string',
+                'send_email' => 'boolean'
+            ]);
+
+            // Send in-app notification
+            $this->notificationService->send([
+                'type' => Notification::TYPE_SYSTEM,
+                'title' => $validated['title'],
+                'message' => $validated['message'],
+                'icon' => 'bell',
+                'action_url' => '/dashboard/notifications'
+            ], $user);
+
+            // Send email if requested
+            if ($request->send_email) {
+                $user->notify(new CustomNotification($validated['title'], $validated['message']));
+            }
+
+            return response()->json([
+                'message' => 'Notification sent successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
+    public function destroy(User $user)
+    {
+        try {
+            // This will trigger the deleting event in the User model
+            $user->delete();
+
+            return response()->json([
+                'message' => 'User deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to delete user'
+            ], 422);
+        }
+    }
 } 
