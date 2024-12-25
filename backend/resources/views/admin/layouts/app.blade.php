@@ -97,5 +97,6 @@
     @endauth
 
     @stack('scripts')
+    <x-toast />
 </body>
 </html> 

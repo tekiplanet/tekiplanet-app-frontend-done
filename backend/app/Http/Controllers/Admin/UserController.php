@@ -96,32 +96,48 @@ class UserController extends Controller
     // Add method to handle new transactions
     public function createTransaction(Request $request, User $user)
     {
-        $validated = $request->validate([
-            'amount' => 'required|numeric|min:0',
-            'type' => 'required|in:credit,debit',
-            'description' => 'required|string|max:255',
-            'category' => 'required|string|max:50',
-            'payment_method' => 'required|string|max:50',
-            'notes' => 'nullable|string|max:1000',
-        ]);
+        try {
+            $validated = $request->validate([
+                'amount' => 'required|numeric|min:0',
+                'type' => 'required|in:credit,debit',
+                'description' => 'required|string|max:255',
+                'category' => 'required|string|max:50',
+                'payment_method' => 'required|string|max:50',
+                'notes' => 'nullable|string|max:1000',
+            ]);
 
-        // Generate reference number
-        $validated['reference_number'] = 'TXN-' . strtoupper(uniqid());
-        $validated['status'] = 'completed';
-        $validated['user_id'] = $user->id;
+            // Generate reference number
+            $validated['reference_number'] = 'TXN-' . strtoupper(uniqid());
+            $validated['status'] = 'completed';
+            $validated['user_id'] = $user->id;
 
-        // Create transaction
-        $transaction = Transaction::create($validated);
+            // Create transaction
+            $transaction = Transaction::create($validated);
 
-        // Update user's wallet balance
-        if ($validated['type'] === 'credit') {
-            $user->increment('wallet_balance', $validated['amount']);
-        } else {
-            $user->decrement('wallet_balance', $validated['amount']);
+            // Update user's wallet balance
+            if ($validated['type'] === 'credit') {
+                $user->increment('wallet_balance', $validated['amount']);
+            } else {
+                if ($user->wallet_balance < $validated['amount']) {
+                    throw new \Exception('Insufficient balance for debit transaction.');
+                }
+                $user->decrement('wallet_balance', $validated['amount']);
+            }
+
+            return redirect()
+                ->route('admin.users.show', $user)
+                ->with('notify', [
+                    'type' => 'success',
+                    'message' => 'Transaction created successfully'
+                ]);
+
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('admin.users.show', $user)
+                ->with('notify', [
+                    'type' => 'error',
+                    'message' => $e->getMessage() ?: 'Failed to create transaction'
+                ]);
         }
-
-        return redirect()
-            ->route('admin.users.show', $user)
-            ->with('success', 'Transaction created successfully');
     }
 } 

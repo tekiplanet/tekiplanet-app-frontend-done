@@ -3,6 +3,16 @@
 @section('title', 'User Details')
 
 @section('content')
+@if(session()->has('notify'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            window.dispatchEvent(new CustomEvent('notify', {
+                detail: @json(session('notify'))
+            }));
+        });
+    </script>
+@endif
+
 <div class="space-y-6">
     <!-- Page Header -->
     <div class="sm:flex sm:items-center sm:justify-between">
@@ -386,7 +396,7 @@
             x-transition:leave="ease-in duration-200"
             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6"
+            class="inline-block w-full align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6"
         >
             <form action="{{ route('admin.users.transactions.store', $user) }}" method="POST">
                 @csrf
@@ -527,62 +537,75 @@
                 <div class="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
             </div>
 
-            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
                 <div class="sm:flex sm:items-start">
                     <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
                         <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
                             Transaction Details
                         </h3>
                         <div class="mt-4 space-y-4">
-                            <div>
+                            <!-- Amount -->
+                            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                                 <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Amount</label>
-                                <p class="mt-1 text-sm text-gray-900 dark:text-white" x-text="transaction ? `${transaction.currency_symbol}${transaction.amount}` : ''"></p>
+                                <p class="mt-1 text-xl font-semibold text-gray-900 dark:text-white" x-text="transaction ? `${transaction.currency_symbol}${transaction.amount}` : ''"></p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Type</label>
-                                <p class="mt-1">
-                                    <span 
-                                        x-show="transaction"
-                                        :class="transaction?.type === 'credit' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'"
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                        x-text="transaction?.type.charAt(0).toUpperCase() + transaction?.type.slice(1)"
-                                    ></span>
-                                </p>
+
+                            <!-- Type and Status -->
+                            <div class="flex flex-wrap gap-4">
+                                <div class="flex-1 min-w-[150px]">
+                                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Type</label>
+                                    <p class="mt-1">
+                                        <span 
+                                            x-show="transaction"
+                                            :class="transaction?.type === 'credit' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'"
+                                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                                            x-text="transaction?.type.charAt(0).toUpperCase() + transaction?.type.slice(1)"
+                                        ></span>
+                                    </p>
+                                </div>
+                                <div class="flex-1 min-w-[150px]">
+                                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Status</label>
+                                    <p class="mt-1">
+                                        <span 
+                                            x-show="transaction"
+                                            :class="transaction?.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'"
+                                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                                            x-text="transaction?.status.charAt(0).toUpperCase() + transaction?.status.slice(1)"
+                                        ></span>
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Status</label>
-                                <p class="mt-1">
-                                    <span 
-                                        x-show="transaction"
-                                        :class="transaction?.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'"
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                        x-text="transaction?.status.charAt(0).toUpperCase() + transaction?.status.slice(1)"
-                                    ></span>
-                                </p>
-                            </div>
+
+                            <!-- Description -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Description</label>
-                                <p class="mt-1 text-sm text-gray-900 dark:text-white" x-text="transaction?.description"></p>
+                                <p class="mt-1 text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded" x-text="transaction?.description"></p>
                             </div>
+
+                            <!-- Reference Number -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Reference Number</label>
-                                <p class="mt-1 text-sm text-gray-900 dark:text-white" x-text="transaction?.reference_number"></p>
+                                <p class="mt-1 text-sm text-gray-900 dark:text-white font-mono bg-gray-50 dark:bg-gray-700 p-3 rounded" x-text="transaction?.reference_number"></p>
                             </div>
+
+                            <!-- Date -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Date</label>
                                 <p class="mt-1 text-sm text-gray-900 dark:text-white" x-text="transaction?.formatted_date"></p>
                             </div>
+
+                            <!-- Notes (if any) -->
                             <div x-show="transaction?.notes">
                                 <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Notes</label>
-                                <p class="mt-1 text-sm text-gray-900 dark:text-white" x-text="transaction?.notes"></p>
+                                <p class="mt-1 text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded" x-text="transaction?.notes"></p>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                <div class="mt-6 sm:mt-4 sm:flex sm:flex-row-reverse">
                     <button 
                         type="button"
-                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm"
+                        class="w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:w-auto sm:text-sm"
                         @click="showDetails = false"
                     >
                         Close
