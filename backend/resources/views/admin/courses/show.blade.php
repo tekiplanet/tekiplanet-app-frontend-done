@@ -278,24 +278,38 @@ function updateCourse(e) {
     
     // Prepare form data
     const formData = new FormData(form);
+    const jsonData = {};
     
     // Convert prerequisites and learning outcomes to arrays
-    ['prerequisites', 'learning_outcomes'].forEach(field => {
-        const value = formData.get(field);
-        if (value) {
-            formData.set(field, value.split('\n').map(item => item.trim()).filter(item => item.length > 0));
+    for (const [key, value] of formData.entries()) {
+        if (key === '_method' || key === '_token') continue;
+        if (key === 'prerequisites' || key === 'learning_outcomes') {
+            jsonData[key] = value.split('\n')
+                .map(item => item.trim())
+                .filter(item => item.length > 0);
+        } else {
+            jsonData[key] = value;
         }
-    });
+    }
 
     fetch(form.action, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+            'X-HTTP-Method-Override': 'PUT'
         },
-        body: JSON.stringify(Object.fromEntries(formData))
+        body: JSON.stringify(jsonData)
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.message || 'Failed to update course');
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             showNotification('Success', 'Course updated successfully');
