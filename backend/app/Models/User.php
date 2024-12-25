@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use App\Models\Transaction;
 
 class User extends Authenticatable
 {
@@ -32,6 +33,7 @@ class User extends Authenticatable
         'username',
         'avatar',
         'status',
+        'wallet_balance',
         'dark_mode',
         'email_notifications',
         'push_notifications',
@@ -69,6 +71,7 @@ class User extends Authenticatable
         'marketing_notifications' => 'boolean',
         'two_factor_enabled' => 'boolean',
         'two_factor_recovery_codes' => 'array',
+        'wallet_balance' => 'decimal:2',
     ];
 
     /**
@@ -84,6 +87,7 @@ class User extends Authenticatable
         'marketing_notifications' => true,
         'profile_visibility' => 'public',
         'status' => 'active',
+        'wallet_balance' => 0.00,
     ];
 
     /**
@@ -203,5 +207,11 @@ class User extends Authenticatable
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE;
+    }
+
+    // Add this relationship to the User model
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
     }
 }
