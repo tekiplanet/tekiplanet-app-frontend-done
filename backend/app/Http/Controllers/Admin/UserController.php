@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Notifications\TransactionNotification;
 use App\Services\NotificationService;
 use App\Models\Notification;
+use App\Notifications\CustomNotification;
 
 class UserController extends Controller
 {

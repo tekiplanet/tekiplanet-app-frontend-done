@@ -29,10 +29,13 @@ class CustomNotification extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->subject($this->title)
+            ->greeting('Hello ' . $notifiable->first_name . '!')
             ->view('emails.custom-notification', [
                 'user' => $notifiable,
                 'title' => $this->title,
-                'content' => $this->message
+                'content' => $this->message,
+                'actionText' => 'View Dashboard',
+                'actionUrl' => url('/dashboard')
             ]);
     }
 } 
