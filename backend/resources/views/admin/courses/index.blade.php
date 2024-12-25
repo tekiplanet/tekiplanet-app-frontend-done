@@ -2,9 +2,15 @@
 
 @section('content')
 <div class="container px-6 mx-auto">
-    <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-4">
-        Courses
-    </h2>
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">
+            Courses
+        </h2>
+        <a href="{{ route('admin.courses.create') }}" 
+           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            Create Course
+        </a>
+    </div>
 
     <!-- Search/Filter Section -->
     <div class="mb-6 bg-white rounded-lg shadow-md dark:bg-gray-800 p-4">
@@ -20,10 +26,16 @@
                 <select name="category" 
                         class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
                     <option value="">All Categories</option>
-                    <option value="programming" {{ request('category') === 'programming' ? 'selected' : '' }}>Programming</option>
-                    <option value="design" {{ request('category') === 'design' ? 'selected' : '' }}>Design</option>
-                    <option value="business" {{ request('category') === 'business' ? 'selected' : '' }}>Business</option>
-                    <option value="marketing" {{ request('category') === 'marketing' ? 'selected' : '' }}>Marketing</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                            {{ $category->name }}
+                        </option>
+                        @foreach($category->children as $child)
+                            <option value="{{ $child->id }}" {{ request('category') == $child->id ? 'selected' : '' }}>
+                                &nbsp;&nbsp;- {{ $child->name }}
+                            </option>
+                        @endforeach
+                    @endforeach
                 </select>
             </div>
             <div class="w-full md:w-48">
@@ -67,9 +79,20 @@
 
                     <!-- Category and Level -->
                     <div class="flex gap-2 mb-2">
-                        <span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                            {{ ucfirst($course->category) }}
-                        </span>
+                        @if(is_object($course->category))
+                            <span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                                {{ $course->category->name }}
+                            </span>
+                            @if($course->category->parent)
+                                <span class="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">
+                                    {{ $course->category->parent->name }}
+                                </span>
+                            @endif
+                        @else
+                            <span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                                {{ ucfirst($course->category) }}
+                            </span>
+                        @endif
                         <span class="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">
                             {{ ucfirst($course->level) }}
                         </span>
@@ -79,22 +102,22 @@
                     <div class="grid grid-cols-3 gap-2 mb-4 text-sm text-gray-600 dark:text-gray-400">
                         <div>
                             <i class="fas fa-users"></i>
-                            {{ $course->total_students }} Students
+                            {{ $course->total_students ?? 0 }} Students
                         </div>
                         <div>
                             <i class="fas fa-clock"></i>
-                            {{ $course->duration_hours }}h
+                            {{ $course->duration_hours ?? 0 }}h
                         </div>
                         <div>
                             <i class="fas fa-star text-yellow-400"></i>
-                            {{ number_format($course->rating, 1) }} ({{ $course->total_reviews }})
+                            {{ number_format($course->rating ?? 0, 1) }} ({{ $course->total_reviews ?? 0 }})
                         </div>
                     </div>
 
                     <!-- Price -->
                     <div class="mb-4">
                         <span class="text-2xl font-bold text-gray-700 dark:text-gray-200">
-                            ₦{{ number_format($course->price, 2) }}
+                            ₦{{ number_format($course->price ?? 0, 2) }}
                         </span>
                     </div>
 

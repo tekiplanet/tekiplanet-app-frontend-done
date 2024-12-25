@@ -52,6 +52,7 @@ class DatabaseSeeder extends Seeder
             ProfessionalCategorySeeder::class,
             HustleSeeder::class,
             HustlePaymentSeeder::class,
+            CourseCategorySeeder::class,
         ]);
     }
 }
