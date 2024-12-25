@@ -26,7 +26,8 @@
 
     <!-- Customers List -->
     <div class="bg-white rounded-lg shadow-md dark:bg-gray-800">
-        <div class="overflow-x-auto">
+        <!-- Desktop Table (hidden on mobile) -->
+        <div class="hidden md:block overflow-x-auto">
             <table class="w-full">
                 <thead>
                     <tr class="text-left bg-gray-50 dark:bg-gray-700">
@@ -66,8 +67,14 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <button onclick="showCustomerDetails('{{ $customer->id }}')" 
-                                    class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
-                                View Details
+                                    class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 inline-flex items-center">
+                                <span class="inline-flex items-center">
+                                    <svg id="customerSpinner-{{ $customer->id }}" class="w-4 h-4 mr-2 animate-spin hidden" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span id="customerButtonText-{{ $customer->id }}">View Details</span>
+                                </span>
                             </button>
                         </td>
                     </tr>
@@ -75,6 +82,36 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Mobile List View -->
+        <div class="md:hidden">
+            @foreach($customers as $customer)
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <h4 class="font-medium text-gray-900 dark:text-gray-100">{{ $customer->name }}</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ $customer->email }}</p>
+                    </div>
+                    <span class="px-2 py-1 text-xs rounded-full {{ $customer->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                        {{ ucfirst($customer->status) }}
+                    </span>
+                </div>
+                <div class="flex justify-end">
+                    <button onclick="showCustomerDetails('{{ $customer->id }}')" 
+                            class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 inline-flex items-center">
+                        <span class="inline-flex items-center">
+                            <svg id="customerSpinnerMobile-{{ $customer->id }}" class="w-4 h-4 mr-2 animate-spin hidden" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span id="customerButtonTextMobile-{{ $customer->id }}">View Details</span>
+                        </span>
+                    </button>
+                </div>
+            </div>
+            @endforeach
+        </div>
+
         <div class="px-6 py-4">
             {{ $customers->links() }}
         </div>
@@ -105,14 +142,35 @@
 
 @push('scripts')
 <script>
+function formatCurrency(amount, currency) {
+    const formatter = new Intl.NumberFormat(undefined, {
+        style: 'currency',
+        currency: currency || 'NGN',
+        minimumFractionDigits: 2
+    });
+    return formatter.format(amount);
+}
+
 async function showCustomerDetails(customerId) {
+    // Show loading state
+    const spinner = document.getElementById(`customerSpinner-${customerId}`);
+    const spinnerMobile = document.getElementById(`customerSpinnerMobile-${customerId}`);
+    const buttonText = document.getElementById(`customerButtonText-${customerId}`);
+    const buttonTextMobile = document.getElementById(`customerButtonTextMobile-${customerId}`);
+    
+    spinner.classList.remove('hidden');
+    spinnerMobile.classList.remove('hidden');
+    buttonText.textContent = 'Loading...';
+    buttonTextMobile.textContent = 'Loading...';
+
     try {
         const response = await fetch(`{{ route('admin.businesses.customers.show', ['business' => $business->id, 'customer' => '__ID__']) }}`.replace('__ID__', customerId));
         const data = await response.json();
         
         if (response.ok) {
             const content = `
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Basic Information -->
                     <div>
                         <label class="text-sm text-gray-600 dark:text-gray-400">Name</label>
                         <p class="text-gray-800 dark:text-gray-200">${data.name}</p>
@@ -137,14 +195,47 @@ async function showCustomerDetails(customerId) {
                             </span>
                         </p>
                     </div>
-                </div>
-                <div class="mt-4">
-                    <label class="text-sm text-gray-600 dark:text-gray-400">Address</label>
-                    <p class="text-gray-800 dark:text-gray-200">${data.address || 'N/A'}</p>
-                </div>
-                <div class="mt-4">
-                    <label class="text-sm text-gray-600 dark:text-gray-400">Notes</label>
-                    <p class="text-gray-800 dark:text-gray-200">${data.notes || 'N/A'}</p>
+                    
+                    <!-- Contact Information -->
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="text-sm text-gray-600 dark:text-gray-400">Address</label>
+                        <p class="text-gray-800 dark:text-gray-200">${data.address || 'N/A'}</p>
+                    </div>
+                    
+                    <!-- Additional Information -->
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="text-sm text-gray-600 dark:text-gray-400">Notes</label>
+                        <p class="text-gray-800 dark:text-gray-200">${data.notes || 'N/A'}</p>
+                    </div>
+                    
+                    <!-- Customer Since -->
+                    <div>
+                        <label class="text-sm text-gray-600 dark:text-gray-400">Customer Since</label>
+                        <p class="text-gray-800 dark:text-gray-200">${new Date(data.created_at).toLocaleDateString()}</p>
+                    </div>
+                    
+                    <!-- Last Updated -->
+                    <div>
+                        <label class="text-sm text-gray-600 dark:text-gray-400">Last Updated</label>
+                        <p class="text-gray-800 dark:text-gray-200">${new Date(data.updated_at).toLocaleDateString()}</p>
+                    </div>
+                    
+                    <!-- Additional Customer Details -->
+                    <div class="col-span-1 md:col-span-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-2">Additional Details</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-sm text-gray-600 dark:text-gray-400">Total Orders</label>
+                                <p class="text-gray-800 dark:text-gray-200">${data.total_orders || '0'}</p>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-600 dark:text-gray-400">Total Spent</label>
+                                <p class="text-gray-800 dark:text-gray-200">
+                                    ${formatCurrency(data.total_spent || 0, data.currency)}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
             
@@ -154,6 +245,12 @@ async function showCustomerDetails(customerId) {
     } catch (error) {
         console.error('Error:', error);
         showNotification('Error', 'Failed to load customer details', 'error');
+    } finally {
+        // Hide loading state
+        spinner.classList.add('hidden');
+        spinnerMobile.classList.add('hidden');
+        buttonText.textContent = 'View Details';
+        buttonTextMobile.textContent = 'View Details';
     }
 }
 

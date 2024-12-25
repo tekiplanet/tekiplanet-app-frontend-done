@@ -60,4 +60,10 @@ class BusinessCustomer extends Model
                 return $invoice->payments->sum('amount');
             });
     }
+
+
+    public function business_invoices()
+    {
+        return $this->hasMany(BusinessInvoice::class, 'customer_id');
+    }    
 } 

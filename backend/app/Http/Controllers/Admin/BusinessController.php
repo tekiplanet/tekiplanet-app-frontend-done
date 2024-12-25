@@ -137,6 +137,34 @@ class BusinessController extends Controller
     public function showCustomer(BusinessProfile $business, $customerId)
     {
         $customer = $business->business_customers()->findOrFail($customerId);
-        return response()->json($customer);
+
+        // Calculate total spent from invoice payments
+        $totalSpent = $customer->business_invoices()
+            ->join('business_invoice_payments', 'business_invoices.id', '=', 'business_invoice_payments.invoice_id')
+            ->sum('business_invoice_payments.amount');
+
+        // Get the customer's currency from their latest invoice payment
+        $latestPayment = $customer->business_invoices()
+            ->join('business_invoice_payments', 'business_invoices.id', '=', 'business_invoice_payments.invoice_id')
+            ->select('business_invoice_payments.currency')
+            ->latest('business_invoice_payments.created_at')
+            ->first();
+
+        $currency = $latestPayment ? $latestPayment->currency : 'NGN';
+
+        return response()->json([
+            'id' => $customer->id,
+            'name' => $customer->name,
+            'email' => $customer->email,
+            'phone' => $customer->phone,
+            'status' => $customer->status,
+            'address' => $customer->address,
+            'notes' => $customer->notes,
+            'created_at' => $customer->created_at,
+            'updated_at' => $customer->updated_at,
+            'total_orders' => $customer->business_invoices()->count(),
+            'total_spent' => $totalSpent,
+            'currency' => $currency
+        ]);
     }
 } 
