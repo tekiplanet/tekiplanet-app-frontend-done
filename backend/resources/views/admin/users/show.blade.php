@@ -108,7 +108,7 @@
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Current Balance</dt>
                             <dd class="flex items-baseline">
                                 <div class="text-2xl font-semibold text-gray-900 dark:text-white">
-                                    ${{ number_format($stats['current_balance'], 2) }}
+                                    {{ $currency['symbol'] }}{{ number_format($stats['current_balance'], 2) }}
                                 </div>
                             </dd>
                         </dl>
@@ -131,7 +131,7 @@
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Credits</dt>
                             <dd class="flex items-baseline">
                                 <div class="text-2xl font-semibold text-gray-900 dark:text-white">
-                                    ${{ number_format($stats['total_credits'], 2) }}
+                                    {{ $currency['symbol'] }}{{ number_format($stats['total_credits'], 2) }}
                                 </div>
                             </dd>
                         </dl>
@@ -154,7 +154,7 @@
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Debits</dt>
                             <dd class="flex items-baseline">
                                 <div class="text-2xl font-semibold text-gray-900 dark:text-white">
-                                    ${{ number_format($stats['total_debits'], 2) }}
+                                    {{ $currency['symbol'] }}{{ number_format($stats['total_debits'], 2) }}
                                 </div>
                             </dd>
                         </dl>
@@ -164,14 +164,59 @@
         </div>
     </div>
 
-    <!-- Transactions Table -->
+    <!-- Transactions Section -->
     <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
         <div class="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
-                Recent Transactions
-            </h3>
+            <div class="sm:flex sm:items-center sm:justify-between">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                    Recent Transactions
+                </h3>
+                <div class="mt-3 sm:mt-0">
+                    <form action="{{ route('admin.users.show', $user) }}" method="GET" class="flex flex-col sm:flex-row gap-2">
+                        <input 
+                            type="text" 
+                            name="search" 
+                            value="{{ request('search') }}"
+                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-md"
+                            placeholder="Search transactions..."
+                        >
+                        <select 
+                            name="type"
+                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:w-auto sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-md"
+                        >
+                            <option value="">All Types</option>
+                            <option value="credit" {{ request('type') === 'credit' ? 'selected' : '' }}>Credit</option>
+                            <option value="debit" {{ request('type') === 'debit' ? 'selected' : '' }}>Debit</option>
+                        </select>
+                        <select 
+                            name="status"
+                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:w-auto sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-md"
+                        >
+                            <option value="">All Status</option>
+                            <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
+                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                        </select>
+                        <button 
+                            type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                        >
+                            Filter
+                        </button>
+                        @if(request()->hasAny(['search', 'type', 'status']))
+                            <a 
+                                href="{{ route('admin.users.show', $user) }}"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                            >
+                                Clear
+                            </a>
+                        @endif
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="overflow-x-auto">
+
+        <!-- Desktop Table (hidden on mobile) -->
+        <div class="hidden md:block overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>
@@ -185,6 +230,9 @@
                             Amount
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Description
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -194,7 +242,13 @@
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     @forelse($transactions as $transaction)
-                        <tr>
+                        <tr class="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                            @click="$dispatch('show-transaction-details', {
+                                ...{{ Js::from($transaction) }},
+                                currency_symbol: '{{ $currency['symbol'] }}',
+                                formatted_date: '{{ $transaction->created_at->format('M d, Y h:i A') }}'
+                            })"
+                        >
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                 {{ $transaction->created_at->format('M d, Y H:i') }}
                             </td>
@@ -206,10 +260,16 @@
                                     {{ ucfirst($transaction->type) }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {{ 
-                                $transaction->type === 'credit' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                            }}">
-                                ${{ number_format($transaction->amount, 2) }}
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                {{ $currency['symbol'] }}{{ number_format($transaction->amount, 2) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ 
+                                    $transaction->status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
+                                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                }}">
+                                    {{ ucfirst($transaction->status) }}
+                                </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                 {{ $transaction->description }}
@@ -220,7 +280,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-center">
+                            <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-center">
                                 No transactions found.
                             </td>
                         </tr>
@@ -228,6 +288,57 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Mobile Card View -->
+        <div class="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
+            @forelse($transactions as $transaction)
+                <div class="p-4 space-y-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                    @click="$dispatch('show-transaction-details', {
+                        ...{{ Js::from($transaction) }},
+                        currency_symbol: '{{ $currency['symbol'] }}',
+                        formatted_date: '{{ $transaction->created_at->format('M d, Y h:i A') }}'
+                    })"
+                >
+                    <!-- Amount and Type -->
+                    <div class="flex items-center justify-between">
+                        <span class="text-lg font-medium text-gray-900 dark:text-white">
+                            {{ $currency['symbol'] }}{{ number_format($transaction->amount, 2) }}
+                        </span>
+                        <div class="flex items-center space-x-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ 
+                                $transaction->type === 'credit' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
+                                'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                            }}">
+                                {{ ucfirst($transaction->type) }}
+                            </span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ 
+                                $transaction->status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
+                                'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                            }}">
+                                {{ ucfirst($transaction->status) }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                        {{ $transaction->description }}
+                    </div>
+
+                    <!-- Reference and Date -->
+                    <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                        <span>{{ $transaction->reference_number }}</span>
+                        <span>{{ $transaction->created_at->format('M d, Y H:i') }}</span>
+                    </div>
+                </div>
+            @empty
+                <div class="p-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+                    No transactions found.
+                </div>
+            @endforelse
+        </div>
+
+        <!-- Pagination -->
         <div class="bg-white dark:bg-gray-800 px-4 py-3 border-t border-gray-200 dark:border-gray-700 sm:px-6">
             {{ $transactions->links() }}
         </div>
@@ -277,7 +388,7 @@
             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6"
         >
-            <form action="{{ route('admin.users.transactions.create', $user) }}" method="POST">
+            <form action="{{ route('admin.users.transactions.store', $user) }}" method="POST">
                 @csrf
                 <div>
                     <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
@@ -389,6 +500,95 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add this at the end of the file for transaction details modal -->
+<div
+    x-data="{ showDetails: false, transaction: null }"
+    x-on:show-transaction-details.window="showDetails = true; transaction = $event.detail"
+    x-on:keydown.escape.window="showDetails = false"
+>
+    <!-- Transaction Details Modal -->
+    <div
+        x-show="showDetails"
+        x-transition:enter="ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 overflow-y-auto"
+        style="display: none;"
+    >
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
+            </div>
+
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                <div class="sm:flex sm:items-start">
+                    <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                            Transaction Details
+                        </h3>
+                        <div class="mt-4 space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Amount</label>
+                                <p class="mt-1 text-sm text-gray-900 dark:text-white" x-text="transaction ? `${transaction.currency_symbol}${transaction.amount}` : ''"></p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Type</label>
+                                <p class="mt-1">
+                                    <span 
+                                        x-show="transaction"
+                                        :class="transaction?.type === 'credit' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'"
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                        x-text="transaction?.type.charAt(0).toUpperCase() + transaction?.type.slice(1)"
+                                    ></span>
+                                </p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Status</label>
+                                <p class="mt-1">
+                                    <span 
+                                        x-show="transaction"
+                                        :class="transaction?.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'"
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                        x-text="transaction?.status.charAt(0).toUpperCase() + transaction?.status.slice(1)"
+                                    ></span>
+                                </p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Description</label>
+                                <p class="mt-1 text-sm text-gray-900 dark:text-white" x-text="transaction?.description"></p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Reference Number</label>
+                                <p class="mt-1 text-sm text-gray-900 dark:text-white" x-text="transaction?.reference_number"></p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Date</label>
+                                <p class="mt-1 text-sm text-gray-900 dark:text-white" x-text="transaction?.formatted_date"></p>
+                            </div>
+                            <div x-show="transaction?.notes">
+                                <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Notes</label>
+                                <p class="mt-1 text-sm text-gray-900 dark:text-white" x-text="transaction?.notes"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                    <button 
+                        type="button"
+                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm"
+                        @click="showDetails = false"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>

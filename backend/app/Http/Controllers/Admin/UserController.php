@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Transaction;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -52,15 +53,29 @@ class UserController extends Controller
         ]);
     }
 
-    public function show(User $user)
+    public function show(Request $request, User $user)
     {
         // Load relationships
         $user->load(['businessProfile', 'professional']);
         
-        // Get recent transactions
+        // Get transactions with search
         $transactions = $user->transactions()
+            ->when($request->search, function($query, $search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('description', 'like', "%{$search}%")
+                        ->orWhere('reference_number', 'like', "%{$search}%")
+                        ->orWhere('amount', 'like', "%{$search}%");
+                });
+            })
+            ->when($request->type, function($query, $type) {
+                $query->where('type', $type);
+            })
+            ->when($request->status, function($query, $status) {
+                $query->where('status', $status);
+            })
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         // Get wallet statistics
         $stats = [
@@ -69,7 +84,13 @@ class UserController extends Controller
             'current_balance' => $user->wallet_balance,
         ];
 
-        return view('admin.users.show', compact('user', 'transactions', 'stats'));
+        // Get currency settings
+        $currency = [
+            'code' => Setting::getSetting('default_currency', 'USD'),
+            'symbol' => Setting::getSetting('currency_symbol', '$')
+        ];
+
+        return view('admin.users.show', compact('user', 'transactions', 'stats', 'currency'));
     }
 
     // Add method to handle new transactions

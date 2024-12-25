@@ -27,7 +27,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
             Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
             Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
             Route::post('users/{user}/transactions', [UserController::class, 'createTransaction'])
-                ->name('users.transactions.create');
+                ->name('users.transactions.store');
         });
 
         // Course management routes - accessible by super admin, admin, and tutor
