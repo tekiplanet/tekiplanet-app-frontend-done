@@ -24,7 +24,7 @@ class ProfessionalController extends Controller
         $categories = ProfessionalCategory::orderBy('name')->get();
         
         $professionals = Professional::query()
-            ->with(['user', 'professional_category'])
+            ->with(['user', 'category'])
             ->when($request->search, function ($query, $search) {
                 $query->whereHas('user', function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -32,7 +32,7 @@ class ProfessionalController extends Controller
                 });
             })
             ->when($request->category, function ($query, $category) {
-                $query->where('professional_category_id', $category);
+                $query->where('category_id', $category);
             })
             ->when($request->status !== null, function ($query) use ($request) {
                 $query->where('status', $request->status);
@@ -45,7 +45,7 @@ class ProfessionalController extends Controller
 
     public function show(Professional $professional)
     {
-        $professional->load(['user', 'professional_category']);
+        $professional->load(['user', 'category']);
         return view('admin.professionals.show', compact('professional'));
     }
 

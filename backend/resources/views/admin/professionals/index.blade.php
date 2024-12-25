@@ -55,16 +55,16 @@
                         @else
                             <div class="h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                                 <span class="text-lg font-semibold text-gray-600 dark:text-gray-300">
-                                    {{ strtoupper(substr($professional->user->name, 0, 1)) }}
+                                    {{ strtoupper(substr($professional->user->first_name, 0, 1)) }}
                                 </span>
                             </div>
                         @endif
                         <div>
                             <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200">
-                                {{ $professional->user->name }}
+                                {{ $professional->user->first_name }} {{ $professional->user->last_name }}
                             </h3>
                             <p class="text-sm text-gray-600 dark:text-gray-400">
-                                {{ $professional->professional_category->name }}
+                                {{ $professional->title }}
                             </p>
                             <p class="text-sm text-gray-500">
                                 {{ $professional->user->email }}
