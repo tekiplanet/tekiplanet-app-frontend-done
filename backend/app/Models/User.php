@@ -134,6 +134,7 @@ class User extends Authenticatable
     protected static function boot()
     {
         parent::boot();
+        
         static::creating(function ($model) {
             if (empty($model->{$model->getKeyName()})) {
                 $model->{$model->getKeyName()} = Str::uuid()->toString();
@@ -141,14 +142,21 @@ class User extends Authenticatable
         });
 
         static::deleting(function($user) {
-            // Delete related records
-            $user->transactions()->delete();
+            // Delete business profile
+            if ($user->businessProfile) {
+                $user->businessProfile->delete();
+            }
+
+            // Delete professional profile
+            if ($user->professional) {
+                $user->professional->delete();
+            }
+
+            // Delete other related records
             $user->userNotifications()->delete();
-            $user->businessProfile()->delete();
-            $user->professional()->delete();
-            $user->courses()->detach();
+            $user->transactions()->delete();
             $user->enrollments()->delete();
-            // Add any other related models that should be deleted
+            $user->userCourseNotices()->delete();
         });
     }
 
@@ -192,6 +200,12 @@ class User extends Authenticatable
             ->orderByDesc('created_at');
     }
 
+    // Add this method for direct access to user_notifications
+    public function userNotifications()
+    {
+        return $this->hasMany(UserNotification::class);
+    }
+
     public function unreadNotifications()
     {
         return $this->notifications()
@@ -225,5 +239,11 @@ class User extends Authenticatable
     public function transactions()
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    // Add this relationship
+    public function userCourseNotices()
+    {
+        return $this->hasMany(UserCourseNotice::class);
     }
 }

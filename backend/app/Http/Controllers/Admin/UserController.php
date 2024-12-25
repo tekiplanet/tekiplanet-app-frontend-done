@@ -12,6 +12,7 @@ use App\Services\NotificationService;
 use App\Models\Notification;
 use App\Notifications\CustomNotification;
 use App\Notifications\AccountStatusNotification;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -265,13 +266,42 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         try {
-            // This will trigger the deleting event in the User model
+            // Begin transaction
+            DB::beginTransaction();
+
+            // Delete related records
+            if ($user->businessProfile) {
+                $user->businessProfile->delete();
+            }
+
+            if ($user->professional) {
+                $user->professional->delete();
+            }
+
+            // Delete notifications and transactions
+            $user->userNotifications()->delete();
+            $user->transactions()->delete();
+
+            // Delete enrollments and course notices
+            $user->enrollments()->delete();
+            $user->userCourseNotices()->delete();
+            
+            // Delete the user
             $user->delete();
+
+            // Commit transaction
+            DB::commit();
 
             return response()->json([
                 'message' => 'User deleted successfully'
             ]);
+
         } catch (\Exception $e) {
+            // Rollback transaction
+            DB::rollBack();
+
+            \Log::error('User deletion failed: ' . $e->getMessage());
+
             return response()->json([
                 'message' => 'Failed to delete user'
             ], 422);
