@@ -29,13 +29,65 @@
                 Manage user information, wallet, and transactions
             </p>
         </div>
-        <div class="mt-4 sm:mt-0 flex space-x-3">
+        <div class="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-2 sm:space-x-3">
+            <!-- Edit User Button -->
+            <button 
+                type="button" 
+                onclick="openEditModal()"
+                class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            >
+                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit User
+            </button>
+
+            <!-- Send Notification Button -->
+            <button 
+                type="button" 
+                onclick="openNotificationModal()"
+                class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            >
+                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                Send Notification
+            </button>
+
+            <!-- Status Toggle Button -->
+            <button 
+                type="button" 
+                @click="$dispatch('open-modal', 'update-status')"
+                class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            >
+                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {{ $user->status === 'active' ? 'Deactivate' : 'Activate' }}
+            </button>
+
+            <!-- New Transaction Button -->
             <button 
                 type="button" 
                 @click="$dispatch('open-modal', 'create-transaction')"
-                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             >
+                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
                 New Transaction
+            </button>
+
+            <!-- Delete User Button -->
+            <button 
+                type="button" 
+                @click="$dispatch('open-modal', 'confirm-delete')"
+                class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Delete User
             </button>
         </div>
     </div>
@@ -355,138 +407,281 @@
     </div>
 </div>
 
-<!-- Create Transaction Modal -->
-<div
-    x-data="{ 
-        show: false,
-        isSubmitting: false,
-        formData: {
-            type: 'credit',
-            amount: '',
-            description: '',
-            category: 'deposit',
-            payment_method: 'wallet',
-            notes: ''
-        }
-    }"
->
-    <!-- Modal -->
-    <div
-        x-show="show"
-        x-on:open-modal.window="if ($event.detail === 'create-transaction') show = true"
-        class="fixed inset-0 z-50 overflow-y-auto"
-        style="display: none;"
-    >
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <!-- Background overlay -->
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
-            </div>
+<!-- Edit User Modal -->
+<div id="editUserModal" class="fixed inset-0 z-50 hidden">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-            <!-- Modal panel -->
-            <div 
-                class="inline-block w-full align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6"
-            >
-                <form @submit.prevent="submitForm">
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 px-6 py-5 text-left shadow-xl transition-all w-full max-w-2xl">
+                <form id="editUserForm" onsubmit="submitEditForm(event)">
                     <div>
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
-                            Create New Transaction
+                        <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">
+                            Edit User
                         </h3>
                         <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                             <div class="sm:col-span-3">
-                                <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Type
-                                </label>
-                                <select 
-                                    id="type" 
-                                    x-model="formData.type"
-                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
-                                >
-                                    <option value="credit">Credit</option>
-                                    <option value="debit">Debit</option>
-                                </select>
-                            </div>
-
-                            <div class="sm:col-span-3">
-                                <label for="amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Amount
-                                </label>
-                                <div class="mt-1">
-                                    <input 
-                                        type="number" 
-                                        x-model="formData.amount"
-                                        step="0.01"
-                                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-md"
-                                    >
-                                </div>
-                            </div>
-
-                            <div class="sm:col-span-6">
-                                <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Description
+                                <label for="first_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    First Name
                                 </label>
                                 <div class="mt-1">
                                     <input 
                                         type="text" 
-                                        x-model="formData.description"
+                                        name="first_name"
+                                        value="{{ $user->first_name }}"
                                         class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-md"
                                     >
                                 </div>
                             </div>
 
                             <div class="sm:col-span-3">
-                                <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Category
+                                <label for="last_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Last Name
                                 </label>
-                                <select 
-                                    id="category" 
-                                    x-model="formData.category"
-                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
-                                >
-                                    <option value="deposit">Deposit</option>
-                                    <option value="withdrawal">Withdrawal</option>
-                                    <option value="refund">Refund</option>
-                                    <option value="payment">Payment</option>
-                                </select>
-                            </div>
-
-                            <div class="sm:col-span-3">
-                                <label for="payment_method" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Payment Method
-                                </label>
-                                <select 
-                                    id="payment_method" 
-                                    x-model="formData.payment_method"
-                                    name="payment_method" 
-                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
-                                >
-                                    <option value="wallet">Wallet</option>
-                                    <option value="bank">Bank Transfer</option>
-                                    <option value="card">Card</option>
-                                </select>
+                                <div class="mt-1">
+                                    <input 
+                                        type="text" 
+                                        name="last_name"
+                                        value="{{ $user->last_name }}"
+                                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-md"
+                                    >
+                                </div>
                             </div>
 
                             <div class="sm:col-span-6">
-                                <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Notes
+                                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Email
                                 </label>
                                 <div class="mt-1">
-                                    <textarea 
-                                        id="notes" 
-                                        name="notes" 
-                                        rows="3" 
+                                    <input 
+                                        type="email" 
+                                        name="email"
+                                        value="{{ $user->email }}"
                                         class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-md"
-                                    ></textarea>
+                                    >
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-3">
+                                <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Username
+                                </label>
+                                <div class="mt-1">
+                                    <input 
+                                        type="text" 
+                                        name="username"
+                                        value="{{ $user->username }}"
+                                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-md"
+                                    >
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-3">
+                                <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Phone
+                                </label>
+                                <div class="mt-1">
+                                    <input 
+                                        type="text" 
+                                        name="phone"
+                                        value="{{ $user->phone }}"
+                                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-md"
+                                    >
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                    <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                        <button 
+                            type="button"
+                            onclick="closeEditModal()"
+                            class="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 sm:text-sm"
+                            id="cancelButton"
+                        >
+                            Cancel
+                        </button>
                         <button 
                             type="submit"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:col-start-2 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            id="submitButton"
+                            class="inline-flex justify-center items-center rounded-md border border-transparent bg-primary px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <span id="submitSpinner" class="hidden">
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                            <span id="submitText">Save Changes</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Send Notification Modal -->
+<div id="sendNotificationModal" class="fixed inset-0 z-50 hidden">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 px-6 py-5 text-left shadow-xl transition-all w-full max-w-2xl">
+                <form id="notificationForm" onsubmit="submitNotificationForm(event)">
+                    <div>
+                        <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">
+                            Send Notification
+                        </h3>
+                        <div class="mt-6 space-y-6">
+                            <div>
+                                <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Title
+                                </label>
+                                <div class="mt-1">
+                                    <input 
+                                        type="text" 
+                                        name="title"
+                                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-md"
+                                        required
+                                    >
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="message" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Message
+                                </label>
+                                <div class="mt-1">
+                                    <textarea 
+                                        name="message"
+                                        rows="4"
+                                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-md"
+                                        required
+                                    ></textarea>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center">
+                                <input 
+                                    type="checkbox" 
+                                    name="send_email"
+                                    id="send_email"
+                                    class="h-4 w-4 text-primary focus:ring-primary border-gray-300 dark:border-gray-700 rounded"
+                                >
+                                <label for="send_email" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                                    Also send as email
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                        <button 
+                            type="button"
+                            onclick="closeNotificationModal()"
+                            class="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 sm:text-sm"
+                            id="notifyCancelButton"
+                        >
+                            Cancel
+                        </button>
+                        <button 
+                            type="submit"
+                            id="notifySubmitButton"
+                            class="inline-flex justify-center items-center rounded-md border border-transparent bg-primary px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <span id="notifySpinner" class="hidden">
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                            <span id="notifyButtonText">Send Notification</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div x-data="{ 
+    show: false,
+    isSubmitting: false,
+    formData: {
+        status: '{{ $user->status === 'active' ? 'inactive' : 'active' }}'
+    },
+    async submitForm() {
+        if (this.isSubmitting) return;
+        this.isSubmitting = true;
+        
+        try {
+            const response = await fetch('{{ route('admin.users.status', $user) }}', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(this.formData)
+            });
+
+            const result = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(result.message || 'Failed to update status');
+            }
+
+            window.dispatchEvent(new CustomEvent('notify', {
+                detail: { type: 'success', message: 'User status updated successfully' }
+            }));
+
+            this.show = false;
+            window.location.reload();
+
+        } catch (error) {
+            window.dispatchEvent(new CustomEvent('notify', {
+                detail: { type: 'error', message: error.message }
+            }));
+        } finally {
+            this.isSubmitting = false;
+        }
+    }
+}"
+x-show="show"
+x-on:open-modal.window="if ($event.detail === 'update-status') show = true"
+class="relative z-50"
+>
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                <form @submit.prevent="submitForm">
+                    <div>
+                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full" :class="formData.status === 'active' ? 'bg-red-100' : 'bg-green-100'">
+                            <svg class="h-6 w-6" :class="formData.status === 'active' ? 'text-red-600' : 'text-green-600'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-5">
+                            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">
+                                Confirm Status Change
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500 dark:text-gray-400">
+                                    Are you sure you want to 
+                                    <span class="font-semibold" x-text="formData.status === 'active' ? 'deactivate' : 'activate'"></span> 
+                                    this user's account? This will 
+                                    <span x-text="formData.status === 'active' ? 'prevent' : 'allow'"></span>
+                                    them from accessing the platform.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3">
+                        <button 
+                            type="submit"
+                            class="inline-flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 sm:col-start-2 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            :class="formData.status === 'active' ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500' : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'"
                             :disabled="isSubmitting"
                         >
                             <span class="flex items-center">
@@ -496,12 +691,12 @@
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
                                 </template>
-                                <span x-text="isSubmitting ? 'Creating...' : 'Create'"></span>
+                                <span x-text="isSubmitting ? 'Processing...' : (formData.status === 'active' ? 'Deactivate Account' : 'Activate Account')"></span>
                             </span>
                         </button>
                         <button 
                             type="button"
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:col-start-1 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 sm:col-start-1 sm:mt-0 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             @click="show = false"
                             :disabled="isSubmitting"
                         >
@@ -512,166 +707,166 @@
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Add the submitForm method -->
-    <script>
-        function submitForm() {
-            if (this.isSubmitting) return;
-            
-            this.isSubmitting = true;
-            
-            fetch('{{ route('admin.users.transactions.store', $user) }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify(this.formData)
-            })
-            .then(async response => {
-                const result = await response.json();
+<!-- Confirm Delete Modal -->
+<div x-data="{ show: false }">
+    <!-- Modal content -->
+</div>
+
+<!-- Add this script at the bottom of your file -->
+<script>
+    function openEditModal() {
+        document.getElementById('editUserModal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+        document.getElementById('editUserModal').classList.add('hidden');
+    }
+
+    function submitEditForm(event) {
+        event.preventDefault();
+        const form = event.target;
+        const submitButton = document.getElementById('submitButton');
+        const cancelButton = document.getElementById('cancelButton');
+        const submitSpinner = document.getElementById('submitSpinner');
+        const submitText = document.getElementById('submitText');
+
+        // Disable buttons and show loading state
+        submitButton.disabled = true;
+        cancelButton.disabled = true;
+        submitSpinner.classList.remove('hidden');
+        submitText.textContent = 'Saving...';
+
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        fetch('{{ route('admin.users.update', $user) }}', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.message) {
+                window.dispatchEvent(new CustomEvent('notify', {
+                    detail: { 
+                        type: 'success', 
+                        message: result.message 
+                    }
+                }));
                 
-                if (!response.ok) {
-                    throw new Error(result.message || 'Something went wrong');
-                }
-
-                // Show success notification
-                window.dispatchEvent(new CustomEvent('notify', {
-                    detail: {
-                        type: 'success',
-                        message: 'Transaction created successfully'
-                    }
-                }));
-
-                // Close modal and reset form
-                this.show = false;
-                this.formData = {
-                    type: 'credit',
-                    amount: '',
-                    description: '',
-                    category: 'deposit',
-                    payment_method: 'wallet',
-                    notes: ''
-                };
-
-                // Refresh immediately
+                closeEditModal();
                 window.location.reload();
-            })
-            .catch(error => {
-                // Show error notification
+            }
+        })
+        .catch(error => {
+            window.dispatchEvent(new CustomEvent('notify', {
+                detail: { 
+                    type: 'error', 
+                    message: error.message || 'Something went wrong' 
+                }
+            }));
+
+            // Reset button state on error
+            submitButton.disabled = false;
+            cancelButton.disabled = false;
+            submitSpinner.classList.add('hidden');
+            submitText.textContent = 'Save Changes';
+        });
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('editUserModal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeEditModal();
+        }
+    });
+
+    // Close modal with escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeEditModal();
+        }
+    });
+
+    function openNotificationModal() {
+        document.getElementById('sendNotificationModal').classList.remove('hidden');
+    }
+
+    function closeNotificationModal() {
+        document.getElementById('sendNotificationModal').classList.add('hidden');
+        document.getElementById('notificationForm').reset();
+    }
+
+    function submitNotificationForm(event) {
+        event.preventDefault();
+        const form = event.target;
+        const submitButton = document.getElementById('notifySubmitButton');
+        const cancelButton = document.getElementById('notifyCancelButton');
+        const spinner = document.getElementById('notifySpinner');
+        const buttonText = document.getElementById('notifyButtonText');
+
+        // Disable buttons and show loading state
+        submitButton.disabled = true;
+        cancelButton.disabled = true;
+        spinner.classList.remove('hidden');
+        buttonText.textContent = 'Sending...';
+
+        const formData = new FormData(form);
+        // Convert checkbox value to boolean
+        const data = {
+            title: formData.get('title'),
+            message: formData.get('message'),
+            send_email: formData.get('send_email') === 'on' // Convert checkbox value to boolean
+        };
+
+        fetch('{{ route('admin.users.notify', $user) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.message) {
                 window.dispatchEvent(new CustomEvent('notify', {
-                    detail: {
-                        type: 'error',
-                        message: error.message
+                    detail: { 
+                        type: 'success', 
+                        message: result.message 
                     }
                 }));
-            })
-            .finally(() => {
-                this.isSubmitting = false;
-            });
+                
+                closeNotificationModal();
+            }
+        })
+        .catch(error => {
+            window.dispatchEvent(new CustomEvent('notify', {
+                detail: { 
+                    type: 'error', 
+                    message: error.message || 'Failed to send notification' 
+                }
+            }));
+        })
+        .finally(() => {
+            // Reset button state
+            submitButton.disabled = false;
+            cancelButton.disabled = false;
+            spinner.classList.add('hidden');
+            buttonText.textContent = 'Send Notification';
+        });
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('sendNotificationModal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeNotificationModal();
         }
-    </script>
-</div>
-
-<!-- Add this at the end of the file for transaction details modal -->
-<div
-    x-data="{ showDetails: false, transaction: null }"
-    x-on:show-transaction-details.window="showDetails = true; transaction = $event.detail"
-    x-on:keydown.escape.window="showDetails = false"
->
-    <!-- Transaction Details Modal -->
-    <div
-        x-show="showDetails"
-        x-transition:enter="ease-out duration-300"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="ease-in duration-200"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-        class="fixed inset-0 z-50 overflow-y-auto"
-        style="display: none;"
-    >
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
-            </div>
-
-            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
-                <div class="sm:flex sm:items-start">
-                    <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
-                            Transaction Details
-                        </h3>
-                        <div class="mt-4 space-y-4">
-                            <!-- Amount -->
-                            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Amount</label>
-                                <p class="mt-1 text-xl font-semibold text-gray-900 dark:text-white" x-text="transaction ? `${transaction.currency_symbol}${transaction.amount}` : ''"></p>
-                            </div>
-
-                            <!-- Type and Status -->
-                            <div class="flex flex-wrap gap-4">
-                                <div class="flex-1 min-w-[150px]">
-                                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Type</label>
-                                    <p class="mt-1">
-                                        <span 
-                                            x-show="transaction"
-                                            :class="transaction?.type === 'credit' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'"
-                                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                                            x-text="transaction?.type.charAt(0).toUpperCase() + transaction?.type.slice(1)"
-                                        ></span>
-                                    </p>
-                                </div>
-                                <div class="flex-1 min-w-[150px]">
-                                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Status</label>
-                                    <p class="mt-1">
-                                        <span 
-                                            x-show="transaction"
-                                            :class="transaction?.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'"
-                                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                                            x-text="transaction?.status.charAt(0).toUpperCase() + transaction?.status.slice(1)"
-                                        ></span>
-                                    </p>
-                                </div>
-                            </div>
-
-                            <!-- Description -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Description</label>
-                                <p class="mt-1 text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded" x-text="transaction?.description"></p>
-                            </div>
-
-                            <!-- Reference Number -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Reference Number</label>
-                                <p class="mt-1 text-sm text-gray-900 dark:text-white font-mono bg-gray-50 dark:bg-gray-700 p-3 rounded" x-text="transaction?.reference_number"></p>
-                            </div>
-
-                            <!-- Date -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Date</label>
-                                <p class="mt-1 text-sm text-gray-900 dark:text-white" x-text="transaction?.formatted_date"></p>
-                            </div>
-
-                            <!-- Notes (if any) -->
-                            <div x-show="transaction?.notes">
-                                <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Notes</label>
-                                <p class="mt-1 text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded" x-text="transaction?.notes"></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-6 sm:mt-4 sm:flex sm:flex-row-reverse">
-                    <button 
-                        type="button"
-                        class="w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:w-auto sm:text-sm"
-                        @click="showDetails = false"
-                    >
-                        Close
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+    });
+</script>
 @endsection 
