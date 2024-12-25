@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\BusinessController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,4 +31,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth:admin']], function () 
     Route::post('/users/{user}/notify', [UserController::class, 'sendNotification'])->name('admin.users.notify');
     Route::put('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
+    Route::resource('businesses', BusinessController::class)->except(['create', 'store', 'destroy']);
+    Route::post('businesses/{business}/toggle-status', [BusinessController::class, 'toggleStatus'])
+        ->name('businesses.toggle-status');
 });
