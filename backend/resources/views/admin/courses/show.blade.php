@@ -97,7 +97,7 @@
                 <div class="bg-white rounded-lg shadow-md dark:bg-gray-800 p-6">
                     <h3 class="text-lg font-semibold mb-4">Instructor</h3>
                     <div class="flex items-center gap-4">
-                        <img src="{{ $course->instructor->avatar ?? asset('images/default-avatar.png') }}" 
+                        <img src="{{ $course->instructor->avatar ?? 'https://ui-avatars.com/api/?name='.urlencode($course->instructor->full_name) }}" 
                              alt="{{ $course->instructor->full_name }}"
                              class="w-16 h-16 rounded-full object-cover">
                         <div>
@@ -161,20 +161,71 @@
             <div class="p-6">
                 <!-- Modules Tab -->
                 <div x-show="activeTab === 'modules'">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Course Modules</h3>
+                        <button @click="$dispatch('open-module-modal')" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Add Module
+                        </button>
+                    </div>
+
                     @if($course->modules->isEmpty())
                         <p class="text-gray-500 text-center py-4">No modules added yet.</p>
                     @else
                         <div class="space-y-4">
                             @foreach($course->modules as $module)
-                                <div class="border rounded-lg p-4">
+                                <div class="border rounded-lg p-4 relative">
+                                    <div class="absolute top-4 right-4 flex items-center gap-2">
+                                        <button @click="$dispatch('edit-module', { id: '{{ $module->id }}' })"
+                                                class="text-blue-600 hover:text-blue-800">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+                                        <button @click="$dispatch('delete-module', { id: '{{ $module->id }}' })"
+                                                class="text-red-600 hover:text-red-800">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
+
                                     <h3 class="font-semibold mb-2">{{ $module->title }}</h3>
+                                    <p class="text-sm text-gray-600 mb-4">{{ $module->description }}</p>
+                                    <div class="flex justify-between items-center mb-4">
+                                        <span class="text-sm text-gray-500">{{ $module->duration_hours }} hours</span>
+                                        <button @click="$dispatch('add-lesson', { moduleId: '{{ $module->id }}' })"
+                                                class="text-sm text-blue-600 hover:text-blue-800">
+                                            + Add Lesson
+                                        </button>
+                                    </div>
+
                                     @if($module->lessons->isEmpty())
                                         <p class="text-sm text-gray-500">No lessons added yet.</p>
                                     @else
-                                        <ul class="space-y-2">
+                                        <ul class="space-y-2 border-t pt-4">
                                             @foreach($module->lessons as $lesson)
-                                                <li class="text-sm text-gray-600 dark:text-gray-400">
+                                                <li class="text-sm text-gray-600 dark:text-gray-400 flex justify-between items-center">
                                                     {{ $lesson->title }}
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-xs text-gray-500">{{ $lesson->duration_minutes }}min</span>
+                                                        <button @click="$dispatch('edit-lesson', { id: '{{ $lesson->id }}' })"
+                                                                class="text-blue-600 hover:text-blue-800">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                            </svg>
+                                                        </button>
+                                                        <button @click="$dispatch('delete-lesson', { id: '{{ $lesson->id }}' })"
+                                                                class="text-red-600 hover:text-red-800">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
                                                 </li>
                                             @endforeach
                                         </ul>
@@ -226,6 +277,7 @@
     </div>
 
     @include('admin.courses.partials.edit-modal')
+    @include('admin.courses.partials.module-modal')
 </div>
 
 @push('scripts')

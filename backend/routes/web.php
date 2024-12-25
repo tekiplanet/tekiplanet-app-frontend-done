@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\BusinessController;
 use App\Http\Controllers\Admin\ProfessionalController;
 use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\CourseModuleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -56,6 +57,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth:admin']], function () 
             'store' => 'admin.courses.store',
             'destroy' => 'admin.courses.destroy',
         ]);
-    Route::put('courses/{course}', [CourseController::class, 'update'])->name('courses.update');
-    Route::patch('courses/{course}', [CourseController::class, 'update'])->name('courses.update');
+    // Course Modules Routes
+    Route::prefix('courses/{course}')->name('admin.courses.')->group(function () {
+        Route::resource('modules', CourseModuleController::class)->except(['index', 'create', 'show']);
+    });
 });
