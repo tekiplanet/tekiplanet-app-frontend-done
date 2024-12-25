@@ -130,20 +130,15 @@ class UserController extends Controller
             // Send notification to user
             $user->notify(new TransactionNotification($transaction));
 
-            return redirect()
-                ->route('admin.users.show', $user)
-                ->with('notify', [
-                    'type' => 'success',
-                    'message' => 'Transaction created successfully'
-                ]);
+            return response()->json([
+                'message' => 'Transaction created successfully',
+                'transaction' => $transaction
+            ]);
 
         } catch (\Exception $e) {
-            return redirect()
-                ->route('admin.users.show', $user)
-                ->with('notify', [
-                    'type' => 'error',
-                    'message' => $e->getMessage() ?: 'Failed to create transaction'
-                ]);
+            return response()->json([
+                'message' => $e->getMessage() ?: 'Failed to create transaction'
+            ], 422);
         }
     }
 } 

@@ -357,161 +357,220 @@
 
 <!-- Create Transaction Modal -->
 <div
-    x-data="{ show: false }"
-    x-show="show"
-    x-on:open-modal.window="if ($event.detail === 'create-transaction') show = true"
-    x-on:close-modal.window="show = false"
-    x-on:keydown.escape.window="show = false"
-    x-transition:enter="ease-out duration-300"
-    x-transition:enter-start="opacity-0"
-    x-transition:enter-end="opacity-100"
-    x-transition:leave="ease-in duration-200"
-    x-transition:leave-start="opacity-100"
-    x-transition:leave-end="opacity-0"
-    class="fixed inset-0 z-50 overflow-y-auto"
-    style="display: none;"
+    x-data="{ 
+        show: false,
+        isSubmitting: false,
+        formData: {
+            type: 'credit',
+            amount: '',
+            description: '',
+            category: 'deposit',
+            payment_method: 'wallet',
+            notes: ''
+        }
+    }"
 >
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div 
-            x-show="show"
-            x-transition:enter="ease-out duration-300"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="ease-in duration-200"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
-            class="fixed inset-0 transition-opacity"
-            aria-hidden="true"
-        >
-            <div class="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
-        </div>
+    <!-- Modal -->
+    <div
+        x-show="show"
+        x-on:open-modal.window="if ($event.detail === 'create-transaction') show = true"
+        class="fixed inset-0 z-50 overflow-y-auto"
+        style="display: none;"
+    >
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
+            </div>
 
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div 
-            x-show="show"
-            x-transition:enter="ease-out duration-300"
-            x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-            x-transition:leave="ease-in duration-200"
-            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-            x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            class="inline-block w-full align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6"
-        >
-            <form action="{{ route('admin.users.transactions.store', $user) }}" method="POST">
-                @csrf
-                <div>
-                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
-                        Create New Transaction
-                    </h3>
-                    <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Type
-                            </label>
-                            <select 
-                                id="type" 
-                                name="type" 
-                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
-                            >
-                                <option value="credit">Credit</option>
-                                <option value="debit">Debit</option>
-                            </select>
-                        </div>
-
-                        <div class="sm:col-span-3">
-                            <label for="amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Amount
-                            </label>
-                            <div class="mt-1">
-                                <input 
-                                    type="number" 
-                                    name="amount" 
-                                    id="amount" 
-                                    step="0.01"
-                                    class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-md"
+            <!-- Modal panel -->
+            <div 
+                class="inline-block w-full align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6"
+            >
+                <form @submit.prevent="submitForm">
+                    <div>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                            Create New Transaction
+                        </h3>
+                        <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                            <div class="sm:col-span-3">
+                                <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Type
+                                </label>
+                                <select 
+                                    id="type" 
+                                    x-model="formData.type"
+                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
                                 >
+                                    <option value="credit">Credit</option>
+                                    <option value="debit">Debit</option>
+                                </select>
                             </div>
-                        </div>
 
-                        <div class="sm:col-span-6">
-                            <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Description
-                            </label>
-                            <div class="mt-1">
-                                <input 
-                                    type="text" 
-                                    name="description" 
-                                    id="description" 
-                                    class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-md"
+                            <div class="sm:col-span-3">
+                                <label for="amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Amount
+                                </label>
+                                <div class="mt-1">
+                                    <input 
+                                        type="number" 
+                                        x-model="formData.amount"
+                                        step="0.01"
+                                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-md"
+                                    >
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-6">
+                                <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Description
+                                </label>
+                                <div class="mt-1">
+                                    <input 
+                                        type="text" 
+                                        x-model="formData.description"
+                                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-md"
+                                    >
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-3">
+                                <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Category
+                                </label>
+                                <select 
+                                    id="category" 
+                                    x-model="formData.category"
+                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
                                 >
+                                    <option value="deposit">Deposit</option>
+                                    <option value="withdrawal">Withdrawal</option>
+                                    <option value="refund">Refund</option>
+                                    <option value="payment">Payment</option>
+                                </select>
                             </div>
-                        </div>
 
-                        <div class="sm:col-span-3">
-                            <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Category
-                            </label>
-                            <select 
-                                id="category" 
-                                name="category" 
-                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
-                            >
-                                <option value="deposit">Deposit</option>
-                                <option value="withdrawal">Withdrawal</option>
-                                <option value="refund">Refund</option>
-                                <option value="payment">Payment</option>
-                            </select>
-                        </div>
+                            <div class="sm:col-span-3">
+                                <label for="payment_method" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Payment Method
+                                </label>
+                                <select 
+                                    id="payment_method" 
+                                    x-model="formData.payment_method"
+                                    name="payment_method" 
+                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
+                                >
+                                    <option value="wallet">Wallet</option>
+                                    <option value="bank">Bank Transfer</option>
+                                    <option value="card">Card</option>
+                                </select>
+                            </div>
 
-                        <div class="sm:col-span-3">
-                            <label for="payment_method" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Payment Method
-                            </label>
-                            <select 
-                                id="payment_method" 
-                                name="payment_method" 
-                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
-                            >
-                                <option value="wallet">Wallet</option>
-                                <option value="bank">Bank Transfer</option>
-                                <option value="card">Card</option>
-                            </select>
-                        </div>
-
-                        <div class="sm:col-span-6">
-                            <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Notes
-                            </label>
-                            <div class="mt-1">
-                                <textarea 
-                                    id="notes" 
-                                    name="notes" 
-                                    rows="3" 
-                                    class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-md"
-                                ></textarea>
+                            <div class="sm:col-span-6">
+                                <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Notes
+                                </label>
+                                <div class="mt-1">
+                                    <textarea 
+                                        id="notes" 
+                                        name="notes" 
+                                        rows="3" 
+                                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-md"
+                                    ></textarea>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                    <button 
-                        type="submit"
-                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:col-start-2 sm:text-sm"
-                    >
-                        Create
-                    </button>
-                    <button 
-                        type="button"
-                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:col-start-1 sm:text-sm"
-                        @click="show = false"
-                    >
-                        Cancel
-                    </button>
-                </div>
-            </form>
+                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                        <button 
+                            type="submit"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:col-start-2 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            :disabled="isSubmitting"
+                        >
+                            <span class="flex items-center">
+                                <template x-if="isSubmitting">
+                                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </template>
+                                <span x-text="isSubmitting ? 'Creating...' : 'Create'"></span>
+                            </span>
+                        </button>
+                        <button 
+                            type="button"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:col-start-1 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            @click="show = false"
+                            :disabled="isSubmitting"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
+
+    <!-- Add the submitForm method -->
+    <script>
+        function submitForm() {
+            if (this.isSubmitting) return;
+            
+            this.isSubmitting = true;
+            
+            fetch('{{ route('admin.users.transactions.store', $user) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(this.formData)
+            })
+            .then(async response => {
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.message || 'Something went wrong');
+                }
+
+                // Show success notification
+                window.dispatchEvent(new CustomEvent('notify', {
+                    detail: {
+                        type: 'success',
+                        message: 'Transaction created successfully'
+                    }
+                }));
+
+                // Close modal and reset form
+                this.show = false;
+                this.formData = {
+                    type: 'credit',
+                    amount: '',
+                    description: '',
+                    category: 'deposit',
+                    payment_method: 'wallet',
+                    notes: ''
+                };
+
+                // Refresh immediately
+                window.location.reload();
+            })
+            .catch(error => {
+                // Show error notification
+                window.dispatchEvent(new CustomEvent('notify', {
+                    detail: {
+                        type: 'error',
+                        message: error.message
+                    }
+                }));
+            })
+            .finally(() => {
+                this.isSubmitting = false;
+            });
+        }
+    </script>
 </div>
 
 <!-- Add this at the end of the file for transaction details modal -->
