@@ -74,7 +74,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            {{ $invoice->invoice_date ? $invoice->invoice_date->format('M d, Y') : 'N/A' }}
+                            {{ $invoice->due_date ? $invoice->due_date->format('M d, Y') : 'N/A' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <button onclick="showInvoiceDetails('{{ $invoice->id }}')" 
@@ -112,7 +112,7 @@
                 </div>
                 <div class="flex justify-between items-center mt-2">
                     <span class="text-sm text-gray-600 dark:text-gray-400">
-                        {{ $invoice->invoice_date ? $invoice->invoice_date->format('M d, Y') : 'N/A' }}
+                        {{ $invoice->due_date ? $invoice->due_date->format('M d, Y') : 'N/A' }}
                     </span>
                     <button onclick="showInvoiceDetails('{{ $invoice->id }}')" 
                             class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 inline-flex items-center">
@@ -232,13 +232,40 @@ async function showInvoiceDetails(invoiceId) {
                                 <p class="text-gray-800 dark:text-gray-200">${formatCurrency(data.amount, data.currency)}</p>
                             </div>
                             <div>
-                                <label class="text-sm text-gray-600 dark:text-gray-400">Invoice Date</label>
-                                <p class="text-gray-800 dark:text-gray-200">${data.invoice_date ? new Date(data.invoice_date).toLocaleDateString() : 'N/A'}</p>
-                            </div>
-                            <div>
                                 <label class="text-sm text-gray-600 dark:text-gray-400">Due Date</label>
                                 <p class="text-gray-800 dark:text-gray-200">${data.due_date ? new Date(data.due_date).toLocaleDateString() : 'N/A'}</p>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Invoice Items -->
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                        <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-2">Invoice Items</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="text-left bg-gray-50 dark:bg-gray-700">
+                                        <th class="px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-300">Description</th>
+                                        <th class="px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-300">Quantity</th>
+                                        <th class="px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-300">Unit Price</th>
+                                        <th class="px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-300">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                    ${data.items.map(item => `
+                                        <tr>
+                                            <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200">${item.description}</td>
+                                            <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200">${item.quantity}</td>
+                                            <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200">${formatCurrency(item.unit_price, data.currency)}</td>
+                                            <td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200">${formatCurrency(item.amount, data.currency)}</td>
+                                        </tr>
+                                    `).join('')}
+                                    <tr class="bg-gray-50 dark:bg-gray-700">
+                                        <td colspan="3" class="px-4 py-2 text-sm font-medium text-right text-gray-700 dark:text-gray-300">Total:</td>
+                                        <td class="px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-200">${formatCurrency(data.amount, data.currency)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 

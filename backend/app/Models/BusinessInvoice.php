@@ -25,7 +25,6 @@ class BusinessInvoice extends Model
     ];
 
     protected $casts = [
-        'invoice_date' => 'datetime',
         'due_date' => 'datetime',
         'amount' => 'decimal:2',
         'status' => 'string'

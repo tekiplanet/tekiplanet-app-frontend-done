@@ -190,7 +190,7 @@ class BusinessController extends Controller
     public function showInvoice(BusinessProfile $business, $invoiceId)
     {
         $invoice = $business->business_invoices()
-            ->with(['customer', 'payments'])
+            ->with(['customer', 'payments', 'items'])
             ->findOrFail($invoiceId);
 
         return response()->json([
@@ -199,13 +199,20 @@ class BusinessController extends Controller
             'amount' => $invoice->amount,
             'currency' => $invoice->currency,
             'status' => $invoice->status,
-            'invoice_date' => $invoice->invoice_date,
             'due_date' => $invoice->due_date,
             'notes' => $invoice->notes,
             'customer' => [
                 'name' => $invoice->customer->name,
                 'email' => $invoice->customer->email,
             ],
+            'items' => $invoice->items->map(function ($item) {
+                return [
+                    'description' => $item->description,
+                    'quantity' => $item->quantity,
+                    'unit_price' => $item->unit_price,
+                    'amount' => $item->amount,
+                ];
+            }),
             'payments' => $invoice->payments->map(function ($payment) {
                 return [
                     'amount' => $payment->amount,
