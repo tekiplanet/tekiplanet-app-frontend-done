@@ -29,9 +29,10 @@ class Course extends Model
     ];
 
     protected $casts = [
-        'prerequisites' => 'array',
-        'learning_outcomes' => 'array',
-        'rating' => 'float'
+        'prerequisites' => 'json',
+        'learning_outcomes' => 'json',
+        'rating' => 'float',
+        'status' => 'string'
     ];
 
     protected static function boot()

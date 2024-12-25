@@ -49,6 +49,7 @@ class CourseController extends Controller
     {
         try {
             \Log::info('Course creation request:', $request->all());
+
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
@@ -62,6 +63,14 @@ class CourseController extends Controller
                 'learning_outcomes' => 'nullable|array',
                 'status' => 'required|in:draft,active,archived',
             ]);
+
+            // Convert arrays to JSON strings before saving
+            if (isset($validated['prerequisites'])) {
+                $validated['prerequisites'] = json_encode($validated['prerequisites']);
+            }
+            if (isset($validated['learning_outcomes'])) {
+                $validated['learning_outcomes'] = json_encode($validated['learning_outcomes']);
+            }
 
             $category = CourseCategory::find($validated['category_id']);
 
@@ -91,5 +100,14 @@ class CourseController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Display the specified course.
+     */
+    public function show(Course $course)
+    {
+        $course->load(['instructor', 'category', 'modules.lessons', 'reviews']);
+        return view('admin.courses.show', compact('course'));
     }
 } 
