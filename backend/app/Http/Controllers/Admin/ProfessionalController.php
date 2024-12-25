@@ -102,7 +102,7 @@ class ProfessionalController extends Controller
             <p>{$message}</p>
             <p><strong>Professional Details:</strong></p>
             <ul>
-                <li>Category: {$professional->professional_category->name}</li>
+                <li>Category: {$professional->category->name}</li>
                 <li>Current Status: " . ucfirst($newStatus) . "</li>
             </ul>
             " . ($newStatus === 'inactive' ? "
