@@ -233,54 +233,84 @@ class CourseController extends Controller
      */
     public function bulkUpdateEnrollments(Course $course, Request $request)
     {
-        $request->validate([
-            'enrollment_ids' => 'required|array',
-            'enrollment_ids.*' => 'required|uuid|exists:enrollments,id',
-            'action' => 'required|in:status,payment_status,progress',
-            'value' => 'required|string'
-        ]);
+        try {
+            $request->validate([
+                'enrollment_ids' => 'required|array',
+                'enrollment_ids.*' => 'required|uuid|exists:enrollments,id',
+                'action' => 'required|in:status,payment_status,progress',
+                'value' => 'required|string'
+            ]);
 
-        $enrollments = $course->enrollments()
-            ->whereIn('id', $request->enrollment_ids)
-            ->with('user')
-            ->get();
+            $enrollments = $course->enrollments()
+                ->whereIn('id', $request->enrollment_ids)
+                ->with('user')
+                ->get();
 
-        foreach ($enrollments as $enrollment) {
-            $oldValue = $enrollment->{$request->action};
-            $enrollment->{$request->action} = $request->value;
-            $enrollment->save();
+            foreach ($enrollments as $enrollment) {
+                $oldValue = $enrollment->{$request->action};
+                $enrollment->{$request->action} = $request->value;
+                $enrollment->save();
 
-            // Prepare notification data
-            $notificationData = [
-                'type' => 'enrollment_update',
-                'title' => 'Course Enrollment Update',
-                'message' => "Your enrollment status for {$course->title} has been updated.",
-                'icon' => 'bell',
-                'action_url' => route('student.courses.show', $course->id),
-                'extra_data' => [
-                    'course_id' => $course->id,
-                    'field_updated' => $request->action,
-                    'old_value' => $oldValue,
-                    'new_value' => $request->value
-                ]
-            ];
+                try {
+                    // Format values for progress updates
+                    $formattedOldValue = $request->action === 'progress' ? $oldValue . '%' : $oldValue;
+                    $formattedNewValue = $request->action === 'progress' ? $request->value . '%' : $request->value;
 
-            // Send notification
-            app(NotificationService::class)->send($notificationData, $enrollment->user);
+                    // Prepare notification data with different messages based on action
+                    $notificationData = [
+                        'type' => 'enrollment_update',
+                        'title' => match($request->action) {
+                            'progress' => 'Course Progress Update',
+                            'payment_status' => 'Payment Status Update',
+                            default => 'Enrollment Status Update'
+                        },
+                        'message' => match($request->action) {
+                            'progress' => "Your progress for {$course->title} has been updated to {$request->value}%",
+                            'payment_status' => "Your payment status for {$course->title} has been updated to " . str_replace('_', ' ', $request->value),
+                            default => "Your enrollment status for {$course->title} has been updated to {$request->value}"
+                        },
+                        'icon' => match($request->action) {
+                            'progress' => 'chart',
+                            'payment_status' => 'credit-card',
+                            default => 'bell'
+                        },
+                        'action_url' => null,
+                        'extra_data' => [
+                            'course_id' => $course->id,
+                            'field_updated' => $request->action,
+                            'old_value' => $formattedOldValue,
+                            'new_value' => $formattedNewValue
+                        ]
+                    ];
 
-            // Send email
-            Mail::to($enrollment->user)->send(new EnrollmentUpdated(
-                $enrollment,
-                $course,
-                $request->action,
-                $oldValue,
-                $request->value
-            ));
+                    app(NotificationService::class)->send($notificationData, $enrollment->user);
+
+                    // Send email with appropriate context
+                    Mail::to($enrollment->user)->queue(new EnrollmentUpdated(
+                        $enrollment,
+                        $course,
+                        $request->action,
+                        $formattedOldValue,
+                        $formattedNewValue
+                    ));
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send notification/email: ' . $e->getMessage());
+                    continue;
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Enrollments updated successfully',
+                'count' => $enrollments->count()
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Bulk update error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update enrollments: ' . $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Enrollments updated successfully'
-        ]);
     }
 } 
