@@ -7,9 +7,12 @@
             {{ $business->business_name }} - Customers
         </h2>
         <a href="{{ route('admin.businesses.show', $business) }}" 
-           class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
-            Back to Business
-        </a>
+           class="inline-flex items-center text-sm text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+             </svg>
+             Back to Business
+         </a>
     </div>
 
     <!-- Filters and Search -->
@@ -121,16 +124,18 @@
 <!-- Customer Details Modal -->
 <div id="customerDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[60]">
     <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg shadow-xl dark:bg-gray-800 w-full max-w-2xl">
-            <div class="p-6">
+        <div class="bg-white rounded-lg shadow-xl dark:bg-gray-800 w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">
                     Customer Details
                 </h3>
+            </div>
+            <div class="p-6 overflow-y-auto">
                 <div id="customerDetailsContent" class="space-y-4">
                     <!-- Content will be loaded here -->
                 </div>
             </div>
-            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 rounded-b-lg flex justify-end">
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 rounded-b-lg flex justify-end border-t border-gray-200 dark:border-gray-700">
                 <button onclick="closeCustomerModal()" 
                         class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-700">
                     Close

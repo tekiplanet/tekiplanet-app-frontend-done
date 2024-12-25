@@ -167,4 +167,53 @@ class BusinessController extends Controller
             'currency' => $currency
         ]);
     }
+
+    public function invoices(Request $request, BusinessProfile $business)
+    {
+        $invoices = $business->business_invoices()
+            ->with(['customer', 'payments'])
+            ->when($request->search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('invoice_number', 'like', "%{$search}%")
+                      ->orWhereHas('customer', function ($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                      });
+                });
+            })
+            ->latest()
+            ->paginate(10);
+
+        return view('admin.businesses.invoices.index', compact('business', 'invoices'));
+    }
+
+    public function showInvoice(BusinessProfile $business, $invoiceId)
+    {
+        $invoice = $business->business_invoices()
+            ->with(['customer', 'payments'])
+            ->findOrFail($invoiceId);
+
+        return response()->json([
+            'id' => $invoice->id,
+            'invoice_number' => $invoice->invoice_number,
+            'amount' => $invoice->amount,
+            'currency' => $invoice->currency,
+            'status' => $invoice->status,
+            'invoice_date' => $invoice->invoice_date,
+            'due_date' => $invoice->due_date,
+            'notes' => $invoice->notes,
+            'customer' => [
+                'name' => $invoice->customer->name,
+                'email' => $invoice->customer->email,
+            ],
+            'payments' => $invoice->payments->map(function ($payment) {
+                return [
+                    'amount' => $payment->amount,
+                    'currency' => $payment->currency,
+                    'payment_date' => $payment->payment_date,
+                    'notes' => $payment->notes,
+                ];
+            }),
+        ]);
+    }
 } 

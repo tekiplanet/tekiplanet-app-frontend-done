@@ -46,6 +46,12 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
                 ->name('businesses.customers.index');
             Route::get('business-profiles/{business}/customers/{customer}', [BusinessController::class, 'showCustomer'])
                 ->name('businesses.customers.show');
+
+            // Business Invoices routes
+            Route::get('business-profiles/{business}/invoices', [BusinessController::class, 'invoices'])
+                ->name('businesses.invoices.index');
+            Route::get('business-profiles/{business}/invoices/{invoice}', [BusinessController::class, 'showInvoice'])
+                ->name('businesses.invoices.show');
         });
 
         // Course management routes - accessible by super admin, admin, and tutor
