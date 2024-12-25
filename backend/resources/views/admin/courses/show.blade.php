@@ -59,7 +59,7 @@
                     <div>
                         <h4 class="font-semibold mb-2">Prerequisites:</h4>
                         <ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
-                            @forelse($course->prerequisites ?? [] as $prerequisite)
+                            @forelse(json_decode($course->prerequisites) ?? [] as $prerequisite)
                                 <li>{{ $prerequisite }}</li>
                             @empty
                                 <li class="text-gray-500">No prerequisites specified</li>
@@ -69,7 +69,7 @@
                     <div>
                         <h4 class="font-semibold mb-2">Learning Outcomes:</h4>
                         <ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
-                            @forelse($course->learning_outcomes ?? [] as $outcome)
+                            @forelse(json_decode($course->learning_outcomes) ?? [] as $outcome)
                                 <li>{{ $outcome }}</li>
                             @empty
                                 <li class="text-gray-500">No learning outcomes specified</li>

@@ -29,8 +29,8 @@ class Course extends Model
     ];
 
     protected $casts = [
-        'prerequisites' => 'json',
-        'learning_outcomes' => 'json',
+        'prerequisites' => 'array',
+        'learning_outcomes' => 'array',
         'rating' => 'float',
         'status' => 'string'
     ];
@@ -104,5 +104,49 @@ class Course extends Model
     public function category()
     {
         return $this->belongsTo(CourseCategory::class);
+    }
+
+    /**
+     * Get the prerequisites attribute.
+     *
+     * @param  string|null  $value
+     * @return array
+     */
+    public function getPrerequisitesAttribute($value)
+    {
+        return $value ? json_decode($value, true) : [];
+    }
+
+    /**
+     * Get the learning outcomes attribute.
+     *
+     * @param  string|null  $value
+     * @return array
+     */
+    public function getLearningOutcomesAttribute($value)
+    {
+        return $value ? json_decode($value, true) : [];
+    }
+
+    /**
+     * Set the prerequisites attribute.
+     *
+     * @param  array|string  $value
+     * @return void
+     */
+    public function setPrerequisitesAttribute($value)
+    {
+        $this->attributes['prerequisites'] = is_array($value) ? json_encode($value) : $value;
+    }
+
+    /**
+     * Set the learning outcomes attribute.
+     *
+     * @param  array|string  $value
+     * @return void
+     */
+    public function setLearningOutcomesAttribute($value)
+    {
+        $this->attributes['learning_outcomes'] = is_array($value) ? json_encode($value) : $value;
     }
 }
