@@ -59,7 +59,12 @@
                     <div>
                         <h4 class="font-semibold mb-2">Prerequisites:</h4>
                         <ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
-                            @forelse(json_decode($course->prerequisites) ?? [] as $prerequisite)
+                            @php
+                                $prerequisites = is_string($course->prerequisites) 
+                                    ? json_decode($course->prerequisites, true) 
+                                    : $course->prerequisites;
+                            @endphp
+                            @forelse($prerequisites ?? [] as $prerequisite)
                                 <li>{{ $prerequisite }}</li>
                             @empty
                                 <li class="text-gray-500">No prerequisites specified</li>
@@ -69,7 +74,12 @@
                     <div>
                         <h4 class="font-semibold mb-2">Learning Outcomes:</h4>
                         <ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
-                            @forelse(json_decode($course->learning_outcomes) ?? [] as $outcome)
+                            @php
+                                $learningOutcomes = is_string($course->learning_outcomes) 
+                                    ? json_decode($course->learning_outcomes, true) 
+                                    : $course->learning_outcomes;
+                            @endphp
+                            @forelse($learningOutcomes ?? [] as $outcome)
                                 <li>{{ $outcome }}</li>
                             @empty
                                 <li class="text-gray-500">No learning outcomes specified</li>
