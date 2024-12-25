@@ -117,4 +117,26 @@ class BusinessController extends Controller
             'status' => $business->status
         ]);
     }
+
+    public function customers(Request $request, BusinessProfile $business)
+    {
+        $customers = $business->business_customers()
+            ->when($request->search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(10);
+
+        return view('admin.businesses.customers.index', compact('business', 'customers'));
+    }
+
+    public function showCustomer(BusinessProfile $business, $customerId)
+    {
+        $customer = $business->business_customers()->findOrFail($customerId);
+        return response()->json($customer);
+    }
 } 

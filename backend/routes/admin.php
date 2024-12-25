@@ -40,6 +40,12 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
             ]);
             Route::post('business-profiles/{business}/toggle-status', [BusinessController::class, 'toggleStatus'])
                 ->name('businesses.toggle-status');
+
+            // Business Customers routes
+            Route::get('business-profiles/{business}/customers', [BusinessController::class, 'customers'])
+                ->name('businesses.customers.index');
+            Route::get('business-profiles/{business}/customers/{customer}', [BusinessController::class, 'showCustomer'])
+                ->name('businesses.customers.show');
         });
 
         // Course management routes - accessible by super admin, admin, and tutor

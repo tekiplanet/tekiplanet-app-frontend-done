@@ -100,12 +100,13 @@
                 Statistics
             </h3>
             <div class="grid grid-cols-2 gap-4">
-                <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                <a href="{{ route('admin.businesses.customers.index', $business) }}" 
+                   class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition">
                     <p class="text-sm text-gray-600 dark:text-gray-400">Total Customers</p>
                     <p class="text-2xl font-semibold text-gray-800 dark:text-gray-200">
                         {{ $business->business_customers()->count() }}
                     </p>
-                </div>
+                </a>
                 <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
                     <p class="text-sm text-gray-600 dark:text-gray-400">Total Invoices</p>
                     <p class="text-2xl font-semibold text-gray-800 dark:text-gray-200">
