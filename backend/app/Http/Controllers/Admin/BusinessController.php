@@ -57,15 +57,20 @@ class BusinessController extends Controller
         ]);
     }
 
-    public function toggleStatus(BusinessProfile $business)
+    public function toggleStatus(Request $request, BusinessProfile $business)
     {
-        $business->status = $business->status === 'active' ? 'inactive' : 'active';
+        $newStatus = $business->status === 'active' ? 'inactive' : 'active';
+        $business->status = $newStatus;
         $business->save();
+
+        $message = $newStatus === 'active' 
+            ? "Your business account has been activated successfully."
+            : "Your business account has been deactivated. Reason: " . $request->input('reason');
 
         // Send notification to the business owner
         $business->user->notify(new CustomNotification(
             'Business Status Update',
-            "Your business account has been " . $business->status,
+            $message,
             'business-status'
         ));
 

@@ -282,8 +282,54 @@
                     Cancel
                 </button>
                 <button onclick="submitEdit()" 
+                        id="saveButton"
                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Save Changes
+                    <span class="inline-flex items-center">
+                        <svg id="saveSpinner" class="w-4 h-4 mr-2 animate-spin hidden" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span id="saveButtonText">Save Changes</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status Confirmation Modal -->
+<div id="confirmStatusModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[60]">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl dark:bg-gray-800 w-full max-w-md">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">
+                    Confirm Status Change
+                </h3>
+                <p class="text-gray-600 dark:text-gray-400" id="confirmStatusMessage"></p>
+                <div id="deactivationReasonContainer" class="mt-4 hidden">
+                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        Reason for Deactivation
+                    </label>
+                    <textarea id="deactivationReason" rows="3"
+                              class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                              placeholder="Please provide a reason for deactivation..."></textarea>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 rounded-b-lg flex justify-end gap-4">
+                <button onclick="closeConfirmStatusModal()" 
+                        class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-700">
+                    Cancel
+                </button>
+                <button onclick="confirmToggleStatus()"
+                        id="confirmStatusButton"
+                        class="px-4 py-2 text-white rounded-lg">
+                    <span class="inline-flex items-center">
+                        <svg id="statusSpinner" class="w-4 h-4 mr-2 animate-spin hidden" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span id="confirmStatusButtonText">Confirm</span>
+                    </span>
                 </button>
             </div>
         </div>
@@ -294,6 +340,8 @@
 
 @push('scripts')
 <script>
+let isProcessing = false;
+
 function showNotification(title, message, type = 'success') {
     const event = new CustomEvent('notify', {
         detail: {
@@ -314,7 +362,15 @@ function closeEditModal() {
 }
 
 async function submitEdit() {
+    if (isProcessing) return;
+    
     try {
+        isProcessing = true;
+        const saveSpinner = document.getElementById('saveSpinner');
+        const saveButtonText = document.getElementById('saveButtonText');
+        saveSpinner.classList.remove('hidden');
+        saveButtonText.textContent = 'Saving...';
+
         const form = document.getElementById('editForm');
         const response = await fetch('{{ route("admin.businesses.update", ["business" => $business]) }}', {
             method: 'PUT',
@@ -336,29 +392,84 @@ async function submitEdit() {
         }
     } catch (error) {
         showNotification('Error', error.message, 'error');
+    } finally {
+        isProcessing = false;
+        const saveSpinner = document.getElementById('saveSpinner');
+        const saveButtonText = document.getElementById('saveButtonText');
+        saveSpinner.classList.add('hidden');
+        saveButtonText.textContent = 'Save Changes';
     }
 }
 
-async function toggleStatus() {
+function toggleStatus() {
+    const isCurrentlyActive = '{{ $business->status }}' === 'active';
+    const confirmStatusModal = document.getElementById('confirmStatusModal');
+    const confirmStatusMessage = document.getElementById('confirmStatusMessage');
+    const confirmStatusButton = document.getElementById('confirmStatusButton');
+    const deactivationReasonContainer = document.getElementById('deactivationReasonContainer');
+
+    confirmStatusMessage.textContent = `Are you sure you want to ${isCurrentlyActive ? 'deactivate' : 'activate'} this business?`;
+    confirmStatusButton.className = `px-4 py-2 text-white rounded-lg ${isCurrentlyActive ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`;
+    
+    // Show/hide reason field based on action
+    if (isCurrentlyActive) {
+        deactivationReasonContainer.classList.remove('hidden');
+    } else {
+        deactivationReasonContainer.classList.add('hidden');
+    }
+    
+    confirmStatusModal.classList.remove('hidden');
+}
+
+function closeConfirmStatusModal() {
+    document.getElementById('confirmStatusModal').classList.add('hidden');
+}
+
+async function confirmToggleStatus() {
+    if (isProcessing) return;
+
+    const isCurrentlyActive = '{{ $business->status }}' === 'active';
+    const deactivationReason = document.getElementById('deactivationReason').value;
+
+    // Validate reason if deactivating
+    if (isCurrentlyActive && !deactivationReason.trim()) {
+        showNotification('Error', 'Please provide a reason for deactivation', 'error');
+        return;
+    }
+
     try {
+        isProcessing = true;
+        const statusSpinner = document.getElementById('statusSpinner');
+        const confirmStatusButtonText = document.getElementById('confirmStatusButtonText');
+        statusSpinner.classList.remove('hidden');
+        confirmStatusButtonText.textContent = 'Processing...';
+
         const response = await fetch('{{ route("admin.businesses.toggle-status", ["business" => $business]) }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            }
+            },
+            body: JSON.stringify({ reason: deactivationReason })
         });
 
         const data = await response.json();
 
         if (response.ok) {
             showNotification('Success', data.message);
+            closeConfirmStatusModal();
             location.reload();
         } else {
             throw new Error(data.message || 'Something went wrong');
         }
     } catch (error) {
         showNotification('Error', error.message, 'error');
+    } finally {
+        isProcessing = false;
+        const statusSpinner = document.getElementById('statusSpinner');
+        const confirmStatusButtonText = document.getElementById('confirmStatusButtonText');
+        statusSpinner.classList.add('hidden');
+        confirmStatusButtonText.textContent = 'Confirm';
     }
 }
 </script>
