@@ -5,8 +5,22 @@ export default {
     "./resources/**/*.js",
     "./resources/**/*.vue",
   ],
+  darkMode: 'class',
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: {
+          DEFAULT: '#0033AB',
+          dark: '#141F78',
+          darker: '#141F77',
+        },
+        secondary: {
+          DEFAULT: '#F25100',
+        }
+      }
+    },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/forms'),
+  ],
 } 
