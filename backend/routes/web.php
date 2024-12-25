@@ -56,4 +56,6 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth:admin']], function () 
             'store' => 'admin.courses.store',
             'destroy' => 'admin.courses.destroy',
         ]);
+    Route::put('courses/{course}', [CourseController::class, 'update'])->name('courses.update');
+    Route::patch('courses/{course}', [CourseController::class, 'update'])->name('courses.update');
 });
