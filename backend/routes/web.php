@@ -19,3 +19,6 @@ Route::get('/', function () {
 });
 
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
+
+// Include admin routes
+require __DIR__.'/admin.php';
