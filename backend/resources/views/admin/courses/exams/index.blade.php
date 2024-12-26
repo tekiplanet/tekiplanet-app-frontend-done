@@ -12,6 +12,69 @@
         </a>
     </div>
 
+    <!-- Search/Filter Section -->
+    <div class="mb-6 bg-white rounded-lg shadow-md dark:bg-gray-800 p-4">
+        <form action="{{ route('admin.courses.exams.index', $course) }}" method="GET" class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1">
+                <input type="text" 
+                       name="search" 
+                       value="{{ request('search') }}"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                       placeholder="Search exams...">
+            </div>
+
+            <div class="w-full md:w-48">
+                <select name="type" 
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                    <option value="">All Types</option>
+                    <option value="multiple_choice" {{ request('type') === 'multiple_choice' ? 'selected' : '' }}>
+                        Multiple Choice
+                    </option>
+                    <option value="true_false" {{ request('type') === 'true_false' ? 'selected' : '' }}>
+                        True/False
+                    </option>
+                    <option value="mixed" {{ request('type') === 'mixed' ? 'selected' : '' }}>
+                        Mixed
+                    </option>
+                </select>
+            </div>
+
+            <div class="w-full md:w-48">
+                <select name="status" 
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                    <option value="">All Status</option>
+                    <option value="upcoming" {{ request('status') === 'upcoming' ? 'selected' : '' }}>Upcoming</option>
+                    <option value="ongoing" {{ request('status') === 'ongoing' ? 'selected' : '' }}>Ongoing</option>
+                    <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
+                    <option value="missed" {{ request('status') === 'missed' ? 'selected' : '' }}>Missed</option>
+                </select>
+            </div>
+
+            <div class="w-full md:w-48">
+                <select name="sort_by" 
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                    <option value="date" {{ request('sort_by') === 'date' ? 'selected' : '' }}>Sort by Date</option>
+                    <option value="title" {{ request('sort_by') === 'title' ? 'selected' : '' }}>Sort by Title</option>
+                    <option value="type" {{ request('sort_by') === 'type' ? 'selected' : '' }}>Sort by Type</option>
+                    <option value="status" {{ request('sort_by') === 'status' ? 'selected' : '' }}>Sort by Status</option>
+                </select>
+            </div>
+
+            <div class="w-full md:w-48">
+                <select name="sort_order" 
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                    <option value="asc" {{ request('sort_order') === 'asc' ? 'selected' : '' }}>Ascending</option>
+                    <option value="desc" {{ request('sort_order', 'desc') === 'desc' ? 'selected' : '' }}>Descending</option>
+                </select>
+            </div>
+
+            <button type="submit" 
+                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                Search
+            </button>
+        </form>
+    </div>
+
     <!-- Exams Table -->
     <div class="w-full overflow-hidden rounded-lg shadow-md">
         <div class="w-full overflow-x-auto">

@@ -6,6 +6,37 @@
         <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">
             All Course Exams
         </h2>
+        <div x-data="{ open: false }" class="relative">
+            <button @click="open = !open" 
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Create Exam
+            </button>
+
+            <!-- Course Selection Dropdown -->
+            <div x-show="open" 
+                 @click.away="open = false"
+                 class="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+                <div class="p-4">
+                    <input type="text" 
+                           x-ref="searchInput"
+                           placeholder="Search courses..."
+                           class="w-full px-3 py-2 border rounded-lg mb-2 focus:outline-none focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                           @input="searchCourses($event.target.value)">
+                    
+                    <div id="coursesList" class="space-y-2">
+                        @foreach($courses as $course)
+                            <a href="{{ route('admin.courses.exams.create', $course) }}" 
+                               class="block p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200">
+                                {{ $course->title }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Search/Filter Section -->
@@ -142,4 +173,20 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    function searchCourses(query) {
+        const coursesList = document.getElementById('coursesList');
+        const courses = coursesList.getElementsByTagName('a');
+        
+        query = query.toLowerCase();
+        
+        for (let course of courses) {
+            const title = course.textContent.toLowerCase();
+            course.style.display = title.includes(query) ? 'block' : 'none';
+        }
+    }
+</script>
+@endpush
 @endsection 

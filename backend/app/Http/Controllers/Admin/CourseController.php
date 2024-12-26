@@ -48,7 +48,12 @@ class CourseController extends Controller
                 ->paginate(10)
                 ->withQueryString();
             
-            return view('admin.courses.exams.all', compact('exams'));
+            // Get all active courses for the create exam dropdown
+            $courses = Course::where('status', 'active')
+                ->orderBy('title')
+                ->get(['id', 'title']);
+            
+            return view('admin.courses.exams.all', compact('exams', 'courses'));
         }
         
         $categories = CourseCategory::orderBy('name')->get();

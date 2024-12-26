@@ -9,11 +9,25 @@ use Illuminate\Http\Request;
 
 class CourseExamController extends Controller
 {
-    public function index(Course $course)
+    public function index(Course $course, Request $request)
     {
         $exams = $course->exams()
-            ->orderBy('date', 'desc')
-            ->paginate(10);
+            ->when($request->search, function($query, $search) {
+                $query->where('title', 'like', "%{$search}%");
+            })
+            ->when($request->type, function($query, $type) {
+                $query->where('type', $type);
+            })
+            ->when($request->status, function($query, $status) {
+                $query->where('status', $status);
+            })
+            ->when($request->sort_by, function($query) use ($request) {
+                $query->orderBy($request->sort_by, $request->sort_order ?? 'asc');
+            }, function($query) {
+                $query->orderBy('date', 'desc');
+            })
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.courses.exams.index', compact('course', 'exams'));
     }
@@ -25,25 +39,43 @@ class CourseExamController extends Controller
 
     public function store(Request $request, Course $course)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'total_questions' => 'required|integer|min:1',
-            'pass_percentage' => 'required|integer|between:1,100',
-            'duration_minutes' => 'required|integer|min:1',
-            'type' => 'required|in:multiple_choice,true_false,mixed',
-            'difficulty' => 'required|in:beginner,intermediate,advanced',
-            'is_mandatory' => 'required|boolean',
-            'date' => 'required|date|after:today',
-            'duration' => 'required|string',
-            'topics' => 'nullable|array'
-        ]);
+        try {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'total_questions' => 'required|integer|min:1',
+                'pass_percentage' => 'required|integer|between:1,100',
+                'duration_minutes' => 'required|integer|min:1',
+                'type' => 'required|in:multiple_choice,true_false,mixed',
+                'difficulty' => 'required|in:beginner,intermediate,advanced',
+                'is_mandatory' => 'required|boolean',
+                'date' => 'required|date|after:today',
+                'duration' => 'required|string',
+                'topics' => 'nullable|array'
+            ]);
 
-        $exam = $course->exams()->create($validated);
+            $validated['status'] = 'upcoming';
 
-        return redirect()
-            ->route('admin.courses.exams.index', $course)
-            ->with('success', 'Exam created successfully.');
+            $exam = $course->exams()->create($validated);
+
+            return redirect()
+                ->route('admin.courses.exams.index', $course)
+                ->with('notification', [
+                    'message' => 'Exam created successfully',
+                    'type' => 'success'
+                ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error creating exam: ' . $e->getMessage());
+            
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('notification', [
+                    'message' => 'Failed to create exam. Please try again.',
+                    'type' => 'error'
+                ]);
+        }
     }
 
     public function show(Course $course, CourseExam $exam)
@@ -80,7 +112,10 @@ class CourseExamController extends Controller
 
         return redirect()
             ->route('admin.courses.exams.index', $course)
-            ->with('success', 'Exam updated successfully.');
+            ->with('notification', [
+                'message' => 'Exam updated successfully',
+                'type' => 'success'
+            ]);
     }
 
     public function destroy(Course $course, CourseExam $exam)
@@ -89,6 +124,9 @@ class CourseExamController extends Controller
 
         return redirect()
             ->route('admin.courses.exams.index', $course)
-            ->with('success', 'Exam deleted successfully.');
+            ->with('notification', [
+                'message' => 'Exam deleted successfully',
+                'type' => 'success'
+            ]);
     }
 } 

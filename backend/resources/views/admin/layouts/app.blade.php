@@ -98,5 +98,18 @@
 
     @stack('scripts')
     @include('components.notification')
+
+    <!-- Add this script to trigger notification -->
+    @if(session('notification'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showNotification(
+                '', // title (empty as per your notification component)
+                '{{ session("notification")["message"] }}',
+                '{{ session("notification")["type"] }}'
+            );
+        });
+    </script>
+    @endif
 </body>
 </html> 
