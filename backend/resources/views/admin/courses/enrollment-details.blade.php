@@ -108,6 +108,25 @@
                             {{ str_replace('_', ' ', ucfirst($enrollment->payment_status)) }}
                         </span>
                     </div>
+                    <div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Next Payment Due</p>
+                        @php
+                            $nextPayment = $enrollment->installments()
+                                ->where('status', 'pending')
+                                ->orderBy('due_date')
+                                ->first();
+                        @endphp
+                        @if($nextPayment)
+                            <p class="text-lg font-semibold {{ strtotime($nextPayment->due_date) < time() ? 'text-red-600' : 'text-blue-600' }}">
+                                {{ date('M d, Y', strtotime($nextPayment->due_date)) }}
+                                @if(strtotime($nextPayment->due_date) < time())
+                                    <span class="text-sm text-red-500">(Overdue)</span>
+                                @endif
+                            </p>
+                        @else
+                            <p class="text-lg font-semibold text-green-600">No pending payments</p>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
