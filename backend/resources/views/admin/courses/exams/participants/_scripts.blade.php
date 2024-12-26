@@ -52,6 +52,15 @@ bulkActionForm.addEventListener('submit', async function(e) {
     const selectedUsers = Array.from(document.querySelectorAll('.user-checkbox:checked')).map(cb => cb.value);
     const action = bulkActionSelect.value;
     
+    // Show loading state
+    const bulkLoadingSpinner = document.getElementById('bulkLoadingSpinner');
+    const bulkActionBtnText = document.getElementById('bulkActionBtnText');
+    const applyBulkAction = document.getElementById('applyBulkAction');
+    
+    applyBulkAction.disabled = true;
+    bulkLoadingSpinner.classList.remove('hidden');
+    bulkActionBtnText.textContent = 'Updating...';
+    
     let data = {
         user_exams: selectedUsers,
         action: action
@@ -72,6 +81,10 @@ bulkActionForm.addEventListener('submit', async function(e) {
         }
     } catch (error) {
         showNotification('', error.message || 'An error occurred', 'error');
+        // Reset button state on error
+        applyBulkAction.disabled = false;
+        bulkLoadingSpinner.classList.add('hidden');
+        bulkActionBtnText.textContent = 'Apply to Selected';
     }
 });
 
@@ -87,6 +100,19 @@ function closeActionModal() {
 
 // Handle individual action submission
 document.getElementById('saveIndividualAction').addEventListener('click', async function() {
+    const button = this;
+    const originalText = button.textContent;
+    
+    // Show loading state
+    button.disabled = true;
+    button.innerHTML = `
+        <svg class="animate-spin h-4 w-4 text-white inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Saving...
+    `;
+    
     const data = {
         status: document.getElementById('individualStatus').value,
         score: document.getElementById('individualScore').value,
@@ -102,6 +128,9 @@ document.getElementById('saveIndividualAction').addEventListener('click', async 
         }
     } catch (error) {
         showNotification('', error.message || 'An error occurred', 'error');
+        // Reset button state on error
+        button.disabled = false;
+        button.textContent = originalText;
     }
 });
 
