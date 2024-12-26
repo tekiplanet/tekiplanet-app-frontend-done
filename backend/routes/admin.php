@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\BusinessController;
 use App\Http\Controllers\Admin\ProfessionalController;
 use App\Http\Controllers\Admin\CourseExamController;
 use App\Http\Controllers\Admin\CourseExamParticipantController;
+use App\Http\Controllers\Admin\ProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
@@ -100,5 +101,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
                 Route::post('/{participant}', [CourseExamParticipantController::class, 'update'])->name('update');
             });
         });
+
+        // Product routes
+        Route::resource('products', ProductController::class)->except(['create', 'store', 'destroy']);
     });
 }); 
