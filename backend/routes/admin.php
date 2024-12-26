@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\BusinessController;
 use App\Http\Controllers\Admin\ProfessionalController;
+use App\Http\Controllers\Admin\CourseExamController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
@@ -79,5 +80,16 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::resource('professionals', ProfessionalController::class)->except(['create', 'store', 'destroy']);
         Route::post('professionals/{professional}/toggle-status', [ProfessionalController::class, 'toggleStatus'])
             ->name('professionals.toggle-status');
+
+        // Course Exam routes
+        Route::group(['prefix' => 'courses/{course}/exams', 'as' => 'courses.exams.'], function () {
+            Route::get('/', [CourseExamController::class, 'index'])->name('index');
+            Route::get('/create', [CourseExamController::class, 'create'])->name('create');
+            Route::post('/', [CourseExamController::class, 'store'])->name('store');
+            Route::get('/{exam}', [CourseExamController::class, 'show'])->name('show');
+            Route::get('/{exam}/edit', [CourseExamController::class, 'edit'])->name('edit');
+            Route::put('/{exam}', [CourseExamController::class, 'update'])->name('update');
+            Route::delete('/{exam}', [CourseExamController::class, 'destroy'])->name('destroy');
+        });
     });
 }); 

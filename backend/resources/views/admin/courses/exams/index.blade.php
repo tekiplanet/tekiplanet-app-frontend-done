@@ -1,39 +1,7 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<div x-data="{ 
-    showEditModal: false,
-    examId: null,
-    examData: {
-        title: '',
-        description: '',
-        date: '',
-        duration: '',
-        duration_minutes: '',
-        type: '',
-        difficulty: '',
-        total_questions: '',
-        pass_percentage: '',
-        is_mandatory: false
-    },
-    loading: false,
-    initializeExam(exam) {
-        this.examId = exam.id;
-        this.examData = {
-            title: exam.title,
-            description: exam.description || '',
-            date: exam.date,
-            duration: exam.duration,
-            duration_minutes: exam.duration_minutes,
-            type: exam.type,
-            difficulty: exam.difficulty,
-            total_questions: exam.total_questions,
-            pass_percentage: exam.pass_percentage,
-            is_mandatory: exam.is_mandatory
-        };
-        this.showEditModal = true;
-    }
-}" class="container px-6 mx-auto">
+<div class="container px-6 mx-auto">
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">
             Course Exams - {{ $course->title }}
@@ -147,7 +115,7 @@
                                 <div class="flex items-center space-x-4">
                                     <a href="{{ route('admin.courses.exams.show', [$course, $exam]) }}" 
                                        class="text-blue-600 hover:text-blue-900">View</a>
-                                    <button @click="initializeExam({{ $exam->toJson() }})" 
+                                    <button onclick="initializeExam({{ $exam }})" 
                                             class="text-yellow-600 hover:text-yellow-900">Edit</button>
                                     <form action="{{ route('admin.courses.exams.destroy', [$course, $exam]) }}" 
                                           method="POST" 
@@ -212,7 +180,7 @@
                            class="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                             View
                         </a>
-                        <button @click="initializeExam({{ $exam->toJson() }})" 
+                        <button onclick="initializeExam({{ $exam }})" 
                                 class="px-3 py-1 text-sm bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
                             Edit
                         </button>
@@ -241,72 +209,58 @@
     </div>
 
     <!-- Edit Modal -->
-    <div x-show="showEditModal" 
-         class="fixed inset-0 z-50 overflow-y-auto" 
-         style="display: none;"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0">
+    <div id="editModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             <!-- Background overlay -->
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div class="fixed inset-0 transition-opacity">
                 <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
             </div>
 
             <!-- Modal panel -->
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full dark:bg-gray-800"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                 x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                
-                <form @submit.prevent="submitForm()" class="p-6">
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full dark:bg-gray-800">
+                <form id="editForm" class="p-6">
                     <div class="mb-4">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Edit Exam</h3>
                     </div>
 
                     <div class="space-y-4">
-                        <!-- Title -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
                             <input type="text" 
-                                   x-model="examData.title"
+                                   id="examTitle"
+                                   name="title"
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
 
-                        <!-- Date -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
                             <input type="date" 
-                                   x-model="examData.date"
+                                   id="examDate"
+                                   name="date"
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
 
-                        <!-- Duration -->
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration</label>
                                 <input type="text" 
-                                       x-model="examData.duration"
+                                       id="examDuration"
+                                       name="duration"
                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Minutes</label>
                                 <input type="number" 
-                                       x-model="examData.duration_minutes"
+                                       id="examDurationMinutes"
+                                       name="duration_minutes"
                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                         </div>
 
-                        <!-- Type -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
-                            <select x-model="examData.type"
+                            <select id="examType"
+                                    name="type"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 <option value="multiple_choice">Multiple Choice</option>
                                 <option value="true_false">True/False</option>
@@ -314,10 +268,10 @@
                             </select>
                         </div>
 
-                        <!-- Difficulty -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Difficulty</label>
-                            <select x-model="examData.difficulty"
+                            <select id="examDifficulty"
+                                    name="difficulty"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 <option value="beginner">Beginner</option>
                                 <option value="intermediate">Intermediate</option>
@@ -325,34 +279,35 @@
                             </select>
                         </div>
 
-                        <!-- Questions and Pass Percentage -->
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Total Questions</label>
                                 <input type="number" 
-                                       x-model="examData.total_questions"
+                                       id="examTotalQuestions"
+                                       name="total_questions"
                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Pass Percentage</label>
                                 <input type="number" 
-                                       x-model="examData.pass_percentage"
+                                       id="examPassPercentage"
+                                       name="pass_percentage"
                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                         </div>
 
-                        <!-- Description -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
-                            <textarea x-model="examData.description"
-                                    rows="3"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                            <textarea id="examDescription"
+                                      name="description"
+                                      rows="3"
+                                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
                         </div>
 
-                        <!-- Is Mandatory -->
                         <div class="flex items-center">
                             <input type="checkbox" 
-                                   x-model="examData.is_mandatory"
+                                   id="examIsMandatory"
+                                   name="is_mandatory"
                                    class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Mandatory Exam</label>
                         </div>
@@ -360,15 +315,18 @@
 
                     <div class="mt-6 flex justify-end gap-3">
                         <button type="button"
-                                @click="showEditModal = false"
+                                onclick="closeEditModal()"
                                 class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50">
                             Cancel
                         </button>
                         <button type="submit"
-                                :disabled="loading"
+                                id="submitButton"
                                 class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 flex items-center gap-2">
-                            <span x-show="loading" class="inline-block animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
-                            <span x-text="loading ? 'Saving...' : 'Save Changes'"></span>
+                            <svg id="loadingSpinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span id="submitButtonText">Save Changes</span>
                         </button>
                     </div>
                 </form>
@@ -379,37 +337,117 @@
 
 @push('scripts')
 <script>
-function submitForm() {
-    if (this.loading) return;
+let currentExamId = null;
+const editModal = document.getElementById('editModal');
+const editForm = document.getElementById('editForm');
+const submitButton = document.getElementById('submitButton');
+const loadingSpinner = document.getElementById('loadingSpinner');
+const submitButtonText = document.getElementById('submitButtonText');
+
+function initializeExam(exam) {
+    console.log('Exam data received:', exam);
     
-    this.loading = true;
+    if (!exam || !exam.id) {
+        showNotification('', 'Invalid exam data received', 'error');
+        return;
+    }
+
+    currentExamId = exam.id;
+    console.log('Setting examId to:', currentExamId);
     
-    fetch(`{{ route('admin.courses.exams.index', $course) }}/${this.examId}`, {
+    // Set form values
+    editForm.elements.title.value = exam.title;
+    editForm.elements.description.value = exam.description || '';
+    editForm.elements.date.value = new Date(exam.date).toISOString().split('T')[0];
+    editForm.elements.duration.value = exam.duration;
+    editForm.elements.duration_minutes.value = exam.duration_minutes;
+    editForm.elements.type.value = exam.type;
+    editForm.elements.difficulty.value = exam.difficulty;
+    editForm.elements.total_questions.value = exam.total_questions;
+    editForm.elements.pass_percentage.value = exam.pass_percentage;
+    editForm.elements.is_mandatory.checked = exam.is_mandatory;
+    
+    // Show modal
+    editModal.classList.remove('hidden');
+}
+
+function closeEditModal() {
+    editModal.classList.add('hidden');
+}
+
+editForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (submitButton.disabled) return;
+    
+    if (!currentExamId) {
+        showNotification('', 'Invalid exam ID', 'error');
+        return;
+    }
+    
+    // Set loading state
+    submitButton.disabled = true;
+    loadingSpinner.classList.remove('hidden');
+    submitButtonText.textContent = 'Saving...';
+    
+    // Collect form data
+    const formData = {
+        title: editForm.elements.title.value,
+        description: editForm.elements.description.value,
+        date: editForm.elements.date.value,
+        duration: editForm.elements.duration.value,
+        duration_minutes: editForm.elements.duration_minutes.value,
+        type: editForm.elements.type.value,
+        difficulty: editForm.elements.difficulty.value,
+        total_questions: editForm.elements.total_questions.value,
+        pass_percentage: editForm.elements.pass_percentage.value,
+        is_mandatory: editForm.elements.is_mandatory.checked
+    };
+    
+    console.log('Submitting data:', formData);
+    
+    fetch(`/admin/courses/{{ $course->id }}/exams/${currentExamId}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
             'X-HTTP-Method-Override': 'PUT'
         },
-        body: JSON.stringify(this.examData)
+        body: JSON.stringify(formData)
     })
-    .then(response => response.json())
+    .then(async response => {
+        if (!response.ok) {
+            const text = await response.text();
+            console.log('Error response:', text);
+            try {
+                const json = JSON.parse(text);
+                throw new Error(json.message || `HTTP error! status: ${response.status}`);
+            } catch (e) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             showNotification('', 'Exam updated successfully', 'success');
             window.location.reload();
         } else {
-            showNotification('', 'Failed to update exam', 'error');
+            throw new Error(data.message || 'Failed to update exam');
         }
     })
     .catch(error => {
-        showNotification('', 'An error occurred', 'error');
+        console.error('Error:', error);
+        showNotification('', error.message || 'An error occurred', 'error');
     })
     .finally(() => {
-        this.loading = false;
-        this.showEditModal = false;
+        // Reset loading state
+        submitButton.disabled = false;
+        loadingSpinner.classList.add('hidden');
+        submitButtonText.textContent = 'Save Changes';
+        closeEditModal();
     });
-}
+});
 </script>
 @endpush
 @endsection 
