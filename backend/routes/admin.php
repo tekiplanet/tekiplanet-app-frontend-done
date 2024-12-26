@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\BusinessController;
 use App\Http\Controllers\Admin\ProfessionalController;
 use App\Http\Controllers\Admin\CourseExamController;
+use App\Http\Controllers\Admin\CourseExamParticipantController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
@@ -90,9 +91,14 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
             Route::get('/{exam}/edit', [CourseExamController::class, 'edit'])->name('edit');
             Route::put('/{exam}', [CourseExamController::class, 'update'])->name('update');
             Route::delete('/{exam}', [CourseExamController::class, 'destroy'])->name('destroy');
-        });
+            Route::post('/{exam}/status', [CourseExamController::class, 'updateStatus'])->name('update-status');
 
-        Route::post('courses/{course}/exams/{exam}/status', [CourseExamController::class, 'updateStatus'])
-            ->name('courses.exams.update-status');
+            // Add participants routes
+            Route::group(['prefix' => '{exam}/participants', 'as' => 'participants.'], function () {
+                Route::get('/', [CourseExamParticipantController::class, 'index'])->name('index');
+                Route::post('/bulk-update', [CourseExamParticipantController::class, 'bulkUpdate'])->name('bulk-update');
+                Route::post('/{participant}', [CourseExamParticipantController::class, 'update'])->name('update');
+            });
+        });
     });
 }); 
