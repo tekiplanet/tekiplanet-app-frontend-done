@@ -72,14 +72,17 @@ class CourseExamParticipantController extends Controller
             $userExams = UserCourseExam::whereIn('id', $validated['user_exams'])->get();
 
             foreach ($userExams as $userExam) {
+                $updateData = [];
+                
                 if ($validated['action'] === 'status') {
-                    $userExam->update(['status' => $validated['status']]);
+                    $updateData['status'] = $validated['status'];
                 } else {
-                    $userExam->update([
-                        'score' => $validated['score'],
-                        'total_score' => $validated['total_score']
-                    ]);
+                    $updateData['score'] = $validated['score'];
+                    $updateData['total_score'] = $validated['total_score'];
                 }
+
+                // Update the user exam
+                $userExam->update($updateData);
 
                 // Queue notification and email
                 dispatch(new SendExamNotification($userExam));
