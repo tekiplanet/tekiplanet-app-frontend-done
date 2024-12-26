@@ -13,6 +13,9 @@ use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\ProductFeatureController;
 use App\Http\Controllers\Admin\ProductSpecificationController;
 use App\Http\Controllers\Admin\ProductImageController;
+use App\Http\Controllers\Admin\ShippingZoneController;
+use App\Http\Controllers\Admin\ShippingMethodController;
+use App\Http\Controllers\Admin\ShippingAddressController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
@@ -139,5 +142,26 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
 
         // Brand routes
         Route::resource('brands', BrandController::class)->except(['create', 'edit', 'destroy']);
+
+        // Shipping Management
+        Route::prefix('shipping')->name('shipping.')->group(function () {
+            // Shipping Zones
+            Route::get('/zones', [ShippingZoneController::class, 'index'])->name('zones.index');
+            Route::post('/zones', [ShippingZoneController::class, 'store'])->name('zones.store');
+            Route::put('/zones/{zone}', [ShippingZoneController::class, 'update'])->name('zones.update');
+            Route::delete('/zones/{zone}', [ShippingZoneController::class, 'destroy'])->name('zones.destroy');
+
+            // Shipping Methods
+            Route::get('/methods', [ShippingMethodController::class, 'index'])->name('methods.index');
+            Route::post('/methods', [ShippingMethodController::class, 'store'])->name('methods.store');
+            Route::put('/methods/{method}', [ShippingMethodController::class, 'update'])->name('methods.update');
+            Route::delete('/methods/{method}', [ShippingMethodController::class, 'destroy'])->name('methods.destroy');
+
+            // Shipping Addresses
+            Route::get('/addresses', [ShippingAddressController::class, 'index'])->name('addresses.index');
+            Route::post('/addresses', [ShippingAddressController::class, 'store'])->name('addresses.store');
+            Route::put('/addresses/{address}', [ShippingAddressController::class, 'update'])->name('addresses.update');
+            Route::delete('/addresses/{address}', [ShippingAddressController::class, 'destroy'])->name('addresses.destroy');
+        });
     });
 }); 
