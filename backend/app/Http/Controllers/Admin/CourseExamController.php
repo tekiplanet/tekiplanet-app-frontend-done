@@ -153,7 +153,21 @@ class CourseExamController extends Controller
                 ], 422);
             }
 
+            // Add logging to debug
+            \Log::info('Updating exam status:', [
+                'exam_id' => $exam->id,
+                'old_status' => $exam->status,
+                'new_status' => $validated['status']
+            ]);
+
             $exam->update($validated);
+
+            // Verify the update
+            $exam->refresh();
+            \Log::info('Exam status after update:', [
+                'exam_id' => $exam->id,
+                'current_status' => $exam->status
+            ]);
 
             return response()->json([
                 'success' => true,

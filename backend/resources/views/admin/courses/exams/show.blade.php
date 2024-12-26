@@ -232,11 +232,28 @@ const statusForm = document.getElementById('statusForm');
 const updateStatusBtn = document.getElementById('updateStatusBtn');
 const loadingSpinner = document.getElementById('loadingSpinner');
 const updateStatusBtnText = document.getElementById('updateStatusBtnText');
+const statusLabel = document.querySelector('span.rounded-full'); // Get the status label
+
+// Function to get status badge classes
+function getStatusClasses(status) {
+    switch(status) {
+        case 'upcoming':
+            return 'bg-yellow-100 text-yellow-800';
+        case 'ongoing':
+            return 'bg-green-100 text-green-800';
+        case 'completed':
+            return 'bg-blue-100 text-blue-800';
+        default:
+            return 'bg-red-100 text-red-800';
+    }
+}
 
 statusForm.addEventListener('submit', function(e) {
     e.preventDefault();
     
     if (updateStatusBtn.disabled) return;
+    
+    const newStatus = document.getElementById('examStatus').value;
     
     // Set loading state
     updateStatusBtn.disabled = true;
@@ -250,7 +267,7 @@ statusForm.addEventListener('submit', function(e) {
             'X-CSRF-TOKEN': '{{ csrf_token() }}'
         },
         body: JSON.stringify({
-            status: document.getElementById('examStatus').value
+            status: newStatus
         })
     })
     .then(async response => {
@@ -267,8 +284,22 @@ statusForm.addEventListener('submit', function(e) {
     })
     .then(data => {
         if (data.success) {
+            // Update the status label
+            statusLabel.className = `px-3 py-1 text-sm rounded-full ${getStatusClasses(newStatus)}`;
+            statusLabel.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+            
+            // If status is completed, disable the form
+            if (newStatus === 'completed') {
+                document.getElementById('examStatus').disabled = true;
+                updateStatusBtn.disabled = true;
+            }
+            
             showNotification('', 'Exam status updated successfully', 'success');
-            window.location.reload();
+            
+            // Force reload after a short delay to ensure all updates are reflected
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } else {
             throw new Error(data.message || 'Failed to update exam status');
         }
@@ -279,7 +310,9 @@ statusForm.addEventListener('submit', function(e) {
     })
     .finally(() => {
         // Reset loading state
-        updateStatusBtn.disabled = false;
+        if (newStatus !== 'completed') {
+            updateStatusBtn.disabled = false;
+        }
         loadingSpinner.classList.add('hidden');
         updateStatusBtnText.textContent = 'Update Status';
     });

@@ -71,20 +71,20 @@ class CourseExam extends Model
     // Optional: Add a method to get exam status
     public function getStatusAttribute($value)
     {
-        $now = now();
-        
-        if ($this->date) {
-            if ($this->date > $now) {
-                return 'upcoming';
-            } elseif ($this->date->addHours(2) > $now) {
-                return 'ongoing';
-            } elseif ($this->score !== null) {
-                return 'completed';
-            } else {
-                return 'missed';
-            }
-        }
-
+        \Log::info('Getting exam status:', [
+            'exam_id' => $this->id,
+            'status' => $value
+        ]);
         return $value;
+    }
+
+    public function setStatusAttribute($value)
+    {
+        \Log::info('Setting exam status:', [
+            'exam_id' => $this->id,
+            'old_status' => $this->attributes['status'] ?? null,
+            'new_status' => $value
+        ]);
+        $this->attributes['status'] = $value;
     }
 }
