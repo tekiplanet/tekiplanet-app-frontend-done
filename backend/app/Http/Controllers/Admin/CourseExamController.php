@@ -137,4 +137,36 @@ class CourseExamController extends Controller
                 'type' => 'success'
             ]);
     }
+
+    public function updateStatus(Request $request, Course $course, CourseExam $exam)
+    {
+        try {
+            $validated = $request->validate([
+                'status' => 'required|in:upcoming,ongoing,completed'
+            ]);
+
+            // Don't allow changing status if exam is already completed
+            if ($exam->status === 'completed') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot change status of a completed exam'
+                ], 422);
+            }
+
+            $exam->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Exam status updated successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error updating exam status: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update exam status'
+            ], 500);
+        }
+    }
 } 

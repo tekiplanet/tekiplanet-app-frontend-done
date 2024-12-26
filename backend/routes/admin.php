@@ -91,5 +91,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
             Route::put('/{exam}', [CourseExamController::class, 'update'])->name('update');
             Route::delete('/{exam}', [CourseExamController::class, 'destroy'])->name('destroy');
         });
+
+        Route::post('courses/{course}/exams/{exam}/status', [CourseExamController::class, 'updateStatus'])
+            ->name('courses.exams.update-status');
     });
 }); 
