@@ -47,13 +47,18 @@ class ProductCategoryController extends Controller
 
     public function update(Request $request, ProductCategory $category)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:product_categories,name,' . $category->id,
-            'description' => 'nullable|string',
-            'icon_name' => 'nullable|string|max:50'
+        \Log::info('Category Update Request:', [
+            'category_id' => $category->id,
+            'request_data' => $request->all()
         ]);
 
         try {
+            $validated = $request->validate([
+                'name' => "required|string|max:255|unique:product_categories,name,{$category->id},id",
+                'description' => 'nullable|string',
+                'icon_name' => 'nullable|string|max:50'
+            ]);
+
             $category->update($validated);
 
             return response()->json([
@@ -61,7 +66,19 @@ class ProductCategoryController extends Controller
                 'message' => 'Category updated successfully',
                 'category' => $category
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->errors()['name'][0] ?? 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
+            \Log::error('Category update failed:', [
+                'category_id' => $category->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update category: ' . $e->getMessage()

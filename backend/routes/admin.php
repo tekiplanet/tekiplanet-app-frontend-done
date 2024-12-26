@@ -108,7 +108,9 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::resource('products', ProductController::class)->except(['destroy']);
 
         // Product Categories routes
-        Route::resource('product-categories', ProductCategoryController::class)->except(['create', 'edit', 'destroy']);
+        Route::resource('product-categories', ProductCategoryController::class)->except(['create', 'edit', 'destroy'])->parameters([
+            'product-categories' => 'category'
+        ]);
 
         // Brand routes
         Route::resource('brands', BrandController::class)->except(['create', 'edit', 'destroy']);

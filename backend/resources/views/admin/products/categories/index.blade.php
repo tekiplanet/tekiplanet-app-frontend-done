@@ -166,6 +166,7 @@ function openCreateModal() {
 }
 
 function openEditModal(category) {
+    console.log('Opening edit modal for category:', category); // Debug log
     isEditMode = true;
     document.getElementById('categoryId').value = category.id;
     document.getElementById('categoryName').value = category.name;
@@ -185,15 +186,21 @@ async function handleSubmit(e) {
     
     submitButton.disabled = true;
     loadingSpinner.classList.remove('hidden');
+    submitButtonText.textContent = isEditMode ? 'Updating...' : 'Creating...';
     
     const formData = new FormData(form);
     const categoryId = document.getElementById('categoryId').value;
     
+    console.log('Category ID:', categoryId); // Debug log
+    
     try {
         const url = isEditMode 
-            ? `{{ url('admin/product-categories') }}/${categoryId}`
+            ? `{{ route('admin.product-categories.update', ':id') }}`.replace(':id', categoryId)
             : '{{ route('admin.product-categories.store') }}';
         
+        console.log('Request URL:', url); // Debug log
+        console.log('Request Data:', Object.fromEntries(formData)); // Debug log
+
         const response = await fetch(url, {
             method: isEditMode ? 'PUT' : 'POST',
             headers: {
@@ -204,7 +211,13 @@ async function handleSubmit(e) {
             body: JSON.stringify(Object.fromEntries(formData))
         });
 
+        console.log('Response Status:', response.status); // Debug log
         const data = await response.json();
+        console.log('Response Data:', data); // Debug log
+
+        if (!response.ok) {
+            throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        }
 
         if (data.success) {
             showNotification('Success', data.message);
@@ -214,9 +227,12 @@ async function handleSubmit(e) {
             throw new Error(data.message || 'Something went wrong');
         }
     } catch (error) {
+        console.error('Error:', error);
         showNotification('Error', error.message, 'error');
+    } finally {
         submitButton.disabled = false;
         loadingSpinner.classList.add('hidden');
+        submitButtonText.textContent = isEditMode ? 'Update Category' : 'Create Category';
     }
 }
 
