@@ -135,6 +135,10 @@ document.getElementById('createProductForm').addEventListener('submit', async fu
     loadingSpinner.classList.remove('hidden');
     
     try {
+        const formData = new FormData(form);
+        const formObject = Object.fromEntries(formData);
+        formObject.is_featured = form.elements.is_featured.checked;
+        
         const response = await fetch('{{ route('admin.products.store') }}', {
             method: 'POST',
             headers: {
@@ -142,7 +146,7 @@ document.getElementById('createProductForm').addEventListener('submit', async fu
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify(Object.fromEntries(new FormData(form)))
+            body: JSON.stringify(formObject)
         });
 
         const data = await response.json();
