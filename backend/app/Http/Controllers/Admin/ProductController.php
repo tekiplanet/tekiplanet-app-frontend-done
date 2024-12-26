@@ -105,4 +105,48 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    public function show(Product $product)
+    {
+        $product->load(['category', 'brand', 'images']);
+        $categories = ProductCategory::all();
+        $brands = Brand::all();
+        return view('admin.products.show', compact('product', 'categories', 'brands'));
+    }
+
+    public function edit(Product $product)
+    {
+        $categories = ProductCategory::all();
+        $brands = Brand::all();
+        return view('admin.products.edit', compact('product', 'categories', 'brands'));
+    }
+
+    public function update(Request $request, Product $product)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'short_description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'category_id' => 'required|exists:product_categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
+            'stock' => 'required|integer|min:0',
+            'is_featured' => 'boolean'
+        ]);
+
+        try {
+            $product->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product updated successfully',
+                'redirect' => route('admin.products.show', $product)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update product: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 } 

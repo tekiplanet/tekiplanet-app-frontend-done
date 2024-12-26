@@ -10,6 +10,9 @@ use App\Http\Controllers\Admin\CourseExamParticipantController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductCategoryController;
 use App\Http\Controllers\Admin\BrandController;
+use App\Http\Controllers\Admin\ProductFeatureController;
+use App\Http\Controllers\Admin\ProductSpecificationController;
+use App\Http\Controllers\Admin\ProductImageController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
@@ -106,6 +109,26 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
 
         // Product routes
         Route::resource('products', ProductController::class)->except(['destroy']);
+
+        // Product Features routes
+        Route::post('products/{product}/features', [ProductFeatureController::class, 'store'])
+            ->name('products.features.store');
+        Route::delete('products/features/{feature}', [ProductFeatureController::class, 'destroy'])
+            ->name('products.features.destroy');
+
+        // Product Specifications routes
+        Route::post('products/{product}/specifications', [ProductSpecificationController::class, 'store'])
+            ->name('products.specifications.store');
+        Route::delete('products/specifications/{specification}', [ProductSpecificationController::class, 'destroy'])
+            ->name('products.specifications.destroy');
+
+        // Product Images routes
+        Route::post('products/{product}/images', [ProductImageController::class, 'store'])
+            ->name('products.images.store');
+        Route::post('products/images/{image}/set-primary', [ProductImageController::class, 'setPrimary'])
+            ->name('products.images.set-primary');
+        Route::delete('products/images/{image}', [ProductImageController::class, 'destroy'])
+            ->name('products.images.destroy');
 
         // Product Categories routes
         Route::resource('product-categories', ProductCategoryController::class)->except(['create', 'edit', 'destroy'])->parameters([

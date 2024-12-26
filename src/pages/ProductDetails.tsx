@@ -187,14 +187,18 @@ export default function ProductDetails() {
                 freeMode={true}
                 watchSlidesProgress={true}
                 modules={[FreeMode, Navigation, Thumbs]}
-                className="thumbs-swiper h-20"
+                className="thumbs-swiper !h-24 mt-4"
+                direction="horizontal"
+                style={{
+                  '--swiper-navigation-size': '20px'
+                } as React.CSSProperties}
               >
                 {product.images.map((image, index) => (
                   <SwiperSlide key={index} className="cursor-pointer rounded-md overflow-hidden">
                     <img
                       src={image}
                       alt={`Thumbnail ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-24 object-cover hover:opacity-75 transition-opacity"
                     />
                   </SwiperSlide>
                 ))}
