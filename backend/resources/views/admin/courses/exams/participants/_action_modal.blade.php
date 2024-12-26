@@ -17,9 +17,10 @@
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
                             <select id="individualStatus" 
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
-                                <option value="pending">Pending</option>
-                                <option value="passed">Passed</option>
-                                <option value="failed">Failed</option>
+                                <option value="not_started">Not Started</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                                <option value="missed">Missed</option>
                             </select>
                         </div>
 

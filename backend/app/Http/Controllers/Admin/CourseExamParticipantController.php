@@ -35,7 +35,7 @@ class CourseExamParticipantController extends Controller
             ->when($request->sort, function($query, $sort) {
                 switch($sort) {
                     case 'oldest':
-                        $query->oldest();
+                        $query->oldest('started_at');
                         break;
                     case 'name':
                         $query->whereHas('user', function($q) {
@@ -43,13 +43,13 @@ class CourseExamParticipantController extends Controller
                         });
                         break;
                     case 'score':
-                        $query->orderBy('score', 'desc');
+                        $query->orderByRaw('COALESCE(score/total_score, 0) DESC');
                         break;
                     default:
-                        $query->latest();
+                        $query->latest('started_at');
                 }
             }, function($query) {
-                $query->latest();
+                $query->latest('started_at');
             })
             ->paginate(10)
             ->withQueryString();
@@ -64,7 +64,7 @@ class CourseExamParticipantController extends Controller
                 'user_exams' => 'required|array',
                 'user_exams.*' => 'exists:user_course_exams,id',
                 'action' => 'required|in:status,score',
-                'status' => 'required_if:action,status|in:pending,passed,failed',
+                'status' => 'required_if:action,status|in:not_started,in_progress,completed,missed',
                 'score' => 'required_if:action,score|numeric|min:0',
                 'total_score' => 'required_if:action,score|numeric|min:0'
             ]);
@@ -104,7 +104,7 @@ class CourseExamParticipantController extends Controller
     {
         try {
             $validated = $request->validate([
-                'status' => 'required|in:pending,passed,failed',
+                'status' => 'required|in:not_started,in_progress,completed,missed',
                 'score' => 'required|numeric|min:0',
                 'total_score' => 'required|numeric|min:0'
             ]);
