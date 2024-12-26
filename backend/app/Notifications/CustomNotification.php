@@ -35,7 +35,8 @@ class CustomNotification extends Notification implements ShouldQueue
             ->subject($this->title)
             ->view('components.mail.layout', [
                 'slot' => $this->emailContent,
-                'greeting' => 'Hello ' . $notifiable->name . '!'
+                'greeting' => 'Hello ' . $notifiable->name . '!',
+                'closing' => 'Best regards, TekiPlanet Team'
             ]);
     }
 } 

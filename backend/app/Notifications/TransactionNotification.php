@@ -34,7 +34,10 @@ class TransactionNotification extends Notification implements ShouldQueue
             ->view('emails.transaction', [
                 'user' => $notifiable,
                 'transaction' => $this->transaction,
-                'currency' => $currency
+                'currency' => $currency,
+                'greeting' => 'Hello ' . $notifiable->name . '!',                
+                'closing' => 'Best regards, The TekiPlanet Team'
+                
             ]);
     }
 } 
