@@ -10,16 +10,17 @@ use Illuminate\Queue\SerializesModels;
 use App\Models\CourseNotice;
 use App\Models\User;
 use App\Models\UserCourseNotice;
-use App\Notifications\CourseNoticeNotification;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\CourseNoticeMail;
 use Illuminate\Support\Str;
-use App\Services\NotificationService;
-use App\Jobs\SendCourseNoticeNotification;
+use App\Jobs\SendEnrollmentNotification;
 
 class SendCourseNoticeJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public $tries = 3;
+    public $timeout = 30;
 
     protected $courseNotice;
     protected $userIds;
@@ -30,7 +31,7 @@ class SendCourseNoticeJob implements ShouldQueue
         $this->userIds = $userIds;
     }
 
-    public function handle(NotificationService $notificationService)
+    public function handle()
     {
         $users = User::whereIn('id', $this->userIds)->get();
 
@@ -47,19 +48,21 @@ class SendCourseNoticeJob implements ShouldQueue
 
             // Prepare notification data
             $notificationData = [
-                'type' => 'course_notice',
+                'type' => 'system',
                 'title' => $this->courseNotice->title,
                 'message' => \Str::limit($this->courseNotice->content, 100),
-                'course_id' => $this->courseNotice->course_id,
-                'notice_id' => $this->courseNotice->id,
-                'priority' => $this->courseNotice->priority,
-                'is_important' => $this->courseNotice->is_important,
+                'icon' => 'bell',
                 'action_url' => "/dashboard/courses/{$this->courseNotice->course_id}",
-                'icon' => 'bell'
+                'extra_data' => [
+                    'course_id' => $this->courseNotice->course_id,
+                    'notice_id' => $this->courseNotice->id,
+                    'priority' => $this->courseNotice->priority,
+                    'is_important' => $this->courseNotice->is_important
+                ]
             ];
-            // Dispatch notification job
-            $notificationJob = new SendCourseNoticeNotification($notificationData, $user);
-            dispatch($notificationJob);
+
+            // Use SendEnrollmentNotification which uses NotificationService
+            dispatch(new SendEnrollmentNotification($notificationData, $user));
 
             // Send email
             Mail::to($user->email)->queue(new CourseNoticeMail($this->courseNotice));
