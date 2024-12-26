@@ -20,7 +20,7 @@ class CourseNoticeMail extends Mailable
 
     public function build()
     {
-        return $this->markdown('emails.course-notice')
+        return $this->view('emails.course-notice')
                     ->subject($this->courseNotice->is_important ? 
                         '❗ Important: ' . $this->courseNotice->title : 
                         'Course Notice: ' . $this->courseNotice->title);

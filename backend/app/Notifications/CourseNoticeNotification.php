@@ -23,16 +23,33 @@ class CourseNoticeNotification extends Notification implements ShouldQueue
         return ['database', 'broadcast'];
     }
 
-    public function toArray($notifiable)
+    public function toDatabase($notifiable)
     {
         return [
             'type' => 'course_notice',
+            'title' => $this->courseNotice->title,
+            'message' => \Str::limit($this->courseNotice->content, 100),
             'course_id' => $this->courseNotice->course_id,
             'notice_id' => $this->courseNotice->id,
-            'title' => $this->courseNotice->title,
-            'content' => $this->courseNotice->content,
             'priority' => $this->courseNotice->priority,
             'is_important' => $this->courseNotice->is_important,
+            'action_url' => "/dashboard/courses/{$this->courseNotice->course_id}",
+            'icon' => 'bell'
+        ];
+    }
+
+    public function toBroadcast($notifiable)
+    {
+        return [
+            'type' => 'course_notice',
+            'title' => $this->courseNotice->title,
+            'message' => \Str::limit($this->courseNotice->content, 100),
+            'course_id' => $this->courseNotice->course_id,
+            'notice_id' => $this->courseNotice->id,
+            'priority' => $this->courseNotice->priority,
+            'is_important' => $this->courseNotice->is_important,
+            'action_url' => "/dashboard/courses/{$this->courseNotice->course_id}",
+            'icon' => 'bell'
         ];
     }
 } 

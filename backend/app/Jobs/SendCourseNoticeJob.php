@@ -14,6 +14,8 @@ use App\Notifications\CourseNoticeNotification;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\CourseNoticeMail;
 use Illuminate\Support\Str;
+use App\Services\NotificationService;
+use App\Jobs\SendCourseNoticeNotification;
 
 class SendCourseNoticeJob implements ShouldQueue
 {
@@ -28,7 +30,7 @@ class SendCourseNoticeJob implements ShouldQueue
         $this->userIds = $userIds;
     }
 
-    public function handle()
+    public function handle(NotificationService $notificationService)
     {
         $users = User::whereIn('id', $this->userIds)->get();
 
@@ -43,8 +45,21 @@ class SendCourseNoticeJob implements ShouldQueue
                 'is_hidden' => false
             ]);
 
-            // Send in-app notification
-            $user->notify(new CourseNoticeNotification($this->courseNotice));
+            // Prepare notification data
+            $notificationData = [
+                'type' => 'course_notice',
+                'title' => $this->courseNotice->title,
+                'message' => \Str::limit($this->courseNotice->content, 100),
+                'course_id' => $this->courseNotice->course_id,
+                'notice_id' => $this->courseNotice->id,
+                'priority' => $this->courseNotice->priority,
+                'is_important' => $this->courseNotice->is_important,
+                'action_url' => "/dashboard/courses/{$this->courseNotice->course_id}",
+                'icon' => 'bell'
+            ];
+            // Dispatch notification job
+            $notificationJob = new SendCourseNoticeNotification($notificationData, $user);
+            dispatch($notificationJob);
 
             // Send email
             Mail::to($user->email)->queue(new CourseNoticeMail($this->courseNotice));
