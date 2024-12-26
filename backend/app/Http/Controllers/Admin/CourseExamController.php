@@ -94,28 +94,36 @@ class CourseExamController extends Controller
 
     public function update(Request $request, Course $course, CourseExam $exam)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'total_questions' => 'required|integer|min:1',
-            'pass_percentage' => 'required|integer|between:1,100',
-            'duration_minutes' => 'required|integer|min:1',
-            'type' => 'required|in:multiple_choice,true_false,mixed',
-            'difficulty' => 'required|in:beginner,intermediate,advanced',
-            'is_mandatory' => 'required|boolean',
-            'date' => 'required|date',
-            'duration' => 'required|string',
-            'topics' => 'nullable|array'
-        ]);
-
-        $exam->update($validated);
-
-        return redirect()
-            ->route('admin.courses.exams.index', $course)
-            ->with('notification', [
-                'message' => 'Exam updated successfully',
-                'type' => 'success'
+        try {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'total_questions' => 'required|integer|min:1',
+                'pass_percentage' => 'required|integer|between:1,100',
+                'duration_minutes' => 'required|integer|min:1',
+                'type' => 'required|in:multiple_choice,true_false,mixed',
+                'difficulty' => 'required|in:beginner,intermediate,advanced',
+                'is_mandatory' => 'required|boolean',
+                'date' => 'required|date',
+                'duration' => 'required|string',
+                'topics' => 'nullable|array'
             ]);
+
+            $exam->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Exam updated successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error updating exam: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update exam'
+            ], 500);
+        }
     }
 
     public function destroy(Course $course, CourseExam $exam)

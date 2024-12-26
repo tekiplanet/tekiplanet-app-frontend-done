@@ -40,17 +40,17 @@
                                     All Courses
                                 </a>
                                 
-                                <a href="{{ route('admin.courses.index') }}?view=exams" 
+                                <!-- <a href="{{ route('admin.courses.index') }}?view=exams" 
                                    class="{{ request()->has('view') && request('view') === 'exams' ? 'bg-gray-700' : '' }} text-gray-400 hover:text-white hover:bg-gray-700 group flex gap-x-3 rounded-md p-2 pl-11 text-sm leading-6 font-semibold">
                                     All Exams
-                                </a>
-                                
+                                </a> -->
+<!--                                 
                                 @if(request()->route('course'))
                                     <a href="{{ route('admin.courses.exams.index', request()->route('course')) }}" 
                                        class="{{ request()->routeIs('admin.courses.exams.*') ? 'bg-gray-700' : '' }} text-gray-400 hover:text-white hover:bg-gray-700 group flex gap-x-3 rounded-md p-2 pl-11 text-sm leading-6 font-semibold">
                                         Course Exams
                                     </a>
-                                @endif
+                                @endif -->
                             </div>
                         </div>
                     </li>
