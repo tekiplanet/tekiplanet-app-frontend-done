@@ -152,7 +152,7 @@
                     @forelse($product->specifications as $spec)
                         <div class="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
                             <div>
-                                <span class="font-medium text-gray-700 dark:text-gray-300">{{ $spec->name }}:</span>
+                                <span class="font-medium text-gray-700 dark:text-gray-300">{{ $spec->key }}:</span>
                                 <span class="ml-2 text-gray-600 dark:text-gray-400">{{ $spec->value }}</span>
                             </div>
                             <button onclick="deleteSpecification('{{ $spec->id }}')"

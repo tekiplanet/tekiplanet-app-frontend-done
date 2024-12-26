@@ -13,14 +13,14 @@ class ProductSpecificationController extends Controller
     public function store(Request $request, Product $product)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'key' => 'required|string|max:255',
             'value' => 'required|string|max:255',
         ]);
 
         try {
             $specification = $product->specifications()->create([
                 'id' => Str::uuid(),
-                'name' => $validated['name'],
+                'key' => $validated['key'],
                 'value' => $validated['value']
             ]);
 
