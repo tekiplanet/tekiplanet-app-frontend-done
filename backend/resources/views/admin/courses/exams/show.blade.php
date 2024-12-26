@@ -112,17 +112,51 @@
                     <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                         <p class="text-sm text-gray-500 dark:text-gray-400">Passed</p>
                         <p class="text-2xl font-bold text-green-600">
-                            {{ $userExams->where('status', 'passed')->count() }}
+                            {{ $totalPassed }}
                         </p>
                     </div>
                     <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                         <p class="text-sm text-gray-500 dark:text-gray-400">Failed</p>
                         <p class="text-2xl font-bold text-red-600">
-                            {{ $userExams->where('status', 'failed')->count() }}
+                            {{ $totalFailed }}
                         </p>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <!-- Total Participants -->
+        <div class="bg-white rounded-lg shadow-md dark:bg-gray-800 p-4">
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Participants</h3>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $userExams->total() }}</p>
+        </div>
+
+        <!-- Passed -->
+        <div class="bg-white rounded-lg shadow-md dark:bg-gray-800 p-4">
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Passed</h3>
+            <p class="text-2xl font-bold text-green-600">{{ $totalPassed }}</p>
+            <p class="text-sm text-gray-500">
+                {{ $totalAttempted > 0 ? round(($totalPassed / $totalAttempted) * 100) : 0 }}% of attempts
+            </p>
+        </div>
+
+        <!-- Failed -->
+        <div class="bg-white rounded-lg shadow-md dark:bg-gray-800 p-4">
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Failed</h3>
+            <p class="text-2xl font-bold text-red-600">{{ $totalFailed }}</p>
+            <p class="text-sm text-gray-500">
+                {{ $totalAttempted > 0 ? round(($totalFailed / $totalAttempted) * 100) : 0 }}% of attempts
+            </p>
+        </div>
+
+        <!-- Pass Rate -->
+        <div class="bg-white rounded-lg shadow-md dark:bg-gray-800 p-4">
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Pass Rate</h3>
+            <p class="text-2xl font-bold text-blue-600">{{ $passRate }}%</p>
+            <p class="text-sm text-gray-500">{{ $totalAttempted }} total attempts</p>
         </div>
     </div>
 </div>

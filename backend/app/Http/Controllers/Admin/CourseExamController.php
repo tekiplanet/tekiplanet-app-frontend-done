@@ -80,11 +80,34 @@ class CourseExamController extends Controller
 
     public function show(Course $course, CourseExam $exam)
     {
+        // Load the relationships and get paginated user exams
+        $exam->load(['userExams.user']);
+        
         $userExams = $exam->userExams()
             ->with('user')
             ->paginate(10);
 
-        return view('admin.courses.exams.show', compact('course', 'exam', 'userExams'));
+        // Calculate statistics
+        $totalAttempted = $exam->userExams()->whereNotNull('score')->count();
+        $totalPassed = $exam->userExams()
+            ->whereNotNull('score')
+            ->whereRaw('(score / total_score * 100) >= ?', [$exam->pass_percentage])
+            ->count();
+        $totalFailed = $exam->userExams()
+            ->whereNotNull('score')
+            ->whereRaw('(score / total_score * 100) < ?', [$exam->pass_percentage])
+            ->count();
+        $passRate = $totalAttempted > 0 ? round(($totalPassed / $totalAttempted) * 100) : 0;
+
+        return view('admin.courses.exams.show', compact(
+            'course', 
+            'exam', 
+            'userExams',
+            'totalAttempted',
+            'totalPassed',
+            'totalFailed',
+            'passRate'
+        ));
     }
 
     public function edit(Course $course, CourseExam $exam)
