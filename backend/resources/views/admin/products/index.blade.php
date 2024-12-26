@@ -6,6 +6,10 @@
         <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">
             Products
         </h2>
+        <a href="{{ route('admin.products.create') }}" 
+           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            Create Product
+        </a>
     </div>
 
     <!-- Filters -->

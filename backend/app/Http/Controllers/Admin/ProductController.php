@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Brand;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -47,5 +48,61 @@ class ProductController extends Controller
         $brands = Brand::all();
 
         return view('admin.products.index', compact('products', 'categories', 'brands'));
+    }
+
+    public function create()
+    {
+        $categories = ProductCategory::all();
+        $brands = Brand::all();
+        return view('admin.products.create', compact('categories', 'brands'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'short_description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'category_id' => 'required|exists:product_categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
+            'stock' => 'required|integer|min:0',
+            'is_featured' => 'boolean',
+            'image_url' => 'required|url' // For primary image
+        ]);
+
+        try {
+            $product = Product::create([
+                'id' => Str::uuid(),
+                'name' => $validated['name'],
+                'description' => $validated['description'],
+                'short_description' => $validated['short_description'],
+                'price' => $validated['price'],
+                'category_id' => $validated['category_id'],
+                'brand_id' => $validated['brand_id'],
+                'stock' => $validated['stock'],
+                'is_featured' => $request->has('is_featured'),
+                'rating' => 0,
+                'reviews_count' => 0
+            ]);
+
+            // Create primary image
+            $product->images()->create([
+                'image_url' => $validated['image_url'],
+                'is_primary' => true,
+                'order' => 1
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product created successfully',
+                'redirect' => route('admin.products.show', $product)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create product: ' . $e->getMessage()
+            ], 500);
+        }
     }
 } 

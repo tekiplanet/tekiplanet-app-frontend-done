@@ -57,14 +57,35 @@
 
                     <!-- Products -->
                     <li>
-                        <a href="{{ route('admin.products.index') }}" 
-                           class="{{ request()->routeIs('admin.products.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold"
-                        >
-                            <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-                            </svg>
-                            Products
-                        </a>
+                        <div x-data="{ open: {{ request()->routeIs('admin.products.*') || request()->routeIs('admin.product-categories.*') || request()->routeIs('admin.brands.*') ? 'true' : 'false' }} }">
+                            <button @click="open = !open" 
+                                    class="{{ request()->routeIs('admin.products.*') || request()->routeIs('admin.product-categories.*') || request()->routeIs('admin.brands.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} group flex items-center justify-between w-full rounded-md p-2 text-sm leading-6 font-semibold">
+                                <div class="flex gap-x-3">
+                                    <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                                    </svg>
+                                    Products
+                                </div>
+                                <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-90': open }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                            
+                            <div x-show="open" class="mt-1 space-y-1" style="display: none;">
+                                <a href="{{ route('admin.products.index') }}" 
+                                   class="{{ request()->routeIs('admin.products.index') ? 'bg-gray-700' : '' }} text-gray-400 hover:text-white hover:bg-gray-700 group flex gap-x-3 rounded-md p-2 pl-11 text-sm leading-6 font-semibold">
+                                    All Products
+                                </a>
+                                <a href="{{ route('admin.product-categories.index') }}" 
+                                   class="{{ request()->routeIs('admin.product-categories.*') ? 'bg-gray-700' : '' }} text-gray-400 hover:text-white hover:bg-gray-700 group flex gap-x-3 rounded-md p-2 pl-11 text-sm leading-6 font-semibold">
+                                    Categories
+                                </a>
+                                <a href="{{ route('admin.brands.index') }}" 
+                                   class="{{ request()->routeIs('admin.brands.*') ? 'bg-gray-700' : '' }} text-gray-400 hover:text-white hover:bg-gray-700 group flex gap-x-3 rounded-md p-2 pl-11 text-sm leading-6 font-semibold">
+                                    Brands
+                                </a>
+                            </div>
+                        </div>
                     </li>
 
                     <!-- Users Management -->
