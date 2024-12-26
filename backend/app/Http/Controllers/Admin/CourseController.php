@@ -14,6 +14,9 @@ use App\Services\NotificationService;
 use App\Jobs\SendEnrollmentNotification;
 use App\Jobs\SendEnrollmentEmail;
 use App\Models\Enrollment;
+use App\Models\CourseNotice;
+use App\Jobs\SendCourseNoticeJob;
+use Illuminate\Support\Facades\Log;
 
 class CourseController extends Controller
 {
@@ -373,5 +376,55 @@ class CourseController extends Controller
             'remainingAmount',
             'paymentProgress'
         ));
+    }
+
+    public function sendBulkNotices(Request $request, Course $course)
+    {
+        try {
+            $request->validate([
+                'enrollment_ids' => 'required|array',
+                'enrollment_ids.*' => 'required|string|exists:enrollments,id',
+                'title' => 'required|string|max:255',
+                'content' => 'required|string',
+                'priority' => 'required|in:low,medium,high',
+                'is_important' => 'required|boolean'
+            ]);
+
+            // Create the course notice
+            $courseNotice = CourseNotice::create([
+                'course_id' => $course->id,
+                'title' => $request->title,
+                'content' => $request->content,
+                'priority' => $request->priority,
+                'is_important' => $request->is_important,
+                'published_at' => now()
+            ]);
+
+            // Get unique user IDs from the selected enrollments
+            $userIds = Enrollment::whereIn('id', $request->enrollment_ids)
+                ->pluck('user_id')
+                ->unique()
+                ->toArray();
+
+            // Dispatch the job
+            SendCourseNoticeJob::dispatch($courseNotice, $userIds);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Course notice is being sent to ' . count($userIds) . ' users',
+                'notice' => $courseNotice
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error sending bulk notices:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send notices: ' . $e->getMessage()
+            ], 500);
+        }
     }
 } 
