@@ -12,8 +12,22 @@ class CourseExamController extends Controller
     public function index(Course $course)
     {
         $exams = $course->exams()
-            ->orderBy('date', 'desc')
-            ->paginate(10);
+            ->when(request('search'), function($query, $search) {
+                $query->where('title', 'like', "%{$search}%");
+            })
+            ->when(request('type'), function($query, $type) {
+                $query->where('type', $type);
+            })
+            ->when(request('status'), function($query, $status) {
+                $query->where('status', $status);
+            })
+            ->when(request('sort_by'), function($query) {
+                $query->orderBy(request('sort_by'), request('sort_order', 'asc'));
+            }, function($query) {
+                $query->orderBy('date', 'desc');
+            })
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.courses.exams.index', compact('course', 'exams'));
     }
@@ -50,6 +64,7 @@ class CourseExamController extends Controller
     {
         $userExams = $exam->userExams()
             ->with('user')
+            ->latest()
             ->paginate(10);
 
         return view('admin.courses.exams.show', compact('course', 'exam', 'userExams'));

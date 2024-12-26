@@ -2,10 +2,16 @@
 
 @section('content')
 <div class="container px-6 mx-auto">
+    <!-- Header Section -->
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">
             All Course Exams
         </h2>
+        <button type="button"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                onclick="showCreateExamModal()">
+            Create Exam
+        </button>
     </div>
 
     <!-- Search/Filter Section -->
@@ -25,15 +31,9 @@
                 <select name="type" 
                         class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
                     <option value="">All Types</option>
-                    <option value="multiple_choice" {{ request('type') === 'multiple_choice' ? 'selected' : '' }}>
-                        Multiple Choice
-                    </option>
-                    <option value="true_false" {{ request('type') === 'true_false' ? 'selected' : '' }}>
-                        True/False
-                    </option>
-                    <option value="mixed" {{ request('type') === 'mixed' ? 'selected' : '' }}>
-                        Mixed
-                    </option>
+                    <option value="multiple_choice" {{ request('type') === 'multiple_choice' ? 'selected' : '' }}>Multiple Choice</option>
+                    <option value="true_false" {{ request('type') === 'true_false' ? 'selected' : '' }}>True/False</option>
+                    <option value="mixed" {{ request('type') === 'mixed' ? 'selected' : '' }}>Mixed</option>
                 </select>
             </div>
 
@@ -73,73 +73,126 @@
         </form>
     </div>
 
-    <!-- Exams Table -->
-    <div class="w-full overflow-hidden rounded-lg shadow-md">
-        <div class="w-full overflow-x-auto">
-            <table class="w-full whitespace-no-wrap">
-                <thead>
-                    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase bg-gray-50 border-b">
-                        <th class="px-4 py-3">Course</th>
-                        <th class="px-4 py-3">Title</th>
-                        <th class="px-4 py-3">Date</th>
-                        <th class="px-4 py-3">Duration</th>
-                        <th class="px-4 py-3">Type</th>
-                        <th class="px-4 py-3">Status</th>
-                        <th class="px-4 py-3">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y">
-                    @forelse($exams as $exam)
-                        <tr class="text-gray-700">
-                            <td class="px-4 py-3">
-                                {{ $exam->course->title }}
-                            </td>
-                            <td class="px-4 py-3">
-                                {{ $exam->title }}
-                            </td>
-                            <td class="px-4 py-3">
-                                {{ $exam->date->format('M d, Y') }}
-                            </td>
-                            <td class="px-4 py-3">
-                                {{ $exam->duration }}
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="px-2 py-1 text-xs rounded-full 
-                                    {{ $exam->type === 'multiple_choice' ? 'bg-blue-100 text-blue-800' : 
-                                       ($exam->type === 'true_false' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800') }}">
-                                    {{ str_replace('_', ' ', ucfirst($exam->type)) }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="px-2 py-1 text-xs rounded-full 
-                                    {{ $exam->status === 'upcoming' ? 'bg-yellow-100 text-yellow-800' : 
-                                       ($exam->status === 'ongoing' ? 'bg-green-100 text-green-800' : 
-                                       ($exam->status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800')) }}">
-                                    {{ ucfirst($exam->status) }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <div class="flex items-center space-x-4">
-                                    <a href="{{ route('admin.courses.exams.show', [$exam->course, $exam]) }}" 
-                                       class="text-blue-600 hover:text-blue-900">
-                                        View
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
+    <!-- Table Section - Desktop -->
+    <div class="hidden md:block">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50">
                         <tr>
-                            <td colspan="7" class="px-4 py-3 text-center text-gray-500">
-                                No exams found
-                            </td>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        <div class="px-4 py-3 border-t">
-            {{ $exams->links() }}
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($exams as $exam)
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ $exam->course->title }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ $exam->title }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ $exam->date->format('M d, Y') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ $exam->duration }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs rounded-full 
+                                        {{ $exam->type === 'multiple_choice' ? 'bg-blue-100 text-blue-800' : 
+                                           ($exam->type === 'true_false' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800') }}">
+                                        {{ str_replace('_', ' ', ucfirst($exam->type)) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs rounded-full 
+                                        {{ $exam->status === 'upcoming' ? 'bg-yellow-100 text-yellow-800' : 
+                                           ($exam->status === 'ongoing' ? 'bg-green-100 text-green-800' : 
+                                           ($exam->status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800')) }}">
+                                        {{ ucfirst($exam->status) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <a href="{{ route('admin.courses.exams.show', [$exam->course, $exam]) }}" 
+                                       class="text-blue-600 hover:text-blue-900">View</a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                                    No exams found
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+
+    <!-- Mobile View -->
+    <div class="md:hidden space-y-4">
+        @forelse($exams as $exam)
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <h3 class="font-medium">{{ $exam->title }}</h3>
+                        <p class="text-sm text-gray-500">{{ $exam->course->title }}</p>
+                    </div>
+                    <a href="{{ route('admin.courses.exams.show', [$exam->course, $exam]) }}" 
+                       class="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                        View
+                    </a>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                        <span class="text-gray-500">Date:</span>
+                        <span class="ml-1">{{ $exam->date->format('M d, Y') }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Duration:</span>
+                        <span class="ml-1">{{ $exam->duration }}</span>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center mt-2">
+                    <span class="px-2 py-1 text-xs rounded-full 
+                        {{ $exam->type === 'multiple_choice' ? 'bg-blue-100 text-blue-800' : 
+                           ($exam->type === 'true_false' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800') }}">
+                        {{ str_replace('_', ' ', ucfirst($exam->type)) }}
+                    </span>
+                    <span class="px-2 py-1 text-xs rounded-full 
+                        {{ $exam->status === 'upcoming' ? 'bg-yellow-100 text-yellow-800' : 
+                           ($exam->status === 'ongoing' ? 'bg-green-100 text-green-800' : 
+                           ($exam->status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800')) }}">
+                        {{ ucfirst($exam->status) }}
+                    </span>
+                </div>
+            </div>
+        @empty
+            <div class="bg-white rounded-lg shadow p-4 text-center text-gray-500">
+                No exams found
+            </div>
+        @endforelse
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-4">
+        {{ $exams->links() }}
+    </div>
 </div>
+
+<!-- Create Exam Modal -->
+<div id="createExamModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <!-- Modal content will be added here -->
+</div>
+
+@push('scripts')
+<script>
+function showCreateExamModal() {
+    // First, we need to show a course selection modal since we're on the all exams page
+    alert('Please select a course first to create an exam');
+    // TODO: Implement course selection modal
+}
+</script>
+@endpush
+
 @endsection 
