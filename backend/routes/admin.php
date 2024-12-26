@@ -125,6 +125,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         // Product Images routes
         Route::post('products/{product}/images', [ProductImageController::class, 'store'])
             ->name('products.images.store');
+        Route::put('products/images/{image}', [ProductImageController::class, 'update'])
+            ->name('products.images.update');
         Route::post('products/images/{image}/set-primary', [ProductImageController::class, 'setPrimary'])
             ->name('products.images.set-primary');
         Route::delete('products/images/{image}', [ProductImageController::class, 'destroy'])

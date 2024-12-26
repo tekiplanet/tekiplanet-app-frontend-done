@@ -94,4 +94,35 @@ class ProductImageController extends Controller
             ], 500);
         }
     }
+
+    public function update(Request $request, ProductImage $image)
+    {
+        $validated = $request->validate([
+            'image_url' => 'required|url|max:2048',
+            'is_primary' => 'boolean'
+        ]);
+
+        try {
+            // If setting as primary, unset other primary images
+            if ($validated['is_primary'] && !$image->is_primary) {
+                $image->product->images()->where('is_primary', true)->update(['is_primary' => false]);
+            }
+
+            $image->update([
+                'image_url' => $validated['image_url'],
+                'is_primary' => $validated['is_primary']
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Image updated successfully',
+                'image' => $image
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update image: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 } 

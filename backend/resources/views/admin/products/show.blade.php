@@ -35,32 +35,56 @@
                     Add Image
                 </button>
             </div>
-            <div class="space-y-4">
-                @forelse($product->images as $image)
-                    <div class="relative group">
-                        <img src="{{ $image->image_url }}" 
-                             alt="{{ $product->name }}"
-                             class="w-full h-48 object-cover rounded-lg">
-                        <div class="absolute top-2 right-2 flex gap-2">
-                            @if($image->is_primary)
-                                <span class="bg-green-500 text-white px-2 py-1 rounded-md text-xs">
-                                    Primary
-                                </span>
-                            @else
-                                <button onclick="setPrimaryImage('{{ $image->id }}')"
-                                        class="hidden group-hover:block bg-blue-500 text-white px-2 py-1 rounded-md text-xs">
-                                    Set as Primary
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Image</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    @forelse($product->images as $image)
+                        <tr class="group hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="px-4 py-4">
+                                <img src="{{ $image->image_url }}" 
+                                     data-image-id="{{ $image->id }}"
+                                     alt="{{ $product->name }}"
+                                     class="w-24 h-24 object-cover rounded-lg">
+                            </td>
+                            <td class="px-4 py-4">
+                                @if($image->is_primary)
+                                    <span class="bg-green-500 text-white px-2 py-1 rounded-md text-xs inline-block">
+                                        Primary
+                                    </span>
+                                @else
+                                    <button onclick="setPrimaryImage('{{ $image->id }}')"
+                                            class="bg-blue-500 text-white px-2 py-1 rounded-md text-xs hover:bg-blue-600">
+                                        Set as Primary
+                                    </button>
+                                @endif
+                            </td>
+                            <td class="px-4 py-4 text-right space-x-2">
+                                <button onclick="editImage('{{ $image->id }}')"
+                                        class="bg-yellow-500 text-white px-2 py-1 rounded-md text-xs hover:bg-yellow-600">
+                                    Edit
                                 </button>
-                            @endif
-                            <button onclick="deleteImage('{{ $image->id }}')"
-                                    class="hidden group-hover:block bg-red-500 text-white px-2 py-1 rounded-md text-xs">
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                @empty
-                    <p class="text-gray-500 dark:text-gray-400">No images available</p>
-                @endforelse
+                                <button onclick="deleteImage('{{ $image->id }}')"
+                                        class="bg-red-500 text-white px-2 py-1 rounded-md text-xs hover:bg-red-600">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="px-4 py-4 text-center text-gray-500 dark:text-gray-400">
+                                No images available
+                            </td>
+                        </tr>
+                    @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
 
