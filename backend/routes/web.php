@@ -97,6 +97,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth:admin']], function () 
         Route::put('schedules/{schedule}', [CourseScheduleController::class, 'update'])->name('schedules.update');
         Route::delete('schedules/{schedule}', [CourseScheduleController::class, 'destroy'])->name('schedules.destroy');
     });
+
+    // Course Enrollments Notice
+    Route::post('/courses/{course}/enrollments/send-notices', [CourseController::class, 'sendBulkNotices'])
+        ->name('admin.courses.enrollments.send-notices');
 });
 
 // Temporary debug route list

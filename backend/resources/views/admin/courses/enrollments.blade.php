@@ -616,7 +616,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loadingSpinner.classList.remove('hidden');
         button.disabled = true;
 
-        fetch(`/admin/courses/{{ $course->id }}/enrollments/send-notices`, {
+        fetch(`{{ route('admin.courses.enrollments.send-notices', $course->id) }}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
