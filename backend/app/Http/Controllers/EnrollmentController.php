@@ -92,9 +92,10 @@ class EnrollmentController extends Controller
 
             // Find the next upcoming course schedule
             $nextCourseSchedule = null;
+            $nextClassDate = null;
             $schedules = CourseSchedule::where('course_id', $enrollment->course_id)
-                ->where('start_date', '<=', now()->toDateString())
                 ->where('end_date', '>=', now()->toDateString())
+                ->orderBy('start_date', 'asc')
                 ->get();
 
             if ($schedules->isNotEmpty()) {
@@ -109,7 +110,6 @@ class EnrollmentController extends Controller
                 ];
 
                 // Find the next class day
-                $nextClassDate = null;
                 foreach ($schedules as $schedule) {
                     $scheduleDays = explode(',', $schedule->days_of_week);
                     
@@ -119,6 +119,7 @@ class EnrollmentController extends Controller
                         
                         if ($dayIndex !== false && $dayIndex >= $todayDayOfWeek) {
                             $nextClassDate = $today->copy()->next($dayMap[$dayIndex]);
+                            $nextCourseSchedule = $schedule;
                             break 2; // Exit both loops
                         }
                     }
@@ -132,17 +133,11 @@ class EnrollmentController extends Controller
                             $dayIndex = array_search($day, $dayMap);
                             if ($dayIndex !== false) {
                                 $nextClassDate = $today->copy()->next($dayMap[$dayIndex]);
+                                $nextCourseSchedule = $schedule;
                                 break 2; // Exit both loops
                             }
                         }
                     }
-                }
-
-                // If we found a next class date, create a schedule object
-                if ($nextClassDate) {
-                    $nextCourseSchedule = new CourseSchedule([
-                        'start_date' => $nextClassDate->toDateString()
-                    ]);
                 }
             }
 
@@ -201,7 +196,9 @@ class EnrollmentController extends Controller
                 'total_tuition' => $totalTuition,
                 'paid_amount' => $paidAmount,
                 'progress' => $enrollment->progress ?? 0,
-                'next_course_schedule' => $nextCourseSchedule ? $nextCourseSchedule->start_date : null,
+                'next_course_schedule' => ($nextClassDate && $nextCourseSchedule) 
+                    ? $nextClassDate->format('Y-m-d') . ' ' . $nextCourseSchedule->start_time
+                    : null,
                 'next_payment_deadline' => $nextPaymentDeadline,
                 'installments' => $installments->map(function($installment) {
                     return [

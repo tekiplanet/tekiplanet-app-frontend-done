@@ -293,15 +293,7 @@ class CourseController extends Controller
     {
         try {
             $course = Course::with([
-                'modules' => function($query) {
-                    $query->orderBy('order');
-                },
-                'modules.topics' => function($query) {
-                    $query->orderBy('order');
-                },
-                'modules.lessons' => function($query) {
-                    $query->orderBy('order');
-                },
+                'modules',
                 'instructor',
                 'schedules',
                 'exams',
@@ -316,17 +308,86 @@ class CourseController extends Controller
                     ->first();
             }
 
+            // Calculate next class date from schedules
+            $nextClass = null;
+            $today = now();
+            
+            foreach ($course->schedules as $schedule) {
+                $scheduleStart = Carbon::parse($schedule->start_date);
+                $scheduleEnd = Carbon::parse($schedule->end_date);
+                
+                // Skip if schedule is ended
+                if ($today->isAfter($scheduleEnd)) {
+                    continue;
+                }
+
+                // Get array of days
+                $classDays = explode(',', $schedule->days_of_week);
+                
+                // Find next occurrence
+                $nextDate = collect(range(0, 7))->map(function($offset) use ($today) {
+                    return $today->copy()->addDays($offset);
+                })->first(function($date) use ($classDays, $scheduleStart, $scheduleEnd) {
+                    $dayName = substr($date->format('D'), 0, 3);
+                    return in_array($dayName, $classDays) && 
+                           $date->between($scheduleStart, $scheduleEnd);
+                });
+
+                if ($nextDate && (!$nextClass || $nextDate->isBefore($nextClass))) {
+                    $nextClass = $nextDate;
+                }
+            }
+
+            // Format next class date
+            $nextClassFormatted = $nextClass 
+                ? $nextClass->format('D, M j, Y') . ' at ' . 
+                  Carbon::parse($course->schedules->first()->start_time)->format('g:i A')
+                : null;
+
+            $formattedSchedules = $course->schedules->map(function($schedule) {
+                $scheduleStart = Carbon::parse($schedule->start_date);
+                $scheduleEnd = Carbon::parse($schedule->end_date);
+                $today = now();
+                
+                // Get array of days
+                $classDays = explode(',', $schedule->days_of_week);
+                
+                // Find next class date for this schedule
+                $nextDate = collect(range(0, 7))->map(function($offset) use ($today) {
+                    return $today->copy()->addDays($offset);
+                })->first(function($date) use ($classDays, $scheduleStart, $scheduleEnd) {
+                    $dayName = substr($date->format('D'), 0, 3);
+                    return in_array($dayName, $classDays) && 
+                           $date->between($scheduleStart, $scheduleEnd);
+                });
+
+                return [
+                    'id' => $schedule->id,
+                    'start_date' => $schedule->start_date,
+                    'end_date' => $schedule->end_date,
+                    'start_time' => $schedule->start_time,
+                    'end_time' => $schedule->end_time,
+                    'days_of_week' => $schedule->days_of_week,
+                    'location' => $schedule->location,
+                    'next_class_date' => $nextDate ? $nextDate->format('Y-m-d') : null,
+                    'next_class_formatted' => $nextDate 
+                        ? $nextDate->format('D, M j, Y') . ' at ' . Carbon::parse($schedule->start_time)->format('g:i A')
+                        : null
+                ];
+            });
+
             return response()->json([
                 'course' => $course,
                 'modules' => $course->modules,
                 'lessons' => $course->modules->flatMap->lessons,
                 'exams' => $course->exams,
-                'schedules' => $course->schedules,
+                'schedules' => $formattedSchedules,
                 'notices' => $course->notices,
                 'features' => $course->features,
                 'instructor' => $course->instructor,
                 'enrollment' => $enrollment,
-                'installments' => $enrollment ? $enrollment->installments : []
+                'installments' => $enrollment ? $enrollment->installments : [],
+                'nextLesson' => $nextClassFormatted
             ]);
 
         } catch (\Exception $e) {
