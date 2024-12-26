@@ -13,6 +13,7 @@ use App\Mail\EnrollmentUpdated;
 use App\Services\NotificationService;
 use App\Jobs\SendEnrollmentNotification;
 use App\Jobs\SendEnrollmentEmail;
+use App\Models\Enrollment;
 
 class CourseController extends Controller
 {
@@ -346,5 +347,31 @@ class CourseController extends Controller
                 'message' => 'Failed to update enrollments: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function showEnrollment(Course $course, Enrollment $enrollment)
+    {
+        // Load relationships
+        $enrollment->load([
+            'user',
+            'installments' => function($query) {
+                $query->orderBy('order', 'asc');
+            }
+        ]);
+
+        // Calculate payment statistics
+        $totalAmount = $enrollment->installments->sum('amount');
+        $paidAmount = $enrollment->installments->whereNotNull('paid_at')->sum('amount');
+        $remainingAmount = $totalAmount - $paidAmount;
+        $paymentProgress = $totalAmount > 0 ? ($paidAmount / $totalAmount) * 100 : 0;
+
+        return view('admin.courses.enrollment-details', compact(
+            'course',
+            'enrollment',
+            'totalAmount',
+            'paidAmount',
+            'remainingAmount',
+            'paymentProgress'
+        ));
     }
 } 

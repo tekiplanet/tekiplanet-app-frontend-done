@@ -220,7 +220,8 @@
             <!-- Mobile View (Card Layout) -->
             <div class="block md:hidden">
                 @foreach($enrollments as $enrollment)
-                    <div class="p-4 border-b border-gray-200 dark:border-gray-600">
+                    <div class="p-4 border-b border-gray-200 dark:border-gray-600 cursor-pointer" 
+                         onclick="window.location.href='{{ route('admin.courses.enrollments.show', [$course, $enrollment]) }}'">
                         <div class="flex items-center gap-3 mb-3">
                             <input type="checkbox" 
                                    class="enrollment-checkbox form-checkbox rounded border-gray-300"
@@ -311,7 +312,8 @@
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
                                     @foreach($enrollments as $enrollment)
-                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                                            onclick="window.location.href='{{ route('admin.courses.enrollments.show', [$course, $enrollment]) }}'">
                                             <td class="px-6 py-4">
                                                 <input type="checkbox" 
                                                        class="enrollment-checkbox form-checkbox rounded border-gray-300"

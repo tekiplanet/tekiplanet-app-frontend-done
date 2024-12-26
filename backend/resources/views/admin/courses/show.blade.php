@@ -154,6 +154,11 @@
                             class="px-3 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300">
                         Reviews
                     </button>
+                    <button @click="activeTab = 'schedules'"
+                            :class="{ 'border-blue-500 text-blue-600': activeTab === 'schedules' }"
+                            class="px-3 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300">
+                        Schedules
+                    </button>
                 </nav>
             </div>
 
@@ -312,6 +317,71 @@
                         </div>
                     @endif
                 </div>
+
+                <!-- Schedules Tab -->
+                <div x-show="activeTab === 'schedules'">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Course Schedules</h3>
+                        <button onclick="openScheduleModal()"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Add Schedule
+                        </button>
+                    </div>
+
+                    @if($course->schedules->isEmpty())
+                        <p class="text-gray-500 text-center py-4">No schedules added yet.</p>
+                    @else
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            @foreach($course->schedules as $schedule)
+                                <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <div class="flex-1">
+                                            <h4 class="font-semibold mb-2">Schedule #{{ $loop->iteration }}</h4>
+                                            <div class="space-y-1 text-sm">
+                                                <p class="text-gray-600 dark:text-gray-300">
+                                                    <span class="font-medium">Period:</span><br>
+                                                    {{ date('M d, Y', strtotime($schedule->start_date)) }} - 
+                                                    {{ date('M d, Y', strtotime($schedule->end_date)) }}
+                                                </p>
+                                                <p class="text-gray-600 dark:text-gray-300">
+                                                    <span class="font-medium">Time:</span><br>
+                                                    {{ date('h:i A', strtotime($schedule->start_time)) }} - 
+                                                    {{ date('h:i A', strtotime($schedule->end_time)) }}
+                                                </p>
+                                                <p class="text-gray-600 dark:text-gray-300">
+                                                    <span class="font-medium">Days:</span><br>
+                                                    {{ $schedule->days_of_week }}
+                                                </p>
+                                                @if($schedule->location)
+                                                    <p class="text-gray-600 dark:text-gray-300">
+                                                        <span class="font-medium">Location:</span><br>
+                                                        {{ $schedule->location }}
+                                                    </p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button onclick="openScheduleModal('{{ $schedule->id }}')"
+                                                    class="text-blue-600 hover:text-blue-800">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                            </button>
+                                            <button onclick="deleteSchedule('{{ $schedule->id }}')"
+                                                    class="text-red-600 hover:text-red-800">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
@@ -320,6 +390,7 @@
     @include('admin.courses.partials.module-modal')
     @include('admin.courses.partials.lesson-modal')
     @include('admin.courses.partials.topic-modal')
+    @include('admin.courses.partials.schedule-modal')
 </div>
 
 @push('scripts')
@@ -756,6 +827,143 @@ function deleteTopic(topicId) {
     .catch(error => {
         console.error('Error:', error);
         showNotification('Error', 'Failed to delete topic', 'error');
+    });
+}
+
+let currentScheduleId = null;
+let isEditingSchedule = false;
+
+function openScheduleModal(scheduleId = null) {
+    const modal = document.getElementById('scheduleModal');
+    const form = document.getElementById('scheduleForm');
+    const modalTitle = document.getElementById('scheduleModalTitle');
+    const modalAction = document.getElementById('scheduleModalAction');
+    
+    currentScheduleId = scheduleId;
+    isEditingSchedule = !!scheduleId;
+    
+    modalTitle.textContent = isEditingSchedule ? 'Edit Schedule' : 'Add New Schedule';
+    modalAction.textContent = isEditingSchedule ? 'Update Schedule' : 'Create Schedule';
+    
+    form.reset();
+    
+    if (scheduleId) {
+        loadSchedule(scheduleId);
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+function closeScheduleModal() {
+    const modal = document.getElementById('scheduleModal');
+    modal.classList.add('hidden');
+}
+
+function loadSchedule(scheduleId) {
+    fetch(`/admin/courses/{{ $course->id }}/schedules/${scheduleId}/edit`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const form = document.getElementById('scheduleForm');
+                form.start_date.value = data.schedule.start_date;
+                form.end_date.value = data.schedule.end_date;
+                form.start_time.value = data.schedule.start_time;
+                form.end_time.value = data.schedule.end_time;
+                form.location.value = data.schedule.location || '';
+                
+                // Handle days of week
+                const days = data.schedule.days_of_week.split(',');
+                form.querySelectorAll('input[name="days[]"]').forEach(checkbox => {
+                    checkbox.checked = days.includes(checkbox.value);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading schedule:', error);
+            showNotification('Error', 'Failed to load schedule data', 'error');
+        });
+}
+
+function handleScheduleSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    const loadingSpinner = submitButton.querySelector('.loading-spinner');
+    
+    submitButton.disabled = true;
+    loadingSpinner.classList.remove('hidden');
+
+    const selectedDays = Array.from(form.querySelectorAll('input[name="days[]"]:checked'))
+        .map(checkbox => checkbox.value)
+        .join(',');
+
+    const formData = {
+        start_date: form.start_date.value,
+        end_date: form.end_date.value,
+        start_time: form.start_time.value,
+        end_time: form.end_time.value,
+        days_of_week: selectedDays,
+        location: form.location.value
+    };
+
+    const url = isEditingSchedule
+        ? `/admin/courses/{{ $course->id }}/schedules/${currentScheduleId}`
+        : `/admin/courses/{{ $course->id }}/schedules`;
+
+    fetch(url, {
+        method: isEditingSchedule ? 'PUT' : 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Success', `Schedule ${isEditingSchedule ? 'updated' : 'created'} successfully`);
+            closeScheduleModal();
+            window.location.reload();
+        } else {
+            throw new Error(data.message || `Failed to ${isEditingSchedule ? 'update' : 'create'} schedule`);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error', error.message, 'error');
+    })
+    .finally(() => {
+        submitButton.disabled = false;
+        loadingSpinner.classList.add('hidden');
+    });
+}
+
+function deleteSchedule(scheduleId) {
+    if (!confirm('Are you sure you want to delete this schedule?')) {
+        return;
+    }
+
+    fetch(`/admin/courses/{{ $course->id }}/schedules/${scheduleId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Success', 'Schedule deleted successfully');
+            window.location.reload();
+        } else {
+            throw new Error(data.message || 'Failed to delete schedule');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error', error.message, 'error');
     });
 }
 </script>

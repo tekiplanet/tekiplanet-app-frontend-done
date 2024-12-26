@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\CourseModuleController;
 use App\Http\Controllers\Admin\CourseLessonController;
 use App\Http\Controllers\Admin\CourseTopicController;
+use App\Http\Controllers\Admin\CourseScheduleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -89,6 +90,12 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth:admin']], function () 
         Route::get('topics/{topic}/edit', [CourseTopicController::class, 'edit'])->name('topics.edit');
         Route::put('topics/{topic}', [CourseTopicController::class, 'update'])->name('topics.update');
         Route::delete('topics/{topic}', [CourseTopicController::class, 'destroy'])->name('topics.destroy');
+
+        // Course Schedule Routes
+        Route::post('schedules', [CourseScheduleController::class, 'store'])->name('schedules.store');
+        Route::get('schedules/{schedule}/edit', [CourseScheduleController::class, 'edit'])->name('schedules.edit');
+        Route::put('schedules/{schedule}', [CourseScheduleController::class, 'update'])->name('schedules.update');
+        Route::delete('schedules/{schedule}', [CourseScheduleController::class, 'destroy'])->name('schedules.destroy');
     });
 });
 
@@ -118,3 +125,6 @@ Route::get('/admin/courses/{course}/enrollments', [CourseController::class, 'enr
 
 Route::post('/admin/courses/{course}/enrollments/bulk-update', [CourseController::class, 'bulkUpdateEnrollments'])
     ->name('admin.courses.enrollments.bulk-update');
+
+Route::get('/admin/courses/{course}/enrollments/{enrollment}', [CourseController::class, 'showEnrollment'])
+    ->name('admin.courses.enrollments.show');
