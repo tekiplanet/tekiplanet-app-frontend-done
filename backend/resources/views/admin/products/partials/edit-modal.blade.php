@@ -166,7 +166,8 @@ async function handleSubmit(e) {
     submitButtonText.textContent = 'Updating...';
     
     const formData = new FormData(form);
-    formData.append('is_featured', document.getElementById('is_featured').checked);
+    const formObject = Object.fromEntries(formData);
+    formObject.is_featured = form.elements.is_featured.checked;
     
     try {
         const response = await fetch('{{ route('admin.products.update', $product) }}', {
@@ -176,7 +177,7 @@ async function handleSubmit(e) {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify(Object.fromEntries(formData))
+            body: JSON.stringify(formObject)
         });
 
         const data = await response.json();
