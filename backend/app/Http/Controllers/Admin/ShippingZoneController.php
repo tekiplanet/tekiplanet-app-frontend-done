@@ -9,9 +9,36 @@ use Illuminate\Support\Str;
 
 class ShippingZoneController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $zones = ShippingZone::withCount(['rates', 'addresses'])->get();
+        $query = ShippingZone::withCount(['rates', 'addresses']);
+
+        // Search by name
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        // Filter by has shipping methods
+        if ($request->filled('has_methods')) {
+            if ($request->has_methods === 'yes') {
+                $query->has('rates');
+            } elseif ($request->has_methods === 'no') {
+                $query->doesntHave('rates');
+            }
+        }
+
+        // Filter by has addresses
+        if ($request->filled('has_addresses')) {
+            if ($request->has_addresses === 'yes') {
+                $query->has('addresses');
+            } elseif ($request->has_addresses === 'no') {
+                $query->doesntHave('addresses');
+            }
+        }
+
+        $zones = $query->latest()->paginate(10);
+        $zones->appends($request->all());
+
         return view('admin.shipping.zones.index', compact('zones'));
     }
 

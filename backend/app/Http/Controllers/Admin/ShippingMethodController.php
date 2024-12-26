@@ -10,9 +10,38 @@ use Illuminate\Support\Str;
 
 class ShippingMethodController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $methods = ShippingMethod::with('zoneRates')->orderBy('priority')->get();
+        $query = ShippingMethod::with('zoneRates');
+
+        // Search by name or description
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->status === 'active');
+        }
+
+        // Filter by cost range
+        if ($request->filled('min_cost')) {
+            $query->where('base_cost', '>=', $request->min_cost);
+        }
+        if ($request->filled('max_cost')) {
+            $query->where('base_cost', '<=', $request->max_cost);
+        }
+
+        // Filter by delivery time
+        if ($request->filled('max_delivery_days')) {
+            $query->where('estimated_days_max', '<=', $request->max_delivery_days);
+        }
+
+        $methods = $query->orderBy('priority')->paginate(10);
+        $methods->appends($request->all());
         $zones = ShippingZone::all();
         return view('admin.shipping.methods.index', compact('methods', 'zones'));
     }
@@ -79,7 +108,7 @@ class ShippingMethodController extends Controller
             'base_cost' => 'required|numeric|min:0',
             'estimated_days_min' => 'required|integer|min:0',
             'estimated_days_max' => 'required|integer|min:0|gte:estimated_days_min',
-            'is_active' => 'boolean',
+            'is_active' => 'required|boolean',
             'priority' => 'required|integer|min:0',
             'zone_rates' => 'array',
             'zone_rates.*.rate' => 'numeric|min:0',
@@ -87,6 +116,7 @@ class ShippingMethodController extends Controller
         ]);
 
         try {
+            $validated['is_active'] = (bool) $request->input('is_active');
             $method->update($validated);
 
             // Update zone rates
@@ -120,6 +150,14 @@ class ShippingMethodController extends Controller
     public function destroy(ShippingMethod $method)
     {
         try {
+            // Check if method is used in any orders
+            if ($method->orders()->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete shipping method that is associated with orders. Consider deactivating it instead.'
+                ], 422);
+            }
+
             $method->delete();
 
             return response()->json([

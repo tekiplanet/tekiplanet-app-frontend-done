@@ -31,6 +31,11 @@ class ShippingMethod extends Model
         return $this->hasMany(ZoneShippingRate::class);
     }
 
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
     public function getRateForZone(string $zoneId): ?float
     {
         return $this->zoneRates()

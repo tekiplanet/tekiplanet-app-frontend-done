@@ -12,6 +12,82 @@
         </button>
     </div>
 
+    <!-- Add this after the header section and before the addresses list -->
+    <div class="mb-6">
+        <form action="{{ route('admin.shipping.addresses.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- Search -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Search
+                </label>
+                <input type="text" 
+                       name="search" 
+                       value="{{ request('search') }}"
+                       placeholder="Search addresses..."
+                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+
+            <!-- Zone Filter -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Zone
+                </label>
+                <select name="zone" 
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">All Zones</option>
+                    @foreach($zones as $zone)
+                        <option value="{{ $zone->id }}" {{ request('zone') == $zone->id ? 'selected' : '' }}>
+                            {{ $zone->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- User Filter -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    User
+                </label>
+                <select name="user" 
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">All Users</option>
+                    @foreach($users as $user)
+                        <option value="{{ $user->id }}" {{ request('user') == $user->id ? 'selected' : '' }}>
+                            {{ $user->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Default Status -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Default Status
+                </label>
+                <select name="is_default" 
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">All</option>
+                    <option value="yes" {{ request('is_default') === 'yes' ? 'selected' : '' }}>Default Only</option>
+                    <option value="no" {{ request('is_default') === 'no' ? 'selected' : '' }}>Non-Default Only</option>
+                </select>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="md:col-span-4 flex justify-end gap-2">
+                <button type="submit" 
+                        class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700">
+                    Filter
+                </button>
+                @if(request()->hasAny(['search', 'zone', 'user', 'is_default']))
+                    <a href="{{ route('admin.shipping.addresses.index') }}" 
+                       class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                        Clear
+                    </a>
+                @endif
+            </div>
+        </form>
+    </div>
+
     <!-- Addresses List -->
     <div class="bg-white rounded-lg shadow-md dark:bg-gray-800">
         <div class="overflow-x-auto">

@@ -11,9 +11,43 @@ use Illuminate\Support\Str;
 
 class ShippingAddressController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $addresses = ShippingAddress::with(['user', 'state'])->latest()->paginate(15);
+        $query = ShippingAddress::with(['user', 'state']);
+
+        // Search by name, email, phone, or address
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('first_name', 'like', '%' . $request->search . '%')
+                  ->orWhere('last_name', 'like', '%' . $request->search . '%')
+                  ->orWhere('email', 'like', '%' . $request->search . '%')
+                  ->orWhere('phone', 'like', '%' . $request->search . '%')
+                  ->orWhere('address', 'like', '%' . $request->search . '%')
+                  ->orWhere('city', 'like', '%' . $request->search . '%')
+                  ->orWhereHas('user', function($query) use ($request) {
+                      $query->where('name', 'like', '%' . $request->search . '%')
+                            ->orWhere('email', 'like', '%' . $request->search . '%');
+                  });
+            });
+        }
+
+        // Filter by zone
+        if ($request->filled('zone')) {
+            $query->where('state_id', $request->zone);
+        }
+
+        // Filter by default status
+        if ($request->filled('is_default')) {
+            $query->where('is_default', $request->is_default === 'yes');
+        }
+
+        // Filter by user
+        if ($request->filled('user')) {
+            $query->where('user_id', $request->user);
+        }
+
+        $addresses = $query->latest()->paginate(10);
+        $addresses->appends($request->all());
         $zones = ShippingZone::all();
         $users = User::all();
         return view('admin.shipping.addresses.index', compact('addresses', 'zones', 'users'));

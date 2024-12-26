@@ -12,6 +12,63 @@
         </button>
     </div>
 
+    <!-- Search and Filters -->
+    <div class="mb-6">
+        <form action="{{ route('admin.shipping.zones.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- Search -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Search
+                </label>
+                <input type="text" 
+                       name="search" 
+                       value="{{ request('search') }}"
+                       placeholder="Search zones..."
+                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+
+            <!-- Has Methods Filter -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Has Methods
+                </label>
+                <select name="has_methods" 
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">All</option>
+                    <option value="yes" {{ request('has_methods') === 'yes' ? 'selected' : '' }}>Yes</option>
+                    <option value="no" {{ request('has_methods') === 'no' ? 'selected' : '' }}>No</option>
+                </select>
+            </div>
+
+            <!-- Has Addresses Filter -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Has Addresses
+                </label>
+                <select name="has_addresses" 
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">All</option>
+                    <option value="yes" {{ request('has_addresses') === 'yes' ? 'selected' : '' }}>Yes</option>
+                    <option value="no" {{ request('has_addresses') === 'no' ? 'selected' : '' }}>No</option>
+                </select>
+            </div>
+
+            <!-- Filter Button -->
+            <div class="flex items-end">
+                <button type="submit" 
+                        class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700">
+                    Filter
+                </button>
+                @if(request()->hasAny(['search', 'has_methods', 'has_addresses']))
+                    <a href="{{ route('admin.shipping.zones.index') }}" 
+                       class="ml-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                        Clear
+                    </a>
+                @endif
+            </div>
+        </form>
+    </div>
+
     <!-- Zones List -->
     <div class="bg-white rounded-lg shadow-md dark:bg-gray-800">
         <div class="overflow-x-auto">
@@ -35,17 +92,17 @@
                 <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
                     @forelse($zones as $zone)
                         <tr>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-6 py-4">
                                 <div class="text-sm font-medium text-gray-900 dark:text-white">
                                     {{ $zone->name }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-6 py-4">
                                 <div class="text-sm text-gray-500 dark:text-gray-400">
                                     {{ $zone->rates_count }} methods
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-6 py-4">
                                 <div class="text-sm text-gray-500 dark:text-gray-400">
                                     {{ $zone->addresses_count }} addresses
                                 </div>
@@ -55,12 +112,10 @@
                                         class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3">
                                     Edit
                                 </button>
-                                @if($zone->addresses_count === 0)
-                                    <button onclick="deleteZone('{{ $zone->id }}')"
-                                            class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-                                        Delete
-                                    </button>
-                                @endif
+                                <button onclick="deleteZone('{{ $zone->id }}')"
+                                        class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                                    Delete
+                                </button>
                             </td>
                         </tr>
                     @empty
@@ -100,6 +155,7 @@ function openEditModal(zone) {
     isEditMode = true;
     document.getElementById('zoneId').value = zone.id;
     document.getElementById('zoneName').value = zone.name;
+
     document.getElementById('modalTitle').textContent = 'Edit Shipping Zone';
     submitButtonText.textContent = 'Update Zone';
     modal.classList.remove('hidden');
@@ -107,6 +163,7 @@ function openEditModal(zone) {
 
 function closeModal() {
     modal.classList.add('hidden');
+    form.reset();
 }
 
 async function handleSubmit(e) {
