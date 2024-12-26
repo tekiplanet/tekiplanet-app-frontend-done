@@ -3,9 +3,9 @@
     
     <p>Hello {{ $userExam->user->name }},</p>
 
-    <p>Your exam status for <strong>{{ $userExam->exam->title }}</strong> has been updated.</p>
+    <p>Your exam status for <strong>{{ $userExam->courseExam->title }}</strong> has been updated.</p>
 
-    <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+    <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
         <p style="margin: 5px 0;"><strong>Status:</strong> {{ str_replace('_', ' ', ucfirst($userExam->status)) }}</p>
         @if($userExam->score !== null)
             <p style="margin: 5px 0;">

@@ -15,7 +15,7 @@ class ExamStatusUpdated extends Mailable
 
     public function __construct(UserCourseExam $userExam)
     {
-        $this->userExam = $userExam;
+        $this->userExam = $userExam->load(['user', 'courseExam']);
     }
 
     public function build()
