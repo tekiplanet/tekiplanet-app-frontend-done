@@ -28,12 +28,14 @@ class AccountStatusNotification extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject('Account Status Updated')
             ->view('components.mail.layout', [
-                'slot' => view('emails.account-status', [
-                    'user' => $notifiable,
-                    'status' => $this->status,
-                    'actionText' => 'View Dashboard',
-                    'actionUrl' => url('/dashboard')
-                ])->render(),
+                'slot' => new \Illuminate\Support\HtmlString(
+                    view('emails.account-status', [
+                        'user' => $notifiable,
+                        'status' => $this->status,
+                        'actionText' => 'View Dashboard',
+                        'actionUrl' => url('/dashboard')
+                    ])->render()
+                ),
                 'greeting' => 'Hello ' . $notifiable->first_name . '!',
                 'closing' => 'Best regards, TekiPlanet Team'
             ]);
