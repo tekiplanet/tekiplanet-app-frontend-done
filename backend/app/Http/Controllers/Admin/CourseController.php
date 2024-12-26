@@ -17,11 +17,40 @@ use App\Models\Enrollment;
 use App\Models\CourseNotice;
 use App\Jobs\SendCourseNoticeJob;
 use Illuminate\Support\Facades\Log;
+use App\Models\CourseExam;
 
 class CourseController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->query('view') === 'exams') {
+            // Get all exams across all courses with search and ordering
+            $exams = CourseExam::with('course')
+                ->when($request->search, function($query, $search) {
+                    $query->where(function($q) use ($search) {
+                        $q->where('title', 'like', "%{$search}%")
+                          ->orWhereHas('course', function($q) use ($search) {
+                              $q->where('title', 'like', "%{$search}%");
+                          });
+                    });
+                })
+                ->when($request->type, function($query, $type) {
+                    $query->where('type', $type);
+                })
+                ->when($request->status, function($query, $status) {
+                    $query->where('status', $status);
+                })
+                ->when($request->sort_by, function($query) use ($request) {
+                    $query->orderBy($request->sort_by, $request->sort_order ?? 'asc');
+                }, function($query) {
+                    $query->orderBy('date', 'desc');
+                })
+                ->paginate(10)
+                ->withQueryString();
+            
+            return view('admin.courses.exams.all', compact('exams'));
+        }
+        
         $categories = CourseCategory::orderBy('name')->get();
         $courses = Course::query()
             ->with(['instructor', 'category'])

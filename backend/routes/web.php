@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\CourseModuleController;
 use App\Http\Controllers\Admin\CourseLessonController;
 use App\Http\Controllers\Admin\CourseTopicController;
 use App\Http\Controllers\Admin\CourseScheduleController;
+use App\Http\Controllers\Admin\CourseExamController;
 
 /*
 |--------------------------------------------------------------------------
@@ -96,6 +97,15 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth:admin']], function () 
         Route::get('schedules/{schedule}/edit', [CourseScheduleController::class, 'edit'])->name('schedules.edit');
         Route::put('schedules/{schedule}', [CourseScheduleController::class, 'update'])->name('schedules.update');
         Route::delete('schedules/{schedule}', [CourseScheduleController::class, 'destroy'])->name('schedules.destroy');
+
+        // Course Exams Routes
+        Route::get('exams', [CourseExamController::class, 'index'])->name('exams.index');
+        Route::get('exams/create', [CourseExamController::class, 'create'])->name('exams.create');
+        Route::post('exams', [CourseExamController::class, 'store'])->name('exams.store');
+        Route::get('exams/{exam}', [CourseExamController::class, 'show'])->name('exams.show');
+        Route::get('exams/{exam}/edit', [CourseExamController::class, 'edit'])->name('exams.edit');
+        Route::put('exams/{exam}', [CourseExamController::class, 'update'])->name('exams.update');
+        Route::delete('exams/{exam}', [CourseExamController::class, 'destroy'])->name('exams.destroy');
     });
 
     // Course Enrollments Notice

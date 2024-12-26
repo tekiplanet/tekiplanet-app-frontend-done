@@ -20,14 +20,39 @@
 
                     <!-- Courses -->
                     <li>
-                        <a href="{{ route('admin.courses.index') }}" 
-                           class="{{ request()->routeIs('admin.courses.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold"
-                        >
-                            <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-                            </svg>
-                            Courses
-                        </a>
+                        <div x-data="{ open: {{ request()->routeIs('admin.courses.*') ? 'true' : 'false' }} }">
+                            <button @click="open = !open" 
+                                    class="{{ request()->routeIs('admin.courses.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} group flex items-center justify-between w-full rounded-md p-2 text-sm leading-6 font-semibold">
+                                <div class="flex gap-x-3">
+                                    <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                    </svg>
+                                    Courses
+                                </div>
+                                <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-90': open }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                            
+                            <div x-show="open" class="mt-1 space-y-1" style="display: none;">
+                                <a href="{{ route('admin.courses.index') }}" 
+                                   class="{{ request()->routeIs('admin.courses.index') ? 'bg-gray-700' : '' }} text-gray-400 hover:text-white hover:bg-gray-700 group flex gap-x-3 rounded-md p-2 pl-11 text-sm leading-6 font-semibold">
+                                    All Courses
+                                </a>
+                                
+                                <a href="{{ route('admin.courses.index') }}?view=exams" 
+                                   class="{{ request()->has('view') && request('view') === 'exams' ? 'bg-gray-700' : '' }} text-gray-400 hover:text-white hover:bg-gray-700 group flex gap-x-3 rounded-md p-2 pl-11 text-sm leading-6 font-semibold">
+                                    All Exams
+                                </a>
+                                
+                                @if(request()->route('course'))
+                                    <a href="{{ route('admin.courses.exams.index', request()->route('course')) }}" 
+                                       class="{{ request()->routeIs('admin.courses.exams.*') ? 'bg-gray-700' : '' }} text-gray-400 hover:text-white hover:bg-gray-700 group flex gap-x-3 rounded-md p-2 pl-11 text-sm leading-6 font-semibold">
+                                        Course Exams
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
                     </li>
 
                     <!-- Users Management -->
