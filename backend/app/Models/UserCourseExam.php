@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserCourseExam extends Model
 {
@@ -42,6 +43,9 @@ class UserCourseExam extends Model
         'total_score' => 'float'
     ];
 
+    // Add this property to store the action temporarily
+    public $action;
+
     protected static function boot()
     {
         parent::boot();
@@ -55,14 +59,14 @@ class UserCourseExam extends Model
     }
 
     // Relationships
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function courseExam()
+    public function courseExam(): BelongsTo
     {
-        return $this->belongsTo(CourseExam::class, 'course_exam_id');
+        return $this->belongsTo(CourseExam::class);
     }
 
     // Scopes
@@ -98,5 +102,19 @@ class UserCourseExam extends Model
     {
         $this->status = 'missed';
         $this->save();
+    }
+
+    protected $attributes = [
+        'action' => null
+    ];
+
+    public function getActionAttribute()
+    {
+        return $this->attributes['action'] ?? null;
+    }
+
+    public function setActionAttribute($value)
+    {
+        $this->attributes['action'] = $value;
     }
 }

@@ -69,23 +69,30 @@ class CourseExamParticipantController extends Controller
                 'total_score' => 'required_if:action,score|numeric|min:0'
             ]);
 
-            $userExams = UserCourseExam::whereIn('id', $validated['user_exams'])->get();
+            \Log::info('Bulk Update Request:', $validated);
+
+            $userExams = UserCourseExam::with(['user', 'courseExam'])
+                ->whereIn('id', $validated['user_exams'])
+                ->get();
 
             foreach ($userExams as $userExam) {
-                $updateData = [];
-                
-                if ($validated['action'] === 'status') {
-                    $updateData['status'] = $validated['status'];
+                if ($validated['action'] === 'score') {
+                    $userExam->update([
+                        'score' => $validated['score'],
+                        'total_score' => $validated['total_score']
+                    ]);
                 } else {
-                    $updateData['score'] = $validated['score'];
-                    $updateData['total_score'] = $validated['total_score'];
+                    $userExam->update(['status' => $validated['status']]);
                 }
 
-                // Update the user exam
-                $userExam->update($updateData);
+                \Log::info('Dispatching notification:', [
+                    'user_exam_id' => $userExam->id,
+                    'action' => $validated['action'],
+                    'score' => $userExam->score,
+                    'status' => $userExam->status
+                ]);
 
-                // Queue notification and email
-                dispatch(new SendExamNotification($userExam));
+                dispatch(new SendExamNotification($userExam->fresh(), $validated['action']));
             }
 
             return response()->json([
@@ -95,7 +102,6 @@ class CourseExamParticipantController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Error updating participants: ' . $e->getMessage());
-            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update participants'
@@ -114,8 +120,11 @@ class CourseExamParticipantController extends Controller
 
             $participant->update($validated);
 
-            // Queue notification and email
-            dispatch(new SendExamNotification($participant));
+            // Determine the action type based on what was updated
+            $action = $request->has('score') ? 'score' : 'status';
+
+            // Queue notification and email with the correct action type
+            dispatch(new SendExamNotification($participant, $action));
 
             return response()->json([
                 'success' => true,
