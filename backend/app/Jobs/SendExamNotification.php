@@ -25,26 +25,42 @@ class SendExamNotification implements ShouldQueue
 
     public function handle(NotificationService $notificationService)
     {
-        // Send email
-        Mail::to($this->userExam->user->email)
-            ->queue(new ExamStatusUpdated($this->userExam));
+        try {
+            // Load the courseExam relationship if not loaded
+            if (!$this->userExam->relationLoaded('courseExam')) {
+                $this->userExam->load('courseExam');
+            }
 
-        // Create notification
-        $notificationData = [
-            'type' => 'exam_update',
-            'title' => 'Exam Status Update',
-            'message' => "Your exam status for {$this->userExam->exam->title} has been updated to " . 
-                        str_replace('_', ' ', ucfirst($this->userExam->status)),
-            'icon' => 'clipboard-check',
-            'action_url' => null,
-            'extra_data' => [
-                'exam_id' => $this->userExam->exam_id,
-                'status' => $this->userExam->status,
-                'score' => $this->userExam->score,
-                'total_score' => $this->userExam->total_score
-            ]
-        ];
+            // Send email
+            Mail::to($this->userExam->user->email)
+                ->queue(new ExamStatusUpdated($this->userExam));
 
-        $notificationService->send($this->userExam->user, $notificationData);
+            // Create notification data
+            $notificationData = [
+                'type' => 'exam_update',
+                'title' => 'Exam Status Update',
+                'message' => "Your exam status for {$this->userExam->courseExam->title} has been updated to " . 
+                            str_replace('_', ' ', ucfirst($this->userExam->status)),
+                'icon' => 'clipboard-check',
+                'action_url' => null,
+                'extra_data' => [
+                    'exam_id' => $this->userExam->course_exam_id,
+                    'status' => $this->userExam->status,
+                    'score' => $this->userExam->score,
+                    'total_score' => $this->userExam->total_score
+                ]
+            ];
+
+            // Send notification
+            $notificationService->send($notificationData, $this->userExam->user);
+
+        } catch (\Exception $e) {
+            \Log::error('Error in SendExamNotification job: ' . $e->getMessage(), [
+                'user_exam_id' => $this->userExam->id,
+                'exam_id' => $this->userExam->course_exam_id,
+                'user_id' => $this->userExam->user_id
+            ]);
+            throw $e;
+        }
     }
 } 

@@ -13,15 +13,18 @@ class UserCourseExam extends Model
     protected $keyType = 'string';
     public $incrementing = false;
 
+    // Add this line to ensure relationships are properly serialized
+    protected $with = ['user', 'courseExam'];
+
     protected $fillable = [
         'id',
-        'user_id', 
+        'user_id',
         'course_exam_id',
-        'status', 
-        'score', 
+        'status',
+        'score',
         'total_score',
         'attempts',
-        'started_at', 
+        'started_at',
         'completed_at',
         'answers',
         'review_notes'
