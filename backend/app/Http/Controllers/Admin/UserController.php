@@ -250,7 +250,11 @@ class UserController extends Controller
 
             // Send email if requested
             if ($request->send_email) {
-                $user->notify(new CustomNotification($validated['title'], $validated['message']));
+                $user->notify(new CustomNotification(
+                    $validated['title'], 
+                    $validated['message'],
+                    'system'
+                ));
             }
 
             return response()->json([

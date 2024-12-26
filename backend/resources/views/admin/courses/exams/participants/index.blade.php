@@ -42,12 +42,12 @@
                     </select>
                 </div>
                 <div>
-                    <select name="sort" 
+                    <select name="result" 
                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        <option value="latest" {{ request('sort', 'latest') === 'latest' ? 'selected' : '' }}>Latest First</option>
-                        <option value="oldest" {{ request('sort') === 'oldest' ? 'selected' : '' }}>Oldest First</option>
-                        <option value="name" {{ request('sort') === 'name' ? 'selected' : '' }}>Name</option>
-                        <option value="score" {{ request('sort') === 'score' ? 'selected' : '' }}>Score</option>
+                        <option value="">All Results</option>
+                        <option value="passed" {{ request('result') === 'passed' ? 'selected' : '' }}>Passed</option>
+                        <option value="failed" {{ request('result') === 'failed' ? 'selected' : '' }}>Failed</option>
+                        <option value="pending" {{ request('result') === 'pending' ? 'selected' : '' }}>Pending</option>
                     </select>
                 </div>
             </div>
@@ -111,6 +111,7 @@
                         <th class="px-4 py-3">Student</th>
                         <th class="px-4 py-3">Status</th>
                         <th class="px-4 py-3">Score</th>
+                        <th class="px-4 py-3">Result</th>
                         <th class="px-4 py-3">Attempt Date</th>
                         <th class="px-4 py-3">Time Taken</th>
                         <th class="px-4 py-3">Actions</th>
@@ -131,7 +132,7 @@
                                          src="{{ $participant->user->avatar_url }}" 
                                          alt="{{ $participant->user->name }}">
                                     <div class="ml-3">
-                                        <p class="font-semibold">{{ $participant->user->name }}</p>
+                                        <p class="font-semibold">{{ $participant->user->first_name }} {{ $participant->user->last_name }}</p>
                                         <p class="text-sm text-gray-500">{{ $participant->user->email }}</p>
                                     </div>
                                 </div>
@@ -153,6 +154,23 @@
                                     </span>
                                 @else
                                     <span class="text-gray-500">Not attempted</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3">
+                                @if($participant->score !== null)
+                                    @php
+                                        $percentage = ($participant->score / $participant->total_score) * 100;
+                                        $passed = $percentage >= $exam->pass_percentage;
+                                    @endphp
+                                    <span class="px-2 py-1 text-xs rounded-full {{ 
+                                        $passed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' 
+                                    }}">
+                                        {{ $passed ? 'Passed' : 'Failed' }}
+                                    </span>
+                                @else
+                                    <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
+                                        Pending
+                                    </span>
                                 @endif
                             </td>
                             <td class="px-4 py-3">

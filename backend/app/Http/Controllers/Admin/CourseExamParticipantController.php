@@ -25,12 +25,25 @@ class CourseExamParticipantController extends Controller
             ->with('user')
             ->when($request->search, function($query, $search) {
                 $query->whereHas('user', function($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+                    $q->where('first_name', 'like', "%{$search}%")
+                      ->orWhere('last_name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"]);
                 });
             })
             ->when($request->status, function($query, $status) {
                 $query->where('status', $status);
+            })
+            ->when($request->result, function ($query, $result) use ($exam) {
+                if ($result === 'passed') {
+                    $query->whereNotNull('score')
+                        ->whereRaw('(score / total_score * 100) >= ?', [$exam->pass_percentage]);
+                } elseif ($result === 'failed') {
+                    $query->whereNotNull('score')
+                        ->whereRaw('(score / total_score * 100) < ?', [$exam->pass_percentage]);
+                } elseif ($result === 'pending') {
+                    $query->whereNull('score');
+                }
             })
             ->when($request->sort, function($query, $sort) {
                 switch($sort) {
