@@ -446,3 +446,7 @@ Route::middleware('auth:sanctum')->post('/broadcasting/auth', function (Request 
         ], 403);
     }
 });
+
+// Inside your admin routes group
+Route::post('/admin/courses/{course}/enrollments/send-notices', [CourseController::class, 'sendBulkNotices'])
+    ->name('admin.courses.enrollments.send-notices');

@@ -206,6 +206,62 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Send Notice -->
+                        <div class="relative w-full sm:w-auto">
+                            <button onclick="toggleDropdown('noticeDropdown')"
+                                    class="w-full sm:w-auto px-3 py-2 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-700">
+                                Send Notice
+                            </button>
+                            <div id="noticeDropdown" 
+                                 class="hidden absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg z-50" 
+                                 style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                               <div class="p-3">
+                                   <div class="mb-3">
+                                       <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                                       <input type="text" 
+                                              id="noticeTitle"
+                                              class="w-full px-3 py-2 text-sm border rounded-lg"
+                                              placeholder="Enter notice title">
+                                   </div>
+                                   <div class="mb-3">
+                                       <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                                       <textarea id="noticeContent"
+                                                class="w-full px-3 py-2 text-sm border rounded-lg"
+                                                rows="4"
+                                                placeholder="Enter notice content"></textarea>
+                                   </div>
+                                   <div class="mb-3">
+                                       <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                                       <select id="noticePriority"
+                                               class="w-full px-3 py-2 text-sm border rounded-lg">
+                                           <option value="low">Low</option>
+                                           <option value="medium">Medium</option>
+                                           <option value="high">High</option>
+                                       </select>
+                                   </div>
+                                   <div class="mb-3">
+                                       <label class="flex items-center">
+                                           <input type="checkbox" 
+                                                  id="noticeImportant"
+                                                  class="form-checkbox rounded border-gray-300">
+                                           <span class="ml-2 text-sm text-gray-700">Mark as Important</span>
+                                       </label>
+                                   </div>
+                                   <button onclick="sendBulkNotices(this)"
+                                           class="w-full px-3 py-2 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-700">
+                                       <span class="inline-flex items-center">
+                                           <span class="notice-text">Send Notice</span>
+                                           <svg class="hidden loading-spinner ml-2 w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                           </svg>
+                                       </span>
+                                   </button>
+                               </div>
+                           </div>
+                       </div>
+
                     </div>
                 </div>
             </div>
@@ -533,6 +589,70 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
             }
+        });
+    };
+
+    window.sendBulkNotices = function(button) {
+        if (selectedEnrollments.length === 0) {
+            showNotification('Error', 'Please select enrollments to send notice to', 'error');
+            return;
+        }
+
+        const title = document.getElementById('noticeTitle').value;
+        const content = document.getElementById('noticeContent').value;
+        const priority = document.getElementById('noticePriority').value;
+        const isImportant = document.getElementById('noticeImportant').checked;
+
+        if (!title || !content) {
+            showNotification('Error', 'Please fill in all required fields', 'error');
+            return;
+        }
+
+        // Show loading state
+        const updateText = button.querySelector('.notice-text');
+        const loadingSpinner = button.querySelector('.loading-spinner');
+        const originalText = updateText.textContent;
+        updateText.textContent = 'Sending...';
+        loadingSpinner.classList.remove('hidden');
+        button.disabled = true;
+
+        fetch(`/admin/courses/{{ $course->id }}/enrollments/send-notices`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                enrollment_ids: selectedEnrollments,
+                title: title,
+                content: content,
+                priority: priority,
+                is_important: isImportant
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Success', data.message);
+                document.getElementById('noticeDropdown').classList.add('hidden');
+                document.getElementById('noticeTitle').value = '';
+                document.getElementById('noticeContent').value = '';
+                document.getElementById('noticePriority').value = 'low';
+                document.getElementById('noticeImportant').checked = false;
+            } else {
+                throw new Error(data.message || 'Failed to send notices');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error', error.message, 'error');
+        })
+        .finally(() => {
+            // Reset button state
+            updateText.textContent = originalText;
+            loadingSpinner.classList.add('hidden');
+            button.disabled = false;
         });
     };
 });

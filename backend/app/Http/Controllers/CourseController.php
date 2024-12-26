@@ -12,6 +12,8 @@ use App\Models\UserCourseExam;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use App\Jobs\SendCourseNoticeJob;
 
 class CourseController extends Controller
 {
@@ -400,6 +402,59 @@ class CourseController extends Controller
             return response()->json([
                 'message' => 'Failed to fetch course details',
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function sendBulkNotices(Request $request)
+    {
+        try {
+            $request->validate([
+                'enrollment_ids' => 'required|array',
+                'enrollment_ids.*' => 'required|string|exists:enrollments,id',
+                'title' => 'required|string|max:255',
+                'content' => 'required|string',
+                'priority' => 'required|in:low,medium,high',
+                'is_important' => 'required|boolean'
+            ]);
+
+            // Get the course_id from the first enrollment
+            $courseId = Enrollment::findOrFail($request->enrollment_ids[0])->course_id;
+
+            // Create the course notice
+            $courseNotice = CourseNotice::create([
+                'course_id' => $courseId,
+                'title' => $request->title,
+                'content' => $request->content,
+                'priority' => $request->priority,
+                'is_important' => $request->is_important,
+                'published_at' => now()
+            ]);
+
+            // Get unique user IDs from the selected enrollments
+            $userIds = Enrollment::whereIn('id', $request->enrollment_ids)
+                ->pluck('user_id')
+                ->unique()
+                ->toArray();
+
+            // Dispatch the job
+            SendCourseNoticeJob::dispatch($courseNotice, $userIds);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Course notice is being sent to ' . count($userIds) . ' users',
+                'notice' => $courseNotice
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error sending bulk notices:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send notices: ' . $e->getMessage()
             ], 500);
         }
     }
