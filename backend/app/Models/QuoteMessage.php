@@ -3,36 +3,23 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class QuoteMessage extends Model
 {
-    public $incrementing = false;
-    protected $keyType = 'string';
+    use HasUuids;
 
     protected $fillable = [
         'quote_id',
         'user_id',
         'message',
-        'sender_type',
-        'is_read'
+        'sender_type', // 'admin' or 'user'
+        'read_at'
     ];
 
     protected $casts = [
-        'is_read' => 'boolean',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'read_at' => 'datetime'
     ];
-
-    protected static function boot()
-    {
-        parent::boot();
-        static::creating(function ($model) {
-            if (empty($model->{$model->getKeyName()})) {
-                $model->{$model->getKeyName()} = Str::uuid()->toString();
-            }
-        });
-    }
 
     public function quote()
     {

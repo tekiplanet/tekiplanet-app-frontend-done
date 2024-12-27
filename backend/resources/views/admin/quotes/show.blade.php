@@ -175,13 +175,18 @@
                 @endforeach
             </div>
             <form id="messageForm" class="mt-4">
+                @csrf
                 <textarea id="message" 
                           rows="3"
                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                           placeholder="Type your message..."></textarea>
                 <button type="submit" 
-                        class="mt-2 w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    Send Message
+                        class="mt-2 w-full inline-flex justify-center items-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50">
+                    <svg id="loadingIcon" class="hidden w-4 h-4 mr-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span id="buttonText">Send Message</span>
                 </button>
             </form>
         </div>
@@ -238,7 +243,7 @@ document.getElementById('assignedTo').addEventListener('change', function() {
     });
 });
 
-// Send Message
+// Handle message form submission
 document.getElementById('messageForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -247,30 +252,90 @@ document.getElementById('messageForm').addEventListener('submit', function(e) {
     
     if (!message) return;
 
+    // Disable submit button while sending
+    const submitButton = this.querySelector('button[type="submit"]');
+    const loadingIcon = document.getElementById('loadingIcon');
+    const buttonText = document.getElementById('buttonText');
+    
+    submitButton.disabled = true;
+    loadingIcon.classList.remove('hidden');
+    buttonText.textContent = 'Sending...';
+
     fetch(`{{ route('admin.quotes.messages.send', $quote) }}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': '{{ csrf_token() }}'
         },
-        body: JSON.stringify({
-            message: message
-        })
+        body: JSON.stringify({ message })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Clear input
             messageInput.value = '';
+            
+            // Add new message to chat
             const messagesContainer = document.getElementById('messages');
-            // Add new message to the container
-            // You might want to create a proper template for this
-            location.reload(); // Simple solution - reload the page
+            const html = `
+                <div class="flex gap-4 flex-row-reverse">
+                    <div class="flex-shrink-0">
+                        <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                            {{ substr(auth()->guard('admin')->user()->name, 0, 1) }}
+                        </div>
+                    </div>
+                    <div class="flex-1 bg-blue-100 rounded-lg p-4">
+                        <div class="text-sm text-gray-600">
+                            {{ auth()->guard('admin')->user()->name }}
+                        </div>
+                        <div class="mt-1">${message}</div>
+                        <div class="text-xs text-gray-500 mt-1">Just now</div>
+                    </div>
+                </div>
+            `;
+            messagesContainer.insertAdjacentHTML('beforeend', html);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        } else {
+            showNotification('Error', data.message || 'Failed to send message', 'error');
         }
     })
     .catch(error => {
         showNotification('Error', 'Failed to send message', 'error');
+    })
+    .finally(() => {
+        // Reset button state
+        submitButton.disabled = false;
+        loadingIcon.classList.add('hidden');
+        buttonText.textContent = 'Send Message';
     });
 });
+
+// Listen for real-time messages from other users
+Echo.private(`quote.${quote.id}`)
+    .listen('NewQuoteMessage', (e) => {
+        const message = e.message;
+        if (message.sender_type !== 'admin') {
+            const messagesContainer = document.getElementById('messages');
+            const html = `
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0">
+                        <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                            ${message.user.first_name.charAt(0)}
+                        </div>
+                    </div>
+                    <div class="flex-1 bg-gray-100 rounded-lg p-4">
+                        <div class="text-sm text-gray-600">
+                            ${message.user.first_name} ${message.user.last_name}
+                        </div>
+                        <div class="mt-1">${message.message}</div>
+                        <div class="text-xs text-gray-500 mt-1">Just now</div>
+                    </div>
+                </div>
+            `;
+            messagesContainer.insertAdjacentHTML('beforeend', html);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    });
 </script>
 @endpush
 @endsection 

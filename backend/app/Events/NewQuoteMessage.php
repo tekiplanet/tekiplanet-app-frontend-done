@@ -6,6 +6,7 @@ use App\Models\QuoteMessage;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
@@ -23,15 +24,6 @@ class NewQuoteMessage implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        return new Channel('quote.' . $this->message->quote_id);
-    }
-
-    public function broadcastWith()
-    {
-        return [
-            'message' => array_merge($this->message->toArray(), [
-                'user' => $this->message->user
-            ])
-        ];
+        return new PrivateChannel('quote.' . $this->message->quote_id);
     }
 } 

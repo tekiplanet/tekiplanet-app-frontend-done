@@ -8,6 +8,8 @@ use App\Models\QuoteMessage;
 use App\Models\Admin;
 use Illuminate\Http\Request;
 use App\Services\NotificationService;
+use App\Mail\QuoteMessageReceived;
+use App\Events\NewQuoteMessage;
 
 class QuoteController extends Controller
 {
@@ -110,23 +112,38 @@ class QuoteController extends Controller
         ]);
 
         $message = $quote->messages()->create([
-            'user_id' => auth()->id(),
+            'user_id' => $quote->user_id,
             'message' => $validated['message'],
             'sender_type' => 'admin'
         ]);
 
-        // Notify the quote owner
+        // Load relationships for the response
+        $message->load(['user', 'quote']);
+
+        // Send email notification (queued)
+        \Mail::to($quote->user)
+            ->queue(new QuoteMessageReceived($message));
+
+        // Send notification (using existing NotificationService)
         $this->notificationService->send([
             'type' => 'new_quote_message',
             'title' => 'New Message on Your Quote',
             'message' => "You have received a new message regarding your quote",
-            'action_url' => "/quotes/{$quote->id}"
+            'icon' => 'chat',
+            'action_url' => "/quotes/{$quote->id}",
+            'extra_data' => [
+                'quote_id' => $quote->id,
+                'message' => $validated['message']
+            ]
         ], $quote->user);
+
+        // Broadcast the new message
+        broadcast(new NewQuoteMessage($message))->toOthers();
 
         return response()->json([
             'success' => true,
             'message' => 'Message sent successfully',
-            'data' => $message->load('user')
+            'data' => $message
         ]);
     }
 } 
