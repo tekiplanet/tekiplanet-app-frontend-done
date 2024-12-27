@@ -36,7 +36,7 @@ class ShippingZoneController extends Controller
             }
         }
 
-        $zones = $query->latest()->paginate(10);
+        $zones = $query->latest()->paginate(10)->withQueryString();
         $zones->appends($request->all());
 
         return view('admin.shipping.zones.index', compact('zones'));

@@ -133,6 +133,14 @@ class ShippingAddressController extends Controller
     public function destroy(ShippingAddress $address)
     {
         try {
+            // Check if address is used in any orders
+            if ($address->orders()->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete address that is associated with orders'
+                ], 422);
+            }
+
             $address->delete();
 
             return response()->json([
