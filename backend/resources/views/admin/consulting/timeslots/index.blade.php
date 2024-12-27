@@ -123,6 +123,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Date</label>
                         <input type="date" name="date" required
+                               min="{{ date('Y-m-d') }}"
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     </div>
                     <div>
@@ -239,9 +240,23 @@
                 <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Edit Time Slot</h3>
                 <form id="editForm" class="space-y-4">
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
+                        <input type="date" name="date" required
+                               min="{{ date('Y-m-d') }}"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Time</label>
+                        <input type="time" name="time" required
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Capacity</label>
                         <input type="number" name="capacity" required min="1"
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <p id="capacityHint" class="mt-1 text-sm text-gray-500 hidden">
+                            Cannot reduce capacity below current bookings
+                        </p>
                     </div>
                     <div class="flex items-center">
                         <input type="checkbox" name="is_available" id="edit_is_available"
@@ -319,8 +334,26 @@ function openEditModal(id) {
         .then(response => response.json())
         .then(data => {
             const form = document.getElementById('editForm');
+            form.date.value = data.date;
+            form.time.value = data.time;
             form.capacity.value = data.capacity;
             form.is_available.checked = data.is_available;
+            
+            // Handle fields based on booking status
+            if (data.has_bookings) {
+                form.date.disabled = true;
+                form.time.disabled = true;
+                form.capacity.min = data.capacity; // Can't reduce below current capacity
+                document.getElementById('capacityHint').classList.remove('hidden');
+            } else {
+                form.date.disabled = false;
+                form.time.disabled = false;
+                form.capacity.min = 1;
+                document.getElementById('capacityHint').classList.add('hidden');
+                // Validate initial date/time
+                validateTimeInput(form.date, form.time);
+            }
+            
             document.getElementById('editModal').classList.remove('hidden');
         })
         .catch(error => {
@@ -338,14 +371,27 @@ function saveEdit() {
     const editSpinner = document.getElementById('editSpinner');
     const editButtonText = document.getElementById('editButtonText');
 
+    // Validate date and time
+    const form = document.getElementById('editForm');
+    const selectedDate = form.date.value;
+    const selectedTime = form.time.value;
+    const selectedDateTime = new Date(selectedDate + 'T' + selectedTime);
+    const now = new Date();
+
+    if (selectedDateTime < now) {
+        showNotification('Error', 'Cannot select a past date and time', 'error');
+        return;
+    }
+
     // Disable button and show loading state
     editButton.disabled = true;
     editSpinner.classList.remove('hidden');
     editButtonText.textContent = 'Saving...';
 
-    const form = document.getElementById('editForm');
     const formData = new FormData(form);
     const data = {
+        date: formData.get('date'),
+        time: formData.get('time'),
         capacity: parseInt(formData.get('capacity')),
         is_available: formData.get('is_available') === 'on'
     };
@@ -621,6 +667,56 @@ function openBulkDeleteModal() {
     document.getElementById('deleteModal').classList.remove('hidden');
     currentTimeSlotId = null; // Set to null to indicate bulk delete
 }
+
+function validateTimeInput(dateInput, timeInput) {
+    const selectedDate = dateInput.value;
+    const selectedTime = timeInput.value;
+    
+    if (selectedDate === new Date().toISOString().split('T')[0]) {
+        const now = new Date();
+        const selectedDateTime = new Date(selectedDate + 'T' + selectedTime);
+        
+        if (selectedDateTime < now) {
+            timeInput.setCustomValidity('Cannot select a past time for today');
+        } else {
+            timeInput.setCustomValidity('');
+        }
+    } else {
+        timeInput.setCustomValidity('');
+    }
+}
+
+// Add event listeners to date and time inputs in single create form
+document.querySelector('#timeSlotForm [name="date"]').addEventListener('change', function() {
+    validateTimeInput(this, document.querySelector('#timeSlotForm [name="time"]'));
+});
+
+document.querySelector('#timeSlotForm [name="time"]').addEventListener('change', function() {
+    validateTimeInput(document.querySelector('#timeSlotForm [name="date"]'), this);
+});
+
+// Add event listeners to bulk create form
+document.querySelector('#bulkCreateForm [name="start_date"]').addEventListener('change', function() {
+    const timeInputs = document.querySelectorAll('#bulkCreateForm [name="times[]"]');
+    timeInputs.forEach(timeInput => {
+        validateTimeInput(this, timeInput);
+    });
+});
+
+document.querySelectorAll('#bulkCreateForm [name="times[]"]').forEach(timeInput => {
+    timeInput.addEventListener('change', function() {
+        validateTimeInput(document.querySelector('#bulkCreateForm [name="start_date"]'), this);
+    });
+});
+
+// Add validation for edit form date/time inputs
+document.querySelector('#editForm [name="date"]').addEventListener('change', function() {
+    validateTimeInput(this, document.querySelector('#editForm [name="time"]'));
+});
+
+document.querySelector('#editForm [name="time"]').addEventListener('change', function() {
+    validateTimeInput(document.querySelector('#editForm [name="date"]'), this);
+});
 </script>
 @endpush
 @endsection 

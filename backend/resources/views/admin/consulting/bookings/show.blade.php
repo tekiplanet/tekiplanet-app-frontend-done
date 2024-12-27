@@ -200,7 +200,9 @@
                 <form id="expertForm" class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Select Expert</label>
-                        <select name="expert_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <select name="expert_id" 
+                                id="expert_id"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             <option value="">Select an Expert</option>
                             @foreach($experts as $expert)
                                 <option value="{{ $expert->id }}" 
@@ -218,8 +220,15 @@
                     Cancel
                 </button>
                 <button onclick="assignExpert()" 
+                        id="assignExpertButton"
                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Assign
+                    <div class="flex items-center gap-2">
+                        <svg id="assignSpinner" class="animate-spin h-4 w-4 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span id="assignButtonText">Assign</span>
+                    </div>
                 </button>
             </div>
         </div>
@@ -273,21 +282,30 @@ function closeExpertModal() {
 }
 
 function assignExpert() {
-    const form = document.getElementById('expertForm');
-    const formData = new FormData(form);
+    const assignButton = document.getElementById('assignExpertButton');
+    const assignSpinner = document.getElementById('assignSpinner');
+    const assignButtonText = document.getElementById('assignButtonText');
 
-    fetch(`{{ route('admin.consulting.bookings.assign-expert', $booking) }}`, {
+    // Disable button and show loading state
+    assignButton.disabled = true;
+    assignSpinner.classList.remove('hidden');
+    assignButtonText.textContent = 'Assigning...';
+
+    const expertId = document.getElementById('expert_id').value;
+
+    fetch(`{{ route('admin.consulting.bookings.assign-expert', $booking->id) }}`, {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(Object.fromEntries(formData))
+        body: JSON.stringify({ expert_id: expertId })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('Success', 'Expert assigned successfully');
+            showNotification('Success', data.message);
+            closeExpertModal();
             setTimeout(() => window.location.reload(), 1000);
         } else {
             throw new Error(data.message);
@@ -295,6 +313,10 @@ function assignExpert() {
     })
     .catch(error => {
         showNotification('Error', error.message, 'error');
+        // Reset button state on error
+        assignButton.disabled = false;
+        assignSpinner.classList.add('hidden');
+        assignButtonText.textContent = 'Assign';
     });
 }
 

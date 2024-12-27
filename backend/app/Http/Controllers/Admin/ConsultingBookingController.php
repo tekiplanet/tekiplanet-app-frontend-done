@@ -46,7 +46,25 @@ class ConsultingBookingController extends Controller
     public function show(ConsultingBooking $booking)
     {
         $booking->load(['user', 'expert.user', 'timeSlot', 'review', 'notifications']);
-        return view('admin.consulting.bookings.show', compact('booking'));
+        $experts = Professional::where('status', 'active')
+            ->where('availability_status', 'available')
+            ->where('user_id', '!=', $booking->user_id)
+            ->with('user')
+            ->get();
+
+        // For debugging - count all professionals vs filtered ones
+        $totalProfessionals = Professional::count();
+        $activeCount = Professional::where('status', 'active')->count();
+        $availableCount = Professional::where('availability_status', 'available')->count();
+
+        \Log::info('Professional counts', [
+            'total' => $totalProfessionals,
+            'active' => $activeCount,
+            'available' => $availableCount,
+            'final_filtered_count' => $experts->count()
+        ]);
+
+        return view('admin.consulting.bookings.show', compact('booking', 'experts'));
     }
 
     public function updateStatus(Request $request, ConsultingBooking $booking)
@@ -79,13 +97,37 @@ class ConsultingBookingController extends Controller
             'expert_id' => 'required|exists:professionals,id'
         ]);
 
+        // Get the professional
+        $expert = Professional::with('user')->find($validated['expert_id']);
+
+        // Check if the professional is the same as the booking user
+        if ($expert->user_id === $booking->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A professional cannot be assigned to their own booking'
+            ], 422);
+        }
+
+        // Debug log to check values
+        \Log::info('Assigning expert', [
+            'booking_id' => $booking->id,
+            'expert_id' => $validated['expert_id'],
+            'current_time' => now()
+        ]);
+
         $booking->update([
             'assigned_expert_id' => $validated['expert_id'],
             'expert_assigned_at' => now()
         ]);
 
+        // Verify the update
+        $booking->refresh();
+        \Log::info('After update', [
+            'assigned_expert_id' => $booking->assigned_expert_id,
+            'expert_assigned_at' => $booking->expert_assigned_at
+        ]);
+
         // Notify the expert
-        $expert = Professional::find($validated['expert_id']);
         $this->notificationService->send([
             'type' => 'booking_assigned',
             'title' => 'New Booking Assigned',

@@ -209,12 +209,12 @@ class ConsultingController extends Controller
                 ->where('user_id', auth()->id())
                 ->findOrFail($id);
 
-            // \Log::info('Booking Expert Data:', [
-            //     'booking_id' => $id,
-            //     'expert_id' => $booking->assigned_expert_id,
-            //     'expert' => $booking->expert,
-            //     'expert_user' => $booking->expert?->user
-            // ]);
+            \Log::info('Booking Expert Data:', [
+                'booking_id' => $id,
+                'expert_id' => $booking->assigned_expert_id,
+                'expert' => $booking->expert,
+                'expert_user' => $booking->expert?->user
+            ]);
 
             return response()->json([
                 'booking' => $booking

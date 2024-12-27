@@ -27,7 +27,9 @@ class ConsultingBooking extends Model
         'payment_status',
         'payment_method',
         'cancellation_reason',
-        'cancelled_at'
+        'cancelled_at',
+        'assigned_expert_id',
+        'expert_assigned_at'
     ];
 
     protected $casts = [

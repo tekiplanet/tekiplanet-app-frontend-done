@@ -246,8 +246,10 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
             // Bookings
             Route::get('/bookings', [ConsultingBookingController::class, 'index'])->name('bookings.index');
             Route::get('/bookings/{booking}', [ConsultingBookingController::class, 'show'])->name('bookings.show');
-            Route::post('/bookings/{booking}/status', [ConsultingBookingController::class, 'updateStatus'])->name('bookings.update-status');
-            Route::post('/bookings/{booking}/assign-expert', [ConsultingBookingController::class, 'assignExpert'])->name('bookings.assign-expert');
+            Route::post('/bookings/{booking}/status', [ConsultingBookingController::class, 'updateStatus'])
+                ->name('bookings.update-status');
+            Route::post('/bookings/{booking}/assign-expert', [ConsultingBookingController::class, 'assignExpert'])
+                ->name('bookings.assign-expert');
 
             // Time Slots
             Route::get('/timeslots', [ConsultingTimeSlotController::class, 'index'])->name('timeslots.index');
