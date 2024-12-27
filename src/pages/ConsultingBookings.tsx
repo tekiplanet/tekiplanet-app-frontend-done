@@ -328,6 +328,7 @@ export default function ConsultingBookings() {
       <Tabs defaultValue="upcoming" className="space-y-4">
         <TabsList>
           <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+          <TabsTrigger value="ongoing">Ongoing</TabsTrigger>
           <TabsTrigger value="completed">Completed</TabsTrigger>
           <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
         </TabsList>
@@ -335,6 +336,12 @@ export default function ConsultingBookings() {
         <TabsContent value="upcoming" className="space-y-4">
           {[...(groupedBookings.pending || []), ...(groupedBookings.confirmed || [])]
             .sort((a, b) => new Date(a.selected_date).getTime() - new Date(b.selected_date).getTime())
+            .map(renderBookingCard)}
+        </TabsContent>
+
+        <TabsContent value="ongoing" className="space-y-4">
+          {(groupedBookings.ongoing || [])
+            .sort((a, b) => new Date(b.selected_date).getTime() - new Date(a.selected_date).getTime())
             .map(renderBookingCard)}
         </TabsContent>
 
