@@ -146,4 +146,25 @@ class QuoteController extends Controller
             'data' => $message
         ]);
     }
+
+    public function getMessages(Quote $quote)
+    {
+        $messages = $quote->messages()
+            ->with('user')
+            ->orderBy('created_at')
+            ->get()
+            ->map(function ($message) {
+                return [
+                    'id' => $message->id,
+                    'message' => $message->message,
+                    'sender_type' => $message->sender_type,
+                    'sender_name' => $message->sender_type === 'admin' 
+                        ? ($message->user->name ?? 'Admin')
+                        : ($message->user->first_name . ' ' . $message->user->last_name ?? 'User'),
+                    'created_at' => $message->created_at->diffForHumans(),
+                ];
+            });
+
+        return response()->json($messages);
+    }
 } 

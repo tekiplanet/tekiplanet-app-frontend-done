@@ -146,7 +146,7 @@
             </h3>
             <div class="flex flex-col space-y-4 max-h-96 overflow-y-auto mb-4" id="messages">
                 @foreach($quote->messages->sortBy('created_at') as $message)
-                    <div class="flex gap-4 {{ $message->sender_type === 'admin' ? 'flex-row-reverse' : '' }}">
+                    <div class="flex gap-4 {{ $message->sender_type === 'user' ? 'flex-row-reverse' : '' }}">
                         <div class="flex-shrink-0">
                             <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
                                 @if($message->sender_type === 'admin')
@@ -156,7 +156,7 @@
                                 @endif
                             </div>
                         </div>
-                        <div class="flex-1 {{ $message->sender_type === 'admin' ? 'bg-blue-100' : 'bg-gray-100' }} rounded-lg p-4">
+                        <div class="flex-1 {{ $message->sender_type === 'user' ? 'bg-blue-100' : 'bg-gray-100' }} rounded-lg p-4">
                             <div class="text-sm text-gray-600">
                                 @if($message->sender_type === 'admin')
                                     {{ $message->user->name }}
@@ -195,56 +195,56 @@
 
 @push('scripts')
 <script>
-// Update Status
-document.getElementById('status').addEventListener('change', function() {
-    fetch(`{{ route('admin.quotes.update-status', $quote) }}`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({
-            status: this.value
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Success', 'Quote status updated successfully');
-        }
-    })
-    .catch(error => {
-        showNotification('Error', 'Failed to update status', 'error');
-    });
-});
+let isLoadingMessages = false;
+let lastMessageId = null;
 
-// Assign Quote
-document.getElementById('assignedTo').addEventListener('change', function() {
-    if (!this.value) return;
+// Message template function
+function createMessageElement(message) {
+    const isAdmin = message.sender_type === 'admin';
+    const senderName = message.sender_name || (isAdmin ? 'Admin' : 'User');
+    const initial = senderName.charAt(0);
 
-    fetch(`{{ route('admin.quotes.assign', $quote) }}`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({
-            assigned_to: this.value
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Success', 'Quote assigned successfully');
-        }
-    })
-    .catch(error => {
-        showNotification('Error', 'Failed to assign quote', 'error');
-    });
-});
+    return `
+        <div class="flex gap-4 ${!isAdmin ? 'flex-row-reverse' : ''}">
+            <div class="flex-shrink-0">
+                <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                    ${initial}
+                </div>
+            </div>
+            <div class="flex-1 ${!isAdmin ? 'bg-blue-100' : 'bg-gray-100'} rounded-lg p-4">
+                <div class="text-sm text-gray-600">
+                    ${senderName}
+                </div>
+                <div class="mt-1">${message.message}</div>
+                <div class="text-xs text-gray-500 mt-1">${message.created_at}</div>
+            </div>
+        </div>
+    `;
+}
+
+// Load messages
+async function loadMessages() {
+    if (isLoadingMessages) return;
+    isLoadingMessages = true;
+
+    try {
+        const response = await fetch('{{ route('admin.quotes.messages', $quote) }}');
+        const messages = await response.json();
+        
+        const container = document.getElementById('messages');
+        container.innerHTML = messages.map(message => createMessageElement(message)).join('');
+        
+        // Scroll to bottom
+        container.scrollTop = container.scrollHeight;
+    } catch (error) {
+        console.error('Failed to load messages:', error);
+    } finally {
+        isLoadingMessages = false;
+    }
+}
 
 // Handle message form submission
-document.getElementById('messageForm').addEventListener('submit', function(e) {
+document.getElementById('messageForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
     const messageInput = document.getElementById('message');
@@ -261,89 +261,36 @@ document.getElementById('messageForm').addEventListener('submit', function(e) {
     loadingIcon.classList.remove('hidden');
     buttonText.textContent = 'Sending...';
 
-    fetch(`{{ route('admin.quotes.messages.send', $quote) }}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({ message })
-    })
-    .then(response => response.json())
-    .then(data => {
+    try {
+        const response = await fetch(`{{ route('admin.quotes.messages.send', $quote) }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ message })
+        });
+
+        const data = await response.json();
         if (data.success) {
-            // Clear input
             messageInput.value = '';
-            
-            // Add new message to chat
-            const messagesContainer = document.getElementById('messages');
-            const html = `
-                <div class="flex gap-4 flex-row-reverse">
-                    <div class="flex-shrink-0">
-                        <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                            {{ substr(auth()->guard('admin')->user()->name, 0, 1) }}
-                        </div>
-                    </div>
-                    <div class="flex-1 bg-blue-100 rounded-lg p-4">
-                        <div class="text-sm text-gray-600">
-                            {{ auth()->guard('admin')->user()->name }}
-                        </div>
-                        <div class="mt-1">${message}</div>
-                        <div class="text-xs text-gray-500 mt-1">Just now</div>
-                    </div>
-                </div>
-            `;
-            messagesContainer.insertAdjacentHTML('beforeend', html);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        } else {
-            showNotification('Error', data.message || 'Failed to send message', 'error');
+            // Reload messages after sending
+            await loadMessages();
         }
-    })
-    .catch(error => {
+    } catch (error) {
         showNotification('Error', 'Failed to send message', 'error');
-    })
-    .finally(() => {
-        // Reset button state
+    } finally {
         submitButton.disabled = false;
         loadingIcon.classList.add('hidden');
         buttonText.textContent = 'Send Message';
-    });
+    }
 });
 
-// Listen for real-time messages
-Echo.private('quote.{{ $quote->id }}')
-    .listen('NewQuoteMessage', (e) => {
-        const message = e.message;
-        const messagesContainer = document.getElementById('messages');
-        const html = `
-            <div class="flex gap-4 ${message.sender_type === 'admin' ? 'flex-row-reverse' : ''}">
-                <div class="flex-shrink-0">
-                    <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                        ${message.sender_type === 'admin' ? 
-                            message.user.name.charAt(0) : 
-                            message.user.first_name.charAt(0)}
-                    </div>
-                </div>
-                <div class="flex-1 ${message.sender_type === 'admin' ? 'bg-blue-100' : 'bg-gray-100'} rounded-lg p-4">
-                    <div class="text-sm text-gray-600">
-                        ${message.sender_type === 'admin' ? 
-                            message.user.name : 
-                            `${message.user.first_name} ${message.user.last_name}`}
-                    </div>
-                    <div class="mt-1">${message.message}</div>
-                    <div class="text-xs text-gray-500 mt-1">Just now</div>
-                </div>
-            </div>
-        `;
-        messagesContainer.insertAdjacentHTML('beforeend', html);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    });
+// Load messages on page load
+loadMessages();
 
-// Scroll to bottom on page load
-document.addEventListener('DOMContentLoaded', () => {
-    const messagesContainer = document.getElementById('messages');
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-});
+// Poll for new messages every 5 seconds
+setInterval(loadMessages, 5000);
 </script>
 @endpush
 @endsection 

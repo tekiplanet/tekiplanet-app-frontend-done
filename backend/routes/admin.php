@@ -236,6 +236,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
             Route::patch('/{quote}/status', [QuoteController::class, 'updateStatus'])->name('update-status');
             Route::patch('/{quote}/assign', [QuoteController::class, 'assign'])->name('assign');
             Route::post('/{quote}/messages', [QuoteController::class, 'sendMessage'])->name('messages.send');
+            Route::get('/{quote}/messages', [QuoteController::class, 'getMessages'])->name('messages');
         });
     });
 }); 
