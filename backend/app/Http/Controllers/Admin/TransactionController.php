@@ -11,6 +11,8 @@ use App\Mail\TransactionStatusUpdated;
 use Illuminate\Support\Facades\Mail;
 use App\Jobs\SendTransactionEmail;
 use App\Jobs\SendTransactionNotification;
+use PDF;
+use App\Mail\TransactionReceipt;
 
 class TransactionController extends Controller
 {
@@ -180,6 +182,32 @@ class TransactionController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update transaction status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function downloadReceipt(Transaction $transaction)
+    {
+        $pdf = PDF::loadView('receipts.transaction-advanced', [
+            'transaction' => $transaction
+        ]);
+
+        return $pdf->download("transaction-{$transaction->reference_number}.pdf");
+    }
+
+    public function sendReceipt(Transaction $transaction)
+    {
+        try {
+            dispatch(new SendTransactionReceipt($transaction, $transaction->user));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Receipt has been sent to user\'s email'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send receipt: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -183,6 +183,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
             Route::get('/', [TransactionController::class, 'index'])->name('index');
             Route::get('/{transaction}', [TransactionController::class, 'show'])->name('show');
             Route::patch('/{transaction}/status', [TransactionController::class, 'updateStatus'])->name('update-status');
+            Route::get('/{transaction}/receipt/download', [TransactionController::class, 'downloadReceipt'])->name('download-receipt');
+            Route::post('/{transaction}/receipt/send', [TransactionController::class, 'sendReceipt'])->name('send-receipt');
         });
 
         Route::prefix('bank-accounts')->name('bank-accounts.')->group(function () {
