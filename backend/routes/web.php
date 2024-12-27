@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\CourseLessonController;
 use App\Http\Controllers\Admin\CourseTopicController;
 use App\Http\Controllers\Admin\CourseScheduleController;
 use App\Http\Controllers\Admin\CourseExamController;
+use App\Http\Controllers\Admin\OrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -111,6 +112,12 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth:admin']], function () 
     // Course Enrollments Notice
     Route::post('/courses/{course}/enrollments/send-notices', [CourseController::class, 'sendBulkNotices'])
         ->name('admin.courses.enrollments.send-notices');
+
+    // Orders
+    Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.show');
+    Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.update-status');
+    Route::post('/orders/{order}/tracking', [OrderController::class, 'updateTracking'])->name('admin.orders.update-tracking');
 });
 
 // Temporary debug route list

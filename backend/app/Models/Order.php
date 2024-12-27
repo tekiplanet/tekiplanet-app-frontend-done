@@ -53,4 +53,9 @@ class Order extends Model
     {
         return $this->hasOne(OrderTracking::class);
     }
+
+    public function statusHistory()
+    {
+        return $this->hasMany(OrderStatusHistory::class)->orderBy('created_at', 'desc');
+    }
 } 

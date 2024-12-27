@@ -409,8 +409,15 @@ class OrderController extends Controller
             // Create timeline with proper scope access
             $timeline = collect($statusOrder)
                 ->take($currentStatusIndex + 1)
-                ->map(function ($status) use ($order, $allStatuses, $currentStatusIndex) {  // Add $currentStatusIndex here
+                ->map(function ($status) use ($order, $allStatuses, $currentStatusIndex) {
                     $index = array_search($status, array_keys($allStatuses));
+                    
+                    // Find the status history entry for this status
+                    $statusHistory = $order->statusHistory()
+                        ->where('status', $status)
+                        ->latest()
+                        ->first();
+
                     return [
                         'status' => $allStatuses[$status],
                         'date' => $index === 0 ? 
@@ -418,7 +425,7 @@ class OrderController extends Controller
                             now()->subHours(($currentStatusIndex - $index) * 24)->format('D, M d, Y H:i:s'),
                         'location' => $status === $order->status ? 
                             ($order->tracking?->location ?? 'Processing Center') : 'Processing Center',
-                        'description' => $order->tracking?->description ?? 
+                        'description' => $statusHistory?->notes ?? 
                             "Order {$allStatuses[$status]}",
                         'completed' => true
                     ];
