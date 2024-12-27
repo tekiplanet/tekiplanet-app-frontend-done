@@ -55,7 +55,7 @@
                             Service
                         </th>
                         <th class="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Customer
+                            Customer Details
                         </th>
                         <th class="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Industry
@@ -81,7 +81,14 @@
                                 {{ $quote->service->name }}
                             </td>
                             <td class="px-6 py-4">
-                                {{ $quote->user->name }}
+                                <div class="flex flex-col">
+                                    <span class="font-medium text-gray-900 dark:text-gray-100">
+                                        {{ $quote->user->first_name }} {{ $quote->user->last_name }}
+                                    </span>
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                                        {{ $quote->user->email }}
+                                    </span>
+                                </div>
                             </td>
                             <td class="px-6 py-4">
                                 {{ $quote->industry }}

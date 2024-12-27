@@ -58,18 +58,18 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
                         <select id="status" 
                                 class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                            <option value="">Select Status</option>
                             <option value="pending" {{ $quote->status === 'pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="in_review" {{ $quote->status === 'in_review' ? 'selected' : '' }}>In Review</option>
-                            <option value="approved" {{ $quote->status === 'approved' ? 'selected' : '' }}>Approved</option>
+                            <option value="reviewed" {{ $quote->status === 'reviewed' ? 'selected' : '' }}>Reviewed</option>
+                            <option value="accepted" {{ $quote->status === 'accepted' ? 'selected' : '' }}>Accepted</option>
                             <option value="rejected" {{ $quote->status === 'rejected' ? 'selected' : '' }}>Rejected</option>
-                            <option value="completed" {{ $quote->status === 'completed' ? 'selected' : '' }}>Completed</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Assign To</label>
                         <select id="assignedTo" 
                                 class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                            <option value="">Select Admin</option>
+                            <option value="">Select Assignee</option>
                             @foreach($admins as $admin)
                                 <option value="{{ $admin->id }}" 
                                         {{ $quote->assigned_to === $admin->id ? 'selected' : '' }}>

@@ -60,9 +60,9 @@ class Quote extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function assignedTo(): BelongsTo
+    public function assignedTo()
     {
-        return $this->belongsTo(User::class, 'assigned_to');
+        return $this->belongsTo(Admin::class, 'assigned_to');
     }
 
     public function messages()

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Quote;
 use App\Models\QuoteMessage;
-use App\Models\User;
+use App\Models\Admin;
 use Illuminate\Http\Request;
 use App\Services\NotificationService;
 
@@ -20,13 +20,14 @@ class QuoteController extends Controller
 
     public function index(Request $request)
     {
-        $quotes = Quote::with(['user', 'service', 'assignedTo'])
+        $quotes = Quote::with(['user:id,first_name,last_name,email', 'service', 'assignedTo'])
             ->when($request->search, function($query, $search) {
                 $query->where(function($q) use ($search) {
                     $q->where('project_description', 'like', "%{$search}%")
                       ->orWhere('industry', 'like', "%{$search}%")
                       ->orWhereHas('user', function($q) use ($search) {
-                          $q->where('name', 'like', "%{$search}%")
+                          $q->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
                             ->orWhere('email', 'like', "%{$search}%");
                       });
                 });
@@ -46,7 +47,7 @@ class QuoteController extends Controller
     public function show(Quote $quote)
     {
         $quote->load(['user', 'service', 'assignedTo', 'messages.user']);
-        $admins = User::where('role', 'admin')->get();
+        $admins = Admin::where('is_active', true)->get();
         
         return view('admin.quotes.show', compact('quote', 'admins'));
     }
@@ -54,7 +55,7 @@ class QuoteController extends Controller
     public function updateStatus(Request $request, Quote $quote)
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,in_review,approved,rejected,completed'
+            'status' => 'required|in:pending,reviewed,accepted,rejected'
         ]);
 
         $quote->update($validated);
@@ -76,18 +77,13 @@ class QuoteController extends Controller
     public function assign(Request $request, Quote $quote)
     {
         $validated = $request->validate([
-            'assigned_to' => 'required|exists:users,id'
+            'assigned_to' => 'required|exists:admins,id'
         ]);
 
         $quote->update($validated);
 
-        // Notify assigned admin
-        $this->notificationService->send([
-            'type' => 'quote_assigned',
-            'title' => 'New Quote Assignment',
-            'message' => "You have been assigned to handle a new quote",
-            'action_url' => "/admin/quotes/{$quote->id}"
-        ], $quote->assignedTo);
+        // For now, we'll just return success without sending notification to admin
+        // TODO: Implement admin notifications system
 
         return response()->json([
             'success' => true,
