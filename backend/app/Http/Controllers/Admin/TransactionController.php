@@ -68,11 +68,17 @@ class TransactionController extends Controller
 
     public function updateStatus(Request $request, Transaction $transaction)
     {
-        // 1. Prevent updating completed transactions
-        if ($transaction->status === 'completed') {
+        // 1. Prevent updating completed, cancelled, or failed transactions
+        if (in_array($transaction->status, ['completed', 'cancelled', 'failed'])) {
+            $message = match ($transaction->status) {
+                'completed' => 'Cannot update status of completed transactions',
+                'cancelled' => 'Cannot update status of cancelled transactions',
+                'failed' => 'Cannot update status of failed transactions',
+            };
+
             return response()->json([
                 'success' => false,
-                'message' => 'Cannot update status of completed transactions'
+                'message' => $message
             ], 422);
         }
 

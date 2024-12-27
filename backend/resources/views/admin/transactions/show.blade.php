@@ -133,31 +133,41 @@
             </div>
 
             <!-- Update Status Form -->
-            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Update Status</h3>
-                <form id="updateStatusForm" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                            <select id="status" name="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary">
-                                <option value="pending" {{ $transaction->status === 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="completed" {{ $transaction->status === 'completed' ? 'selected' : '' }}>Completed</option>
-                                <option value="failed" {{ $transaction->status === 'failed' ? 'selected' : '' }}>Failed</option>
-                                <option value="cancelled" {{ $transaction->status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                            </select>
+            @if(!in_array($transaction->status, ['completed', 'cancelled', 'failed']))
+                <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Update Status</h3>
+                    <form id="updateStatusForm" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                                <select id="status" name="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary">
+                                    <option value="pending" {{ $transaction->status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                    <option value="completed" {{ $transaction->status === 'completed' ? 'selected' : '' }}>Completed</option>
+                                    <option value="failed" {{ $transaction->status === 'failed' ? 'selected' : '' }}>Failed</option>
+                                    <option value="cancelled" {{ $transaction->status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
+                                <textarea id="notes" name="notes" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"></textarea>
+                            </div>
                         </div>
-                        <div>
-                            <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
-                            <textarea id="notes" name="notes" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"></textarea>
+                        <div class="flex justify-end">
+                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                Update Status
+                            </button>
                         </div>
+                    </form>
+                </div>
+            @else
+                <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                        <p class="text-gray-700 dark:text-gray-300">
+                            This transaction is {{ $transaction->status }} and cannot be updated.
+                        </p>
                     </div>
-                    <div class="flex justify-end">
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                            Update Status
-                        </button>
-                    </div>
-                </form>
-            </div>
+                </div>
+            @endif
         </div>
     </div>
 </div>
