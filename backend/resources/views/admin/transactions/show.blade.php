@@ -84,32 +84,32 @@
                     </div>
                     @if($transaction->notes)
                         <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Notes</dt>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Notes History</dt>
                             <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                                @if(is_array($transaction->notes))
-                                    <div class="space-y-2">
-                                        @foreach($transaction->notes as $key => $note)
-                                            <div class="flex">
-                                                <span class="font-medium min-w-[120px] text-gray-600 dark:text-gray-400">
-                                                    {{ ucwords(str_replace('_', ' ', $key)) }}:&nbsp;&nbsp;
-                                                </span>
-                                                @if(is_array($note))
-                                                    <div class="flex-1">
-                                                        <ul class="list-disc pl-4 space-y-1">
-                                                            @foreach($note as $item)
-                                                                <li>{{ $item }}</li>
-                                                            @endforeach
-                                                        </ul>
+                                <div class="space-y-3">
+                                    @foreach($transaction->notes as $note)
+                                        <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                                            @if(isset($note['status_update']))
+                                                <div class="mb-2">
+                                                    <span class="font-medium">Status Update ({{ $note['status_update']['date'] }})</span>
+                                                    <div class="ml-4">
+                                                        <div>From: <span class="font-medium">{{ ucfirst($note['status_update']['from']) }}</span></div>
+                                                        <div>To: <span class="font-medium">{{ ucfirst($note['status_update']['to']) }}</span></div>
+                                                        @if(isset($note['status_update']['note']))
+                                                            <div class="mt-1">Note: {{ $note['status_update']['note'] }}</div>
+                                                        @endif
                                                     </div>
-                                                @else
-                                                    <span class="flex-1">{{ $note }}</span>
-                                                @endif
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    {{ $transaction->notes }}
-                                @endif
+                                                </div>
+                                            @endif
+
+                                            @if(isset($note['wallet_update']))
+                                                <div class="text-green-600 dark:text-green-400">
+                                                    {{ $note['wallet_update'] }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
                             </dd>
                         </div>
                     @endif

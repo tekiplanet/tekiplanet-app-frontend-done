@@ -94,10 +94,6 @@ class TransactionController extends Controller
                 ]
             ];
 
-            // Merge with existing notes
-            $existingNotes = is_array($transaction->notes) ? $transaction->notes : [];
-            $updatedNotes = array_merge($existingNotes, $newNote);
-
             // Process based on transaction type and new status
             $user = $transaction->user;
             $amount = $transaction->amount;
@@ -115,6 +111,10 @@ class TransactionController extends Controller
                     $newNote['wallet_update'] = "Credited {$amount} to wallet on completion";
                 }
             }
+
+            // Merge with existing notes after all notes are prepared
+            $existingNotes = is_array($transaction->notes) ? $transaction->notes : [];
+            $updatedNotes = array_merge($existingNotes, [$newNote]);  // Wrap $newNote in array to maintain history
 
             // Update transaction
             $transaction->update([

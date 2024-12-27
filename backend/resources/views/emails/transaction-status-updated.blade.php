@@ -13,7 +13,12 @@
         @if(isset($transaction->notes['status_update']['note']))
             <li>Note: {{ $transaction->notes['status_update']['note'] }}</li>
         @endif
+        @if(isset($transaction->notes['wallet_update']))
+            <li class="text-green-600">{{ $transaction->notes['wallet_update'] }}</li>
+        @endif
     </ul>
+
+    <p>Current Wallet Balance: <strong>{{ number_format($user->wallet_balance, 2) }}</strong></p>
 
     <p>You can view the complete transaction details in your account.</p>
 
