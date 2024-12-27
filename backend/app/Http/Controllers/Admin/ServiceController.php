@@ -38,6 +38,7 @@ class ServiceController extends Controller
 
     public function store(Request $request)
     {
+        // First validate basic service data
         $validated = $request->validate([
             'category_id' => 'required|exists:service_categories,id',
             'name' => 'required|string|max:255',
@@ -46,13 +47,29 @@ class ServiceController extends Controller
             'starting_price' => 'required|numeric|min:0',
             'icon_name' => 'required|string|max:50',
             'is_featured' => 'boolean',
-            'quote_fields' => 'nullable|array',
-            'quote_fields.*.name' => 'required|string|max:255',
-            'quote_fields.*.label' => 'required|string|max:255',
-            'quote_fields.*.type' => 'required|in:text,textarea,select,multiselect,checkbox,radio,date,datetime,time,number,email,tel,url,file',
-            'quote_fields.*.required' => 'required|boolean',
-            'quote_fields.*.options' => 'nullable'
         ]);
+
+        // Then validate quote fields if they exist
+        if ($request->has('quote_fields')) {
+            // Check for duplicate field names
+            $fieldNames = collect($request->quote_fields)->pluck('name');
+            if ($fieldNames->count() !== $fieldNames->unique()->count()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Each field name must be unique within the service'
+                ], 422);
+            }
+
+            // Validate other field attributes
+            $request->validate([
+                'quote_fields' => 'nullable|array',
+                'quote_fields.*.name' => 'required|string|max:255',
+                'quote_fields.*.label' => 'required|string|max:255',
+                'quote_fields.*.type' => 'required|in:text,textarea,select,multiselect,checkbox,radio,date,datetime,time,number,email,tel,url,file',
+                'quote_fields.*.required' => 'required|boolean',
+                'quote_fields.*.options' => 'nullable'
+            ]);
+        }
 
         try {
             DB::beginTransaction();
@@ -122,6 +139,7 @@ class ServiceController extends Controller
 
     public function update(Request $request, Service $service)
     {
+        // First validate basic service data
         $validated = $request->validate([
             'category_id' => 'required|exists:service_categories,id',
             'name' => 'required|string|max:255',
@@ -130,14 +148,30 @@ class ServiceController extends Controller
             'starting_price' => 'required|numeric|min:0',
             'icon_name' => 'required|string|max:50',
             'is_featured' => 'boolean',
-            'quote_fields' => 'nullable|array',
-            'quote_fields.*.id' => 'nullable|exists:service_quote_fields,id',
-            'quote_fields.*.name' => 'required|string|max:255',
-            'quote_fields.*.label' => 'required|string|max:255',
-            'quote_fields.*.type' => 'required|in:text,textarea,select,multiselect,checkbox,radio,date,datetime,time,number,email,tel,url,file',
-            'quote_fields.*.required' => 'required|boolean',
-            'quote_fields.*.options' => 'nullable'
         ]);
+
+        // Then validate quote fields if they exist
+        if ($request->has('quote_fields')) {
+            // Check for duplicate field names
+            $fieldNames = collect($request->quote_fields)->pluck('name');
+            if ($fieldNames->count() !== $fieldNames->unique()->count()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Each field name must be unique within the service'
+                ], 422);
+            }
+
+            // Validate other field attributes
+            $request->validate([
+                'quote_fields' => 'nullable|array',
+                'quote_fields.*.id' => 'nullable|exists:service_quote_fields,id',
+                'quote_fields.*.name' => 'required|string|max:255',
+                'quote_fields.*.label' => 'required|string|max:255',
+                'quote_fields.*.type' => 'required|in:text,textarea,select,multiselect,checkbox,radio,date,datetime,time,number,email,tel,url,file',
+                'quote_fields.*.required' => 'required|boolean',
+                'quote_fields.*.options' => 'nullable'
+            ]);
+        }
 
         try {
             DB::beginTransaction();
