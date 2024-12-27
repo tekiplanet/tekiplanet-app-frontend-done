@@ -16,13 +16,13 @@ class NewHustleMessage extends Mailable implements ShouldQueue
 
     public $hustle;
     public $recipient;
-    public $message;
+    public $messageContent;
 
     public function __construct(Hustle $hustle, User $recipient, HustleMessage $message)
     {
         $this->hustle = $hustle;
         $this->recipient = $recipient;
-        $this->message = $message;
+        $this->messageContent = $message->message;
     }
 
     public function build()
