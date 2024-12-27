@@ -6,6 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use App\Services\NotificationService;
+use Illuminate\Support\Facades\DB;
+use App\Mail\TransactionStatusUpdated;
+use Illuminate\Support\Facades\Mail;
+use App\Jobs\SendTransactionEmail;
+use App\Jobs\SendTransactionNotification;
 
 class TransactionController extends Controller
 {
@@ -63,27 +68,90 @@ class TransactionController extends Controller
 
     public function updateStatus(Request $request, Transaction $transaction)
     {
+        // 1. Prevent updating completed transactions
+        if ($transaction->status === 'completed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot update status of completed transactions'
+            ], 422);
+        }
+
         $validated = $request->validate([
             'status' => 'required|in:pending,completed,failed,cancelled',
             'notes' => 'nullable|string'
         ]);
 
         try {
-            $transaction->update($validated);
+            DB::beginTransaction();
 
-            // Send notification to user
-            $this->notificationService->send([
+            // Prepare new note
+            $newNote = [
+                'status_update' => [
+                    'from' => $transaction->status,
+                    'to' => $validated['status'],
+                    'date' => now()->format('Y-m-d H:i:s'),
+                    'note' => $validated['notes'] ?? 'Status updated by admin'
+                ]
+            ];
+
+            // Merge with existing notes
+            $existingNotes = is_array($transaction->notes) ? $transaction->notes : [];
+            $updatedNotes = array_merge($existingNotes, $newNote);
+
+            // Process based on transaction type and new status
+            $user = $transaction->user;
+            $amount = $transaction->amount;
+
+            if ($transaction->type === 'debit') {
+                if (in_array($validated['status'], ['cancelled', 'failed']) && $transaction->status === 'pending') {
+                    // Credit back the amount to user's wallet
+                    $user->increment('wallet_balance', $amount);
+                    $newNote['wallet_update'] = "Credited back {$amount} to wallet due to {$validated['status']} status";
+                }
+            } elseif ($transaction->type === 'credit') {
+                if ($validated['status'] === 'completed' && $transaction->status === 'pending') {
+                    // Credit the amount to user's wallet
+                    $user->increment('wallet_balance', $amount);
+                    $newNote['wallet_update'] = "Credited {$amount} to wallet on completion";
+                }
+            }
+
+            // Update transaction
+            $transaction->update([
+                'status' => $validated['status'],
+                'notes' => $updatedNotes
+            ]);
+
+            // Prepare notification data
+            $notificationData = [
                 'type' => 'transaction_status_updated',
                 'title' => 'Transaction Status Updated',
                 'message' => "Your transaction #{$transaction->reference_number} status has been updated to " . ucfirst($validated['status']),
-                'action_url' => "/transactions/{$transaction->id}"
-            ], $transaction->user);
+                'action_url' => "/transactions/{$transaction->id}",
+                'extra_data' => [
+                    'transaction_id' => $transaction->id,
+                    'old_status' => $transaction->status,
+                    'new_status' => $validated['status'],
+                ]
+            ];
+
+            // Queue notification and email
+            dispatch(new SendTransactionNotification($notificationData, $user));
+            dispatch(new SendTransactionEmail($transaction, $user));
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Transaction status updated successfully'
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Transaction status update failed:', [
+                'error' => $e->getMessage(),
+                'transaction_id' => $transaction->id
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update transaction status: ' . $e->getMessage()
