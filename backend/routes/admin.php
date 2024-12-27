@@ -216,5 +216,11 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
             Route::get('/{hustle}/applications/{application}', [HustleApplicationController::class, 'show'])->name('applications.show');
             Route::patch('/{hustle}/applications/{application}/status', [HustleApplicationController::class, 'updateStatus'])->name('applications.update-status');
         });
+
+        Route::patch('hustles/{hustle}/status', [HustleController::class, 'updateStatus'])
+            ->name('hustles.update-status');
+
+        Route::patch('hustles/{hustle}/payments/{payment}/status', [HustleController::class, 'updatePaymentStatus'])
+            ->name('hustles.payments.update-status');
     });
 }); 

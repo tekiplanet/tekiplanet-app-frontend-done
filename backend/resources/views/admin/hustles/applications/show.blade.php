@@ -110,6 +110,73 @@
                 </div>
             </div>
         </div>
+
+        @if($application->status === 'approved')
+            <!-- Hustle Status Management -->
+            <div class="bg-white rounded-lg shadow-md dark:bg-gray-800 p-6">
+                <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">
+                    Hustle Status
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Current Status:</span>
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            {{ $hustle->status === 'approved' ? 'bg-yellow-100 text-yellow-800' : 
+                               ($hustle->status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 
+                               ($hustle->status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                'bg-gray-100 text-gray-800')) }}">
+                            {{ ucfirst($hustle->status) }}
+                        </span>
+                    </div>
+
+                    @if($hustle->status === 'approved')
+                        <button onclick="updateHustleStatus('{{ route('admin.hustles.update-status', $hustle) }}', 'in_progress')" 
+                                class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Mark as In Progress
+                        </button>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Payments Section -->
+            @if($hustle->status === 'in_progress')
+                <div class="bg-white rounded-lg shadow-md dark:bg-gray-800 p-6">
+                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">
+                        Payments
+                    </h3>
+                    <div class="space-y-6">
+                        @foreach($hustle->payments as $payment)
+                            <div class="border-b pb-4 last:border-0 last:pb-0">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h4 class="font-medium text-gray-900 dark:text-gray-100">
+                                            {{ ucfirst($payment->payment_type) }} Payment 
+                                            ({{ $payment->payment_type === 'initial' ? '40%' : '60%' }})
+                                        </h4>
+                                        <p class="text-sm text-gray-500">
+                                            Amount: ₦{{ number_format($payment->amount, 2) }}
+                                        </p>
+                                    </div>
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        {{ $payment->status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                        {{ ucfirst($payment->status) }}
+                                    </span>
+                                </div>
+
+                                @if($payment->status === 'pending')
+                                    <button onclick="updatePaymentStatus(
+                                        '{{ route('admin.hustles.payments.update-status', [$hustle, $payment]) }}',
+                                        'completed'
+                                    )" class="text-sm text-green-600 hover:text-green-900">
+                                        Mark as Completed
+                                    </button>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        @endif
     </div>
 
     @if($application->status === 'approved')
