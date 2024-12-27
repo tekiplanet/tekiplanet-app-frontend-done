@@ -34,6 +34,18 @@ class ConsultingTimeSlotController extends Controller
             'is_available' => 'boolean'
         ]);
 
+        // Check if time slot already exists
+        $exists = ConsultingTimeSlot::where('date', $validated['date'])
+            ->where('time', $validated['time'])
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A time slot already exists for this date and time'
+            ], 422);
+        }
+
         ConsultingTimeSlot::create([
             'date' => $validated['date'],
             'time' => $validated['time'],
@@ -62,25 +74,53 @@ class ConsultingTimeSlotController extends Controller
         $endDate = Carbon::parse($validated['end_date']);
         $currentDate = $startDate->copy();
 
+        $existingSlots = [];
+        $slotsToCreate = [];
+        $createdCount = 0;
+
         while ($currentDate <= $endDate) {
             if (in_array($currentDate->format('N'), $validated['days'])) {
                 foreach ($validated['times'] as $time) {
-                    ConsultingTimeSlot::create([
-                        'date' => $currentDate->format('Y-m-d'),
-                        'time' => $time,
-                        'capacity' => $validated['capacity'],
-                        'is_available' => true,
-                        'booked_slots' => 0
-                    ]);
+                    $exists = ConsultingTimeSlot::where('date', $currentDate->format('Y-m-d'))
+                        ->where('time', $time)
+                        ->exists();
+
+                    if ($exists) {
+                        $existingSlots[] = $currentDate->format('Y-m-d') . ' ' . $time;
+                    } else {
+                        $slotsToCreate[] = [
+                            'date' => $currentDate->format('Y-m-d'),
+                            'time' => $time,
+                            'capacity' => $validated['capacity'],
+                            'is_available' => true,
+                            'booked_slots' => 0
+                        ];
+                    }
                 }
             }
             $currentDate->addDay();
         }
 
+        // Create the non-existing slots
+        foreach ($slotsToCreate as $slot) {
+            ConsultingTimeSlot::create($slot);
+            $createdCount++;
+        }
+
+        $message = [];
+        if ($createdCount > 0) {
+            $message[] = "$createdCount time slots created successfully";
+        }
+        if (!empty($existingSlots)) {
+            $message[] = count($existingSlots) . " time slots already existed: " . implode(', ', $existingSlots);
+        }
+
         return response()->json([
-            'success' => true,
-            'message' => 'Time slots created successfully'
-        ]);
+            'success' => $createdCount > 0,
+            'message' => implode('. ', $message),
+            'created' => $createdCount,
+            'existing' => count($existingSlots)
+        ], $createdCount > 0 ? 200 : 422);
     }
 
     public function update(Request $request, ConsultingTimeSlot $timeSlot)

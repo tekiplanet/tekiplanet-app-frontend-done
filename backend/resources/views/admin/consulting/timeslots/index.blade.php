@@ -148,8 +148,15 @@
                     Cancel
                 </button>
                 <button onclick="saveTimeSlot()" 
+                        id="saveTimeSlotButton"
                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Save
+                    <div class="flex items-center gap-2">
+                        <svg id="saveTimeSlotSpinner" class="animate-spin h-4 w-4 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span id="saveTimeSlotButtonText">Save</span>
+                    </div>
                 </button>
             </div>
         </div>
@@ -159,60 +166,63 @@
 <!-- Bulk Create Modal -->
 <div id="bulkCreateModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
     <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg max-w-md w-full">
+        <div class="bg-white rounded-lg max-w-md w-full dark:bg-gray-800">
             <div class="p-6">
-                <h3 class="text-lg font-semibold mb-4">Bulk Create Time Slots</h3>
+                <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Bulk Create Time Slots</h3>
                 <form id="bulkCreateForm" class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Start Date</label>
-                            <input type="date" name="start_date" required
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">End Date</label>
-                            <input type="date" name="end_date" required
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
+                        <input type="date" name="start_date" required min="{{ date('Y-m-d') }}"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Days of Week</label>
-                        <div class="mt-2 space-x-2">
-                            @foreach(['Mon' => 1, 'Tue' => 2, 'Wed' => 3, 'Thu' => 4, 'Fri' => 5, 'Sat' => 6, 'Sun' => 7] as $day => $value)
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="days[]" value="{{ $value }}"
-                                           class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <span class="ml-2 text-sm text-gray-600">{{ $day }}</span>
-                                </label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
+                        <input type="date" name="end_date" required min="{{ date('Y-m-d') }}"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Days</label>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach(['Monday' => 1, 'Tuesday' => 2, 'Wednesday' => 3, 'Thursday' => 4, 'Friday' => 5, 'Saturday' => 6, 'Sunday' => 7] as $day => $value)
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="days[]" value="{{ $value }}"
+                                       class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $day }}</span>
+                            </label>
                             @endforeach
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Times</label>
-                        <div class="mt-2 space-y-2">
-                            <div class="flex gap-2">
-                                <input type="time" name="times[]" required
-                                       class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <button type="button" onclick="addTimeInput(this)"
-                                        class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">+</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Capacity per Slot</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Capacity</label>
                         <input type="number" name="capacity" required min="1"
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Times</label>
+                        <div class="flex gap-2">
+                            <input type="time" name="times[]" required
+                                   class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <button type="button" onclick="addTimeInput(this)"
+                                    class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">+</button>
+                        </div>
+                    </div>
                 </form>
             </div>
-            <div class="px-6 py-4 bg-gray-50 flex justify-end gap-2">
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 flex justify-end gap-2">
                 <button onclick="closeBulkCreateModal()" 
-                        class="px-4 py-2 text-gray-700 hover:text-gray-900">
+                        class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900">
                     Cancel
                 </button>
                 <button onclick="saveBulkCreate()" 
+                        id="bulkCreateButton"
                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Create
+                    <div class="flex items-center gap-2">
+                        <svg id="bulkCreateSpinner" class="animate-spin h-4 w-4 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span id="bulkCreateButtonText">Create</span>
+                    </div>
                 </button>
             </div>
         </div>
@@ -370,8 +380,23 @@ function closeModal() {
 }
 
 function saveTimeSlot() {
+    const saveButton = document.getElementById('saveTimeSlotButton');
+    const saveSpinner = document.getElementById('saveTimeSlotSpinner');
+    const saveButtonText = document.getElementById('saveTimeSlotButtonText');
+
+    // Disable button and show loading state
+    saveButton.disabled = true;
+    saveSpinner.classList.remove('hidden');
+    saveButtonText.textContent = 'Saving...';
+
     const form = document.getElementById('timeSlotForm');
     const formData = new FormData(form);
+    const data = {
+        date: formData.get('date'),
+        time: formData.get('time'),
+        capacity: parseInt(formData.get('capacity')),
+        is_available: formData.get('is_available') === 'on'
+    };
     
     const url = currentTimeSlotId 
         ? `/admin/consulting/timeslots/${currentTimeSlotId}`
@@ -385,12 +410,13 @@ function saveTimeSlot() {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(Object.fromEntries(formData))
+        body: JSON.stringify(data)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             showNotification('Success', data.message);
+            closeModal();
             setTimeout(() => window.location.reload(), 1000);
         } else {
             throw new Error(data.message);
@@ -398,6 +424,10 @@ function saveTimeSlot() {
     })
     .catch(error => {
         showNotification('Error', error.message, 'error');
+        // Reset button state on error
+        saveButton.disabled = false;
+        saveSpinner.classList.add('hidden');
+        saveButtonText.textContent = 'Save';
     });
 }
 
@@ -427,8 +457,26 @@ function removeTimeInput(button) {
 }
 
 function saveBulkCreate() {
+    const bulkCreateButton = document.getElementById('bulkCreateButton');
+    const bulkCreateSpinner = document.getElementById('bulkCreateSpinner');
+    const bulkCreateButtonText = document.getElementById('bulkCreateButtonText');
+
+    // Disable button and show loading state
+    bulkCreateButton.disabled = true;
+    bulkCreateSpinner.classList.remove('hidden');
+    bulkCreateButtonText.textContent = 'Creating...';
+
     const form = document.getElementById('bulkCreateForm');
     const formData = new FormData(form);
+
+    // Convert form data to proper format
+    const data = {
+        start_date: formData.get('start_date'),
+        end_date: formData.get('end_date'),
+        days: Array.from(formData.getAll('days[]')).map(Number),
+        times: Array.from(formData.getAll('times[]')),
+        capacity: parseInt(formData.get('capacity'))
+    };
     
     fetch('/admin/consulting/timeslots/bulk-create', {
         method: 'POST',
@@ -436,12 +484,13 @@ function saveBulkCreate() {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(Object.fromEntries(formData))
+        body: JSON.stringify(data)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             showNotification('Success', data.message);
+            closeBulkCreateModal();
             setTimeout(() => window.location.reload(), 1000);
         } else {
             throw new Error(data.message);
@@ -449,6 +498,10 @@ function saveBulkCreate() {
     })
     .catch(error => {
         showNotification('Error', error.message, 'error');
+        // Reset button state on error
+        bulkCreateButton.disabled = false;
+        bulkCreateSpinner.classList.add('hidden');
+        bulkCreateButtonText.textContent = 'Create';
     });
 }
 
