@@ -70,10 +70,10 @@
                     </dd>
                 </div>
                 <!-- Debug Info -->
-                @php
+                <!-- @php
                     \Log::info('Quote Fields:', ['fields' => $quote->quote_fields]);
                     \Log::info('Service Quote Fields:', ['fields' => $quote->service->quoteFields->toArray()]);
-                @endphp
+                @endphp -->
 
                 @if($quote->quote_fields)
                     <div class="col-span-2">

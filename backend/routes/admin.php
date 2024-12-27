@@ -25,6 +25,8 @@ use App\Http\Controllers\Admin\HustleApplicationController;
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\Auth\LogoutController;
 use App\Http\Controllers\Admin\QuoteController;
+use App\Http\Controllers\Admin\ConsultingBookingController;
+use App\Http\Controllers\Admin\ConsultingTimeSlotController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
@@ -237,6 +239,23 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
             Route::patch('/{quote}/assign', [QuoteController::class, 'assign'])->name('assign');
             Route::post('/{quote}/messages', [QuoteController::class, 'sendMessage'])->name('messages.send');
             Route::get('/{quote}/messages', [QuoteController::class, 'getMessages'])->name('messages');
+        });
+
+        // Add this inside the middleware('auth:admin') group
+        Route::prefix('consulting')->name('consulting.')->group(function () {
+            // Bookings
+            Route::get('/bookings', [ConsultingBookingController::class, 'index'])->name('bookings.index');
+            Route::get('/bookings/{booking}', [ConsultingBookingController::class, 'show'])->name('bookings.show');
+            Route::post('/bookings/{booking}/status', [ConsultingBookingController::class, 'updateStatus'])->name('bookings.update-status');
+            Route::post('/bookings/{booking}/assign-expert', [ConsultingBookingController::class, 'assignExpert'])->name('bookings.assign-expert');
+
+            // Time Slots
+            Route::get('/timeslots', [ConsultingTimeSlotController::class, 'index'])->name('timeslots.index');
+            Route::post('/timeslots', [ConsultingTimeSlotController::class, 'store'])->name('timeslots.store');
+            Route::post('/timeslots/bulk-create', [ConsultingTimeSlotController::class, 'bulkCreate'])->name('timeslots.bulk-create');
+            Route::post('/timeslots/bulk-delete', [ConsultingTimeSlotController::class, 'bulkDestroy'])->name('timeslots.bulk-destroy');
+            Route::put('/timeslots/{timeSlot}', [ConsultingTimeSlotController::class, 'update'])->name('timeslots.update');
+            Route::delete('/timeslots/{timeSlot}', [ConsultingTimeSlotController::class, 'destroy'])->name('timeslots.destroy');
         });
     });
 }); 
