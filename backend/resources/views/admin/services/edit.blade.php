@@ -165,9 +165,25 @@
                                             <select name="quote_fields[{{ $loop->index }}][type]" 
                                                     onchange="toggleOptions({{ $loop->index }})"
                                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                                                @foreach(['text', 'textarea', 'select', 'checkbox', 'radio'] as $type)
-                                                    <option value="{{ $type }}" {{ $field->type === $type ? 'selected' : '' }}>
-                                                        {{ ucfirst($type) }}
+                                                @foreach([
+                                                    'text' => 'Text',
+                                                    'textarea' => 'Textarea',
+                                                    'select' => 'Select (Single)',
+                                                    'multiselect' => 'Select (Multiple)',
+                                                    'checkbox' => 'Checkbox',
+                                                    'radio' => 'Radio',
+                                                    'date' => 'Date',
+                                                    'datetime' => 'Date & Time',
+                                                    'time' => 'Time',
+                                                    'number' => 'Number',
+                                                    'email' => 'Email',
+                                                    'tel' => 'Phone',
+                                                    'url' => 'URL',
+                                                    'file' => 'File Upload'
+                                                ] as $value => $label)
+                                                    <option value="{{ $value }}" 
+                                                            {{ $field->type === $value ? 'selected' : '' }}>
+                                                        {{ $label }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -290,7 +306,7 @@ function toggleOptions(id) {
     const select = document.querySelector(`[name="quote_fields[${id}][type]"]`);
     const optionsContainer = document.getElementById(`options-${id}`);
     
-    if (['select', 'checkbox', 'radio'].includes(select.value)) {
+    if (['select', 'multiselect', 'checkbox', 'radio'].includes(select.value)) {
         optionsContainer.classList.remove('hidden');
     } else {
         optionsContainer.classList.add('hidden');

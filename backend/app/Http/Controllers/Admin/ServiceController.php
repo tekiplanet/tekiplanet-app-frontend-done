@@ -49,7 +49,7 @@ class ServiceController extends Controller
             'quote_fields' => 'nullable|array',
             'quote_fields.*.name' => 'required|string|max:255',
             'quote_fields.*.label' => 'required|string|max:255',
-            'quote_fields.*.type' => 'required|in:text,textarea,select,checkbox,radio',
+            'quote_fields.*.type' => 'required|in:text,textarea,select,multiselect,checkbox,radio,date,datetime,time,number,email,tel,url,file',
             'quote_fields.*.required' => 'required|boolean',
             'quote_fields.*.options' => 'nullable'
         ]);
@@ -134,7 +134,7 @@ class ServiceController extends Controller
             'quote_fields.*.id' => 'nullable|exists:service_quote_fields,id',
             'quote_fields.*.name' => 'required|string|max:255',
             'quote_fields.*.label' => 'required|string|max:255',
-            'quote_fields.*.type' => 'required|in:text,textarea,select,checkbox,radio',
+            'quote_fields.*.type' => 'required|in:text,textarea,select,multiselect,checkbox,radio,date,datetime,time,number,email,tel,url,file',
             'quote_fields.*.required' => 'required|boolean',
             'quote_fields.*.options' => 'nullable'
         ]);
