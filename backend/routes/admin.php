@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\HustleController;
 use App\Http\Controllers\Admin\HustleApplicationController;
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\Auth\LogoutController;
+use App\Http\Controllers\Admin\QuoteController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
@@ -227,5 +228,14 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
             ->name('hustles.messages');
         Route::post('hustles/{hustle}/messages', [HustleController::class, 'sendMessage'])
             ->name('hustles.messages.send');
+
+        // Inside the middleware('auth:admin') group
+        Route::prefix('quotes')->name('quotes.')->group(function () {
+            Route::get('/', [QuoteController::class, 'index'])->name('index');
+            Route::get('/{quote}', [QuoteController::class, 'show'])->name('show');
+            Route::patch('/{quote}/status', [QuoteController::class, 'updateStatus'])->name('update-status');
+            Route::patch('/{quote}/assign', [QuoteController::class, 'assign'])->name('assign');
+            Route::post('/{quote}/messages', [QuoteController::class, 'sendMessage'])->name('messages.send');
+        });
     });
 }); 
