@@ -19,26 +19,20 @@
         </div>
         @if($application->status === 'pending')
             <div class="flex gap-2">
-                <form action="{{ route('admin.hustles.applications.update-status', [$hustle, $application]) }}" 
-                      method="POST">
-                    @csrf
-                    @method('PATCH')
-                    <input type="hidden" name="status" value="approved">
-                    <button type="submit" 
-                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                        Approve Application
-                    </button>
-                </form>
-                <form action="{{ route('admin.hustles.applications.update-status', [$hustle, $application]) }}" 
-                      method="POST">
-                    @csrf
-                    @method('PATCH')
-                    <input type="hidden" name="status" value="rejected">
-                    <button type="submit" 
-                            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-                        Reject Application
-                    </button>
-                </form>
+                <button onclick="updateApplicationStatus(
+                    '{{ route('admin.hustles.applications.update-status', [$hustle, $application]) }}',
+                    'approved',
+                    'Approve'
+                )" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                    Approve Application
+                </button>
+                <button onclick="updateApplicationStatus(
+                    '{{ route('admin.hustles.applications.update-status', [$hustle, $application]) }}',
+                    'rejected',
+                    'Reject'
+                )" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    Reject Application
+                </button>
             </div>
         @endif
     </div>
@@ -149,4 +143,8 @@
         </div>
     @endif
 </div>
-@endsection 
+@endsection
+
+@push('scripts')
+    @include('admin.hustles.applications._status-update-script')
+@endpush 

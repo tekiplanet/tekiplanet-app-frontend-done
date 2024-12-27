@@ -70,28 +70,20 @@
                                     View
                                 </a>
                                 @if($application->status === 'pending')
-                                    <form action="{{ route('admin.hustles.applications.update-status', [$hustle, $application]) }}" 
-                                          method="POST" 
-                                          class="inline">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="status" value="approved">
-                                        <button type="submit" 
-                                                class="text-green-600 hover:text-green-900 ml-2">
-                                            Approve
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('admin.hustles.applications.update-status', [$hustle, $application]) }}" 
-                                          method="POST" 
-                                          class="inline">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="status" value="rejected">
-                                        <button type="submit" 
-                                                class="text-red-600 hover:text-red-900 ml-2">
-                                            Reject
-                                        </button>
-                                    </form>
+                                    <button onclick="updateApplicationStatus(
+                                        '{{ route('admin.hustles.applications.update-status', [$hustle, $application]) }}',
+                                        'approved',
+                                        'Approve'
+                                    )" class="text-green-600 hover:text-green-900 ml-2">
+                                        Approve
+                                    </button>
+                                    <button onclick="updateApplicationStatus(
+                                        '{{ route('admin.hustles.applications.update-status', [$hustle, $application]) }}',
+                                        'rejected',
+                                        'Reject'
+                                    )" class="text-red-600 hover:text-red-900 ml-2">
+                                        Reject
+                                    </button>
                                 @endif
                             </td>
                         </tr>
@@ -111,3 +103,7 @@
     </div>
 </div>
 @endsection 
+
+@push('scripts')
+    @include('admin.hustles.applications._status-update-script')
+@endpush 

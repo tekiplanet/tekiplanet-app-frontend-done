@@ -22,14 +22,20 @@ use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\BankAccountController;
 use App\Http\Controllers\Admin\HustleController;
 use App\Http\Controllers\Admin\HustleApplicationController;
+use App\Http\Controllers\Admin\Auth\LoginController;
+use App\Http\Controllers\Admin\Auth\LogoutController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     // Guest routes
     Route::middleware('guest:admin')->group(function () {
-        Route::get('login', [AuthController::class, 'showLogin'])->name('login');
-        Route::post('login', [AuthController::class, 'login'])->name('login.post');
+        Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
+        Route::post('login', [LoginController::class, 'login'])->name('login.post');
     });
+
+    Route::post('logout', [LogoutController::class, 'logout'])
+        ->name('admin.logout')
+        ->middleware('auth:admin');
 
     // Protected routes
     Route::middleware('auth:admin')->group(function () {
