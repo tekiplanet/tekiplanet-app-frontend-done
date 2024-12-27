@@ -22,7 +22,7 @@ class TransactionReceipt extends Mailable
     public function build()
     {
         $settings = [
-            'currency_symbol' => Setting::getSetting('currency_symbol', '₦'),
+            'currency_symbol' => Setting::getSetting('currency_symbol', 'NGN'),
             'site_name' => Setting::getSetting('site_name', 'TekiPlanet'),
             'support_email' => Setting::getSetting('support_email', 'support@tekiplanet.com')
         ];

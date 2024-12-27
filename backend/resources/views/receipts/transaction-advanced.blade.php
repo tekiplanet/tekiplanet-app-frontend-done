@@ -152,7 +152,11 @@
                     <div class="label">Amount</div>
                     <div class="value amount {{ $transaction->type === 'credit' ? 'credit' : 'debit' }}">
                         {{ $transaction->type === 'credit' ? '+' : '-' }} 
-                        {{ $settings['currency_symbol'] }}{{ number_format($transaction->amount, 2) }}
+                        @if($settings['currency_symbol'] === '₦' || $settings['currency_symbol'] === 'NGN')
+                            NGN {{ number_format($transaction->amount, 2) }}
+                        @else
+                            {{ $settings['currency_symbol'] }}{{ number_format($transaction->amount, 2) }}
+                        @endif
                     </div>
                 </div>
                 <div class="info-item">
@@ -181,7 +185,13 @@
                 @endif
                 <div class="info-item">
                     <div class="label">Current Balance</div>
-                    <div class="value">{{ $settings['currency_symbol'] }}{{ number_format($transaction->user->wallet_balance, 2) }}</div>
+                    <div class="value">
+                        @if($settings['currency_symbol'] === '₦' || $settings['currency_symbol'] === 'NGN')
+                            NGN {{ number_format($transaction->user->wallet_balance, 2) }}
+                        @else
+                            {{ $settings['currency_symbol'] }}{{ number_format($transaction->user->wallet_balance, 2) }}
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
