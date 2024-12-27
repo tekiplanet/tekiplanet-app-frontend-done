@@ -118,7 +118,7 @@ class ProfessionalController extends Controller
             'title' => $title,
             'message' => $message,
             'icon' => 'professional',
-            'action_url' => '/professional/profile'
+            'action_url' => '/dashboard'
         ], $professional->user);
 
         // Send email notification

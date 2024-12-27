@@ -5,7 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Hustle;
 use App\Models\ProfessionalCategory;
+use App\Models\Professional;
+use App\Services\NotificationService;
+use App\Mail\HustleCreated;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class HustleController extends Controller
 {
@@ -38,19 +42,68 @@ class HustleController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'category_id' => 'required|exists:professional_categories,id',
-            'budget' => 'required|numeric|min:0',
-            'deadline' => 'required|date|after:today',
-            'requirements' => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'category_id' => 'required|exists:professional_categories,id',
+                'budget' => 'required|numeric|min:0',
+                'deadline' => 'required|date|after:today',
+                'requirements' => 'nullable|string',
+            ]);
 
-        $hustle = Hustle::create($validated);
+            $hustle = Hustle::create($validated);
 
-        return redirect()->route('admin.hustles.show', $hustle)
-            ->with('success', 'Hustle created successfully.');
+            // Get all professionals in this category
+            $professionals = Professional::where('category_id', $hustle->category_id)
+                ->with('user')
+                ->get();
+
+            // Prepare notification data
+            $notificationData = [
+                'type' => 'new_hustle',
+                'title' => 'New Hustle Available',
+                'message' => "A new hustle '{$hustle->title}' has been posted in your category.",
+                'icon' => 'briefcase',
+                'action_url' => '/dashboard/hustles/' . $hustle->id,
+                'extra_data' => [
+                    'hustle_id' => $hustle->id,
+                    'category_id' => $hustle->category_id,
+                ]
+            ];
+
+            // Get notification service
+            $notificationService = app(NotificationService::class);
+
+            foreach ($professionals as $professional) {
+                // Send notification
+                $notificationService->send($notificationData, $professional->user);
+
+                // Send email
+                Mail::to($professional->user->email)
+                    ->queue(new HustleCreated($hustle, $professional));
+            }
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Hustle created successfully',
+                    'hustle' => $hustle,
+                    'redirect' => route('admin.hustles.show', $hustle)
+                ]);
+            }
+
+            return redirect()->route('admin.hustles.show', $hustle)
+                ->with('success', 'Hustle created successfully.');
+        } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Failed to create hustle',
+                    'errors' => [$e->getMessage()]
+                ], 422);
+            }
+
+            throw $e;
+        }
     }
 
     public function show(Hustle $hustle)
