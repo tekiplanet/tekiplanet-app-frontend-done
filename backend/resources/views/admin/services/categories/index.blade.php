@@ -55,8 +55,8 @@
     </div>
 
     <!-- Table -->
-    <div class="mt-6">
-        <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+    <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
@@ -162,17 +162,17 @@ async function toggleFeatured(id) {
 }
 
 function deleteCategory(id) {
-    if (!confirm('Are you sure you want to delete this category?')) return;
-
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `/admin/service-categories/${id}`;
-    form.innerHTML = `
-        @csrf
-        @method('DELETE')
-    `;
-    document.body.appendChild(form);
-    form.submit();
+    showDeleteModal(function() {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/service-categories/${id}`;
+        form.innerHTML = `
+            @csrf
+            @method('DELETE')
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }, 'Are you sure you want to delete this category? All associated services will also be deleted.');
 }
 </script>
 @endpush
