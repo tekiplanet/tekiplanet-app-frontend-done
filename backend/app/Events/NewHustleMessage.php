@@ -23,10 +23,11 @@ class NewHustleMessage implements ShouldBroadcast
             'id' => $message->id,
             'message' => $message->message,
             'sender_type' => $message->sender_type,
-            'sender_name' => $message->user->name,
+            'sender_name' => $message->user->full_name,
             'sender_avatar' => $message->user->avatar,
             'created_at' => $message->created_at->diffForHumans(),
-            'is_admin' => $message->sender_type === 'admin'
+            'is_admin' => $message->sender_type === 'admin',
+            'hustle_id' => $message->hustle_id
         ];
     }
 

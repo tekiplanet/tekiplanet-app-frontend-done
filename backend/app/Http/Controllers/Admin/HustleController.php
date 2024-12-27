@@ -321,7 +321,7 @@ class HustleController extends Controller
                     'id' => $message->id,
                     'message' => $message->message,
                     'sender_type' => $message->sender_type,
-                    'sender_name' => $message->user->name,
+                    'sender_name' => $message->user->full_name,
                     'sender_avatar' => $message->user->avatar,
                     'created_at' => $message->created_at->diffForHumans(),
                     'is_admin' => $message->sender_type === 'admin'
@@ -338,40 +338,18 @@ class HustleController extends Controller
                 'message' => 'required|string'
             ]);
 
+            // Get the professional's user record
+            $professional = $hustle->assignedProfessional;
+
             $message = $hustle->messages()->create([
-                'user_id' => auth()->id(),
+                'user_id' => $professional->user_id,  // Use the professional's user_id
                 'message' => $validated['message'],
-                'sender_type' => 'admin',
+                'sender_type' => 'admin',  // This identifies it as an admin message
                 'is_read' => false
             ]);
 
-            // Load the user relationship for the broadcast
+            // Load the user relationship
             $message->load('user');
-
-            // Broadcast the new message
-            broadcast(new NewHustleMessage($message))->toOthers();
-
-            // Send notification to professional
-            $professional = $hustle->assignedProfessional;
-            $notificationService = app(NotificationService::class);
-
-            $notificationData = [
-                'type' => 'new_message',
-                'title' => 'New Message',
-                'message' => "You have a new message regarding '{$hustle->title}'",
-                'icon' => 'chat',
-                'action_url' => '/dashboard/hustles/' . $hustle->id . '/messages',
-                'extra_data' => [
-                    'hustle_id' => $hustle->id,
-                    'message_id' => $message->id
-                ]
-            ];
-
-            $notificationService->send($notificationData, $professional->user);
-
-            // Send email
-            Mail::to($professional->user->email)
-                ->queue(new NewHustleMessage($hustle, $professional->user, $message));
 
             return response()->json([
                 'success' => true,
@@ -379,8 +357,8 @@ class HustleController extends Controller
                     'id' => $message->id,
                     'message' => $message->message,
                     'sender_type' => $message->sender_type,
-                    'sender_name' => auth()->user()->name,
-                    'sender_avatar' => auth()->user()->avatar,
+                    'sender_name' => 'Admin', // Just use 'Admin' as the sender name
+                    'sender_avatar' => null,  // You can set a default admin avatar if needed
                     'created_at' => $message->created_at->diffForHumans(),
                     'is_admin' => true
                 ]
