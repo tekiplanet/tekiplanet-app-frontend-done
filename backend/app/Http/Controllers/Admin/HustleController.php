@@ -314,7 +314,7 @@ class HustleController extends Controller
     {
         $messages = $hustle->messages()
             ->with('user')
-            ->latest()
+            ->oldest()
             ->get()
             ->map(function ($message) {
                 return [
