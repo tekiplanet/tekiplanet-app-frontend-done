@@ -11,6 +11,7 @@ use App\Mail\TransactionStatusUpdated;
 use Illuminate\Support\Facades\Mail;
 use App\Jobs\SendTransactionEmail;
 use App\Jobs\SendTransactionNotification;
+use App\Jobs\SendTransactionReceipt;
 use PDF;
 use App\Mail\TransactionReceipt;
 use App\Models\Setting;
@@ -190,7 +191,7 @@ class TransactionController extends Controller
     public function downloadReceipt(Transaction $transaction)
     {
         $settings = [
-            'currency_symbol' => Setting::getSetting('currency_symbol', '₦'),
+            'currency_symbol' => Setting::getSetting('currency_symbol', 'NGN'),
             'site_name' => Setting::getSetting('site_name', 'TekiPlanet'),
             'support_email' => Setting::getSetting('support_email', 'support@tekiplanet.com')
         ];
@@ -200,7 +201,7 @@ class TransactionController extends Controller
             'settings' => $settings
         ]);
 
-        return $pdf->download("transaction-{$transaction->reference_number}.pdf");
+        return $pdf->stream("transaction-{$transaction->reference_number}.pdf");
     }
 
     public function sendReceipt(Transaction $transaction)
@@ -213,6 +214,11 @@ class TransactionController extends Controller
                 'message' => 'Receipt has been sent to user\'s email'
             ]);
         } catch (\Exception $e) {
+            \Log::error('Failed to send receipt:', [
+                'error' => $e->getMessage(),
+                'transaction_id' => $transaction->id
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to send receipt: ' . $e->getMessage()

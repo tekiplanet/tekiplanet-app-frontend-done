@@ -136,20 +136,22 @@
             <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Receipt Actions</h3>
                 <div class="flex space-x-4">
-                    <a href="{{ route('admin.transactions.download-receipt', $transaction) }}" 
-                       class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                    <button onclick="downloadReceipt()" 
+                            id="downloadReceiptBtn"
+                            class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        Download Receipt
-                    </a>
+                        <span>Download Receipt</span>
+                    </button>
 
                     <button onclick="sendReceipt()" 
+                            id="sendReceiptBtn"
                             class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
-                        Send Receipt to User
+                        <span>Send Receipt to User</span>
                     </button>
                 </div>
             </div>
@@ -235,8 +237,64 @@ document.getElementById('updateStatusForm').addEventListener('submit', async fun
     }
 });
 
-async function sendReceipt() {
+async function downloadReceipt() {
+    const button = document.getElementById('downloadReceiptBtn');
+    const originalContent = button.innerHTML;
+    
     try {
+        button.disabled = true;
+        button.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Downloading...
+        `;
+
+        const response = await fetch('{{ route('admin.transactions.download-receipt', $transaction) }}', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (!response.ok) throw new Error('Download failed');
+
+        // Get the blob from the response
+        const blob = await response.blob();
+        
+        // Create a link and trigger download
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = "transaction-{{ $transaction->reference_number }}.pdf";
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        
+        showNotification('Success', 'Receipt downloaded successfully');
+    } catch (error) {
+        showNotification('Error', 'Failed to download receipt', 'error');
+    } finally {
+        button.disabled = false;
+        button.innerHTML = originalContent;
+    }
+}
+
+async function sendReceipt() {
+    const button = document.getElementById('sendReceiptBtn');
+    const originalContent = button.innerHTML;
+    
+    try {
+        button.disabled = true;
+        button.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Sending...
+        `;
+
         const response = await fetch('{{ route('admin.transactions.send-receipt', $transaction) }}', {
             method: 'POST',
             headers: {
@@ -254,6 +312,9 @@ async function sendReceipt() {
         }
     } catch (error) {
         showNotification('Error', error.message, 'error');
+    } finally {
+        button.disabled = false;
+        button.innerHTML = originalContent;
     }
 }
 </script>
