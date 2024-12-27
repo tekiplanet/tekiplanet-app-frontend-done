@@ -44,6 +44,13 @@ class TransactionController extends Controller
             });
 
         $transactions = $query->latest()->paginate(15);
+        
+        // Add this for debugging
+        \Log::info('Transactions with users:', [
+            'sample_transaction' => $transactions->first(),
+            'has_user' => $transactions->first()->user ? 'yes' : 'no',
+            'user_details' => $transactions->first()->user
+        ]);
 
         return view('admin.transactions.index', compact('transactions'));
     }

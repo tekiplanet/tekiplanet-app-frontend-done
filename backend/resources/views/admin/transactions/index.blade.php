@@ -79,7 +79,16 @@
                                 {{ $transaction->reference_number }}
                             </td>
                             <td class="px-6 py-4">
-                                {{ $transaction->user->name }}
+                                @if($transaction->user)
+                                    <div class="flex flex-col">
+                                        <span class="font-medium">
+                                            {{ $transaction->user->first_name }} {{ $transaction->user->last_name }}
+                                        </span>
+                                        <span class="text-sm text-gray-500">{{ $transaction->user->email }}</span>
+                                    </div>
+                                @else
+                                    <span class="text-gray-500">User not found</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
