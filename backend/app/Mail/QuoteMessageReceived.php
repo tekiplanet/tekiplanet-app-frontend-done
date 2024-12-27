@@ -16,8 +16,6 @@ class QuoteMessageReceived extends Mailable
     public function __construct(QuoteMessage $message)
     {
         $this->message = $message;
-        $this->onQueue('emails');
-        $this->afterCommit();
     }
 
     public function build()
@@ -25,8 +23,10 @@ class QuoteMessageReceived extends Mailable
         return $this->view('emails.quotes.new-message')
             ->subject('New Message on Your Quote')
             ->with([
-                'greeting' => 'Hello ' . $this->message->quote->user->first_name . ',',
-                'closing' => 'Best regards,<br>TekiPlanet Team'
+                'greeting' => 'Hello ' . $this->message->user->first_name . ',',
+                'closing' => 'Best regards,<br>TekiPlanet Team',
+                'messageText' => $this->message->message,
+                'quoteId' => $this->message->quote_id
             ]);
     }
 } 

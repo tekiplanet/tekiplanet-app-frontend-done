@@ -6,11 +6,11 @@
     <p>You have received a new message regarding your quote.</p>
 
     <p><strong>Message:</strong><br>
-    {{ $message->message }}</p>
+    {{ $messageText }}</p>
 
     <p>Click the button below to view and reply to this message:</p>
 
-    <a href="{{ url('/quotes/' . $message->quote_id) }}" class="button">
+    <a href="{{ url('/quotes/' . $quoteId) }}" class="button">
         View Message
     </a>
 
