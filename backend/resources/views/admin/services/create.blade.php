@@ -127,6 +127,22 @@
                         </label>
                     </div>
 
+                    <!-- Quote Fields Section -->
+                    <div class="border-t pt-4">
+                        <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-4">Quote Fields</h3>
+                        <div id="quoteFields" class="space-y-4">
+                            <!-- Quote fields will be added here dynamically -->
+                        </div>
+                        <button type="button" 
+                                onclick="addQuoteField()"
+                                class="mt-4 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Add Field
+                        </button>
+                    </div>
+
                     <div class="flex justify-end">
                         <button type="submit"
                                 id="submitButton"
@@ -146,6 +162,84 @@
 
 @push('scripts')
 <script>
+let fieldCount = 0;
+
+function addQuoteField() {
+    const fieldHtml = `
+        <div class="quote-field bg-gray-50 p-4 rounded-lg relative" data-field-id="${fieldCount}">
+            <button type="button" 
+                    onclick="removeQuoteField(${fieldCount})" 
+                    class="absolute right-2 top-2 text-gray-400 hover:text-red-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Field Name</label>
+                    <input type="text" 
+                           name="quote_fields[${fieldCount}][name]" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                           required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Label</label>
+                    <input type="text" 
+                           name="quote_fields[${fieldCount}][label]" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                           required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Type</label>
+                    <select name="quote_fields[${fieldCount}][type]" 
+                            onchange="toggleOptions(${fieldCount})"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                        <option value="text">Text</option>
+                        <option value="textarea">Textarea</option>
+                        <option value="select">Select</option>
+                        <option value="checkbox">Checkbox</option>
+                        <option value="radio">Radio</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Required</label>
+                    <select name="quote_fields[${fieldCount}][required]" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                        <option value="1">Yes</option>
+                        <option value="0">No</option>
+                    </select>
+                </div>
+                <div class="options-container hidden col-span-2" id="options-${fieldCount}">
+                    <label class="block text-sm font-medium text-gray-700">Options (one per line)</label>
+                    <textarea name="quote_fields[${fieldCount}][options]" 
+                              rows="3"
+                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('quoteFields').insertAdjacentHTML('beforeend', fieldHtml);
+    fieldCount++;
+}
+
+function removeQuoteField(id) {
+    const field = document.querySelector(`[data-field-id="${id}"]`);
+    field.remove();
+}
+
+function toggleOptions(id) {
+    const select = document.querySelector(`[name="quote_fields[${id}][type]"]`);
+    const optionsContainer = document.getElementById(`options-${id}`);
+    
+    if (['select', 'checkbox', 'radio'].includes(select.value)) {
+        optionsContainer.classList.remove('hidden');
+    } else {
+        optionsContainer.classList.add('hidden');
+    }
+}
+
+// Modify the existing form submit handler
 document.getElementById('createForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const button = document.getElementById('submitButton');
@@ -158,6 +252,15 @@ document.getElementById('createForm').addEventListener('submit', async function(
 
     try {
         const formData = new FormData(this);
+        
+        // Process quote fields options
+        document.querySelectorAll('[name$="[options]"]').forEach(textarea => {
+            if (!textarea.classList.contains('hidden')) {
+                const options = textarea.value.split('\n').filter(option => option.trim());
+                formData.set(textarea.name, JSON.stringify(options));
+            }
+        });
+
         const response = await fetch(this.action, {
             method: 'POST',
             body: formData,
@@ -179,7 +282,7 @@ document.getElementById('createForm').addEventListener('submit', async function(
             buttonText.textContent = 'Create Service';
         }
     } catch (error) {
-        showNotification('An error occurred while creating the service', 'error');
+        showNotification('Error', 'An error occurred while creating the service', 'error');
         button.disabled = false;
         loadingIcon.classList.add('hidden');
         buttonText.textContent = 'Create Service';

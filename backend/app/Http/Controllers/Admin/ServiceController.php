@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Service;
 use App\Models\ServiceCategory;
+use App\Models\ServiceQuoteField;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class ServiceController extends Controller
 {
@@ -38,41 +41,76 @@ class ServiceController extends Controller
         $validated = $request->validate([
             'category_id' => 'required|exists:service_categories,id',
             'name' => 'required|string|max:255',
-            'short_description' => 'required|string|max:255',
+            'short_description' => 'required|string',
             'long_description' => 'required|string',
             'starting_price' => 'required|numeric|min:0',
-            'icon_name' => 'required|string',
-            'is_featured' => 'boolean'
+            'icon_name' => 'required|string|max:50',
+            'is_featured' => 'boolean',
+            'quote_fields' => 'nullable|array',
+            'quote_fields.*.name' => 'required|string|max:255',
+            'quote_fields.*.label' => 'required|string|max:255',
+            'quote_fields.*.type' => 'required|in:text,textarea,select,checkbox,radio',
+            'quote_fields.*.required' => 'required|boolean',
+            'quote_fields.*.options' => 'nullable'
         ]);
 
         try {
-            Service::create($validated);
-            
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'title' => 'Success',
-                    'message' => 'Service created successfully',
-                    'redirect' => route('admin.services.index')
-                ]);
+            DB::beginTransaction();
+
+            $service = Service::create([
+                'id' => Str::uuid(),
+                'category_id' => $validated['category_id'],
+                'name' => $validated['name'],
+                'short_description' => $validated['short_description'],
+                'long_description' => $validated['long_description'],
+                'starting_price' => $validated['starting_price'],
+                'icon_name' => $validated['icon_name'],
+                'is_featured' => $validated['is_featured'] ?? false
+            ]);
+
+            // Create quote fields
+            if (!empty($validated['quote_fields'])) {
+                foreach ($validated['quote_fields'] as $order => $field) {
+                    // Format options if they exist
+                    $options = null;
+                    if (!empty($field['options'])) {
+                        if (is_string($field['options'])) {
+                            // If it's a JSON string, decode it first
+                            $decodedOptions = json_decode($field['options'], true);
+                            $options = is_array($decodedOptions) ? $decodedOptions : explode("\n", $field['options']);
+                        } else {
+                            $options = $field['options'];
+                        }
+                        // Clean the array
+                        $options = array_values(array_filter(array_map('trim', $options)));
+                    }
+
+                    ServiceQuoteField::create([
+                        'id' => Str::uuid(),
+                        'service_id' => $service->id,
+                        'name' => $field['name'],
+                        'label' => $field['label'],
+                        'type' => $field['type'],
+                        'required' => $field['required'],
+                        'order' => $order + 1,
+                        'options' => $options
+                    ]);
+                }
             }
-            
-            return redirect()
-                ->route('admin.services.index')
-                ->with('success', 'Service created successfully');
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Service created successfully',
+                'redirect' => route('admin.services.index')
+            ]);
         } catch (\Exception $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'title' => 'Error',
-                    'message' => 'Failed to create service: ' . $e->getMessage()
-                ], 500);
-            }
-            
-            return redirect()
-                ->back()
-                ->with('error', 'Failed to create service: ' . $e->getMessage())
-                ->withInput();
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create service: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -87,41 +125,101 @@ class ServiceController extends Controller
         $validated = $request->validate([
             'category_id' => 'required|exists:service_categories,id',
             'name' => 'required|string|max:255',
-            'short_description' => 'required|string|max:255',
+            'short_description' => 'required|string',
             'long_description' => 'required|string',
             'starting_price' => 'required|numeric|min:0',
-            'icon_name' => 'required|string',
-            'is_featured' => 'boolean'
+            'icon_name' => 'required|string|max:50',
+            'is_featured' => 'boolean',
+            'quote_fields' => 'nullable|array',
+            'quote_fields.*.id' => 'nullable|exists:service_quote_fields,id',
+            'quote_fields.*.name' => 'required|string|max:255',
+            'quote_fields.*.label' => 'required|string|max:255',
+            'quote_fields.*.type' => 'required|in:text,textarea,select,checkbox,radio',
+            'quote_fields.*.required' => 'required|boolean',
+            'quote_fields.*.options' => 'nullable'
         ]);
 
         try {
-            $service->update($validated);
-            
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'title' => 'Success',
-                    'message' => 'Service updated successfully',
-                    'redirect' => route('admin.services.index')
-                ]);
+            DB::beginTransaction();
+
+            $service->update([
+                'category_id' => $validated['category_id'],
+                'name' => $validated['name'],
+                'short_description' => $validated['short_description'],
+                'long_description' => $validated['long_description'],
+                'starting_price' => $validated['starting_price'],
+                'icon_name' => $validated['icon_name'],
+                'is_featured' => $validated['is_featured'] ?? false
+            ]);
+
+            // Handle quote fields
+            if (isset($validated['quote_fields'])) {
+                // Get existing field IDs
+                $existingFieldIds = $service->quoteFields->pluck('id')->toArray();
+                $updatedFieldIds = [];
+
+                foreach ($validated['quote_fields'] as $order => $field) {
+                    // Format options if they exist
+                    $options = null;
+                    if (!empty($field['options'])) {
+                        if (is_string($field['options'])) {
+                            // If it's a JSON string, decode it first
+                            $decodedOptions = json_decode($field['options'], true);
+                            $options = is_array($decodedOptions) ? $decodedOptions : explode("\n", $field['options']);
+                        } else {
+                            $options = $field['options'];
+                        }
+                        // Clean the array
+                        $options = array_values(array_filter(array_map('trim', $options)));
+                    }
+
+                    if (isset($field['id'])) {
+                        ServiceQuoteField::where('id', $field['id'])->update([
+                            'name' => $field['name'],
+                            'label' => $field['label'],
+                            'type' => $field['type'],
+                            'required' => $field['required'],
+                            'order' => $order + 1,
+                            'options' => $options
+                        ]);
+                        $updatedFieldIds[] = $field['id'];
+                    } else {
+                        ServiceQuoteField::create([
+                            'id' => Str::uuid(),
+                            'service_id' => $service->id,
+                            'name' => $field['name'],
+                            'label' => $field['label'],
+                            'type' => $field['type'],
+                            'required' => $field['required'],
+                            'order' => $order + 1,
+                            'options' => $options
+                        ]);
+                    }
+                }
+
+                // Delete removed fields
+                $removedFieldIds = array_diff($existingFieldIds, $updatedFieldIds);
+                if (!empty($removedFieldIds)) {
+                    ServiceQuoteField::whereIn('id', $removedFieldIds)->delete();
+                }
+            } else {
+                // If no fields provided, delete all existing fields
+                $service->quoteFields()->delete();
             }
-            
-            return redirect()
-                ->route('admin.services.index')
-                ->with('success', 'Service updated successfully');
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Service updated successfully',
+                'redirect' => route('admin.services.index')
+            ]);
         } catch (\Exception $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'title' => 'Error',
-                    'message' => 'Failed to update service: ' . $e->getMessage()
-                ], 500);
-            }
-            
-            return redirect()
-                ->back()
-                ->with('error', 'Failed to update service: ' . $e->getMessage())
-                ->withInput();
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update service: ' . $e->getMessage()
+            ], 500);
         }
     }
 
