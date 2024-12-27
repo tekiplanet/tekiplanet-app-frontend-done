@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\CourseTopicController;
 use App\Http\Controllers\Admin\CourseScheduleController;
 use App\Http\Controllers\Admin\CourseExamController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\ServiceController;
+use App\Http\Controllers\Admin\ServiceCategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -112,6 +114,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth:admin']], function () 
     // Course Enrollments Notice
     Route::post('/courses/{course}/enrollments/send-notices', [CourseController::class, 'sendBulkNotices'])
         ->name('admin.courses.enrollments.send-notices');
+
+    // Services
+    Route::resource('services', ServiceController::class);
+    Route::resource('service-categories', ServiceCategoryController::class);
 
     // Orders
     Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
