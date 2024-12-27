@@ -80,37 +80,28 @@
                         <dt class="text-sm font-medium text-gray-500 mb-2">Additional Information</dt>
                         <dd class="mt-1">
                             <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                                <div class="text-sm text-gray-500">
-                                    @php
-                                        \Log::info('Quote Fields Keys:', ['keys' => array_keys($quote->quote_fields)]);
-                                        // Get all the fields at once to avoid multiple queries
-                                        $serviceQuoteFields = \App\Models\ServiceQuoteField::whereIn('id', array_keys($quote->quote_fields))
-                                            ->pluck('label', 'id')
-                                            ->toArray();
-                                        \Log::info('Service Quote Fields Found:', ['fields' => $serviceQuoteFields]);
-                                    @endphp
-                                    @foreach($quote->quote_fields as $key => $value)
-                                        @php
-                                            $label = $serviceQuoteFields[$key] ?? 'Field ' . ($loop->iteration);
-                                        @endphp
-                                        <div class="mb-4">
-                                            <dt class="font-medium text-gray-700 dark:text-gray-300">
-                                                {{ $label }}
-                                            </dt>
-                                            <dd class="mt-1 text-gray-900 dark:text-gray-100">
-                                                @if(is_array($value) || is_string($value) && str_contains($value, ','))
-                                                    <ul class="list-disc list-inside">
-                                                        @foreach((is_array($value) ? $value : explode(',', $value)) as $item)
-                                                            <li>{{ trim($item) }}</li>
-                                                        @endforeach
-                                                    </ul>
-                                                @else
-                                                    {{ $value }}
-                                                @endif
-                                            </dd>
-                                        </div>
+                                <dl class="grid grid-cols-1 gap-3">
+                                    @foreach($quote->service->quoteFields->sortBy('order') as $field)
+                                        @if(isset($quote->quote_fields[$field->id]))
+                                            <div>
+                                                <dt class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                    {{ $field->label }}
+                                                </dt>
+                                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                                                    @if(is_array($quote->quote_fields[$field->id]))
+                                                        <ul class="list-disc list-inside">
+                                                            @foreach($quote->quote_fields[$field->id] as $item)
+                                                                <li>{{ $item }}</li>
+                                                            @endforeach
+                                                        </ul>
+                                                    @else
+                                                        {{ $quote->quote_fields[$field->id] }}
+                                                    @endif
+                                                </dd>
+                                            </div>
+                                        @endif
                                     @endforeach
-                                </div>
+                                </dl>
                             </div>
                         </dd>
                     </div>
