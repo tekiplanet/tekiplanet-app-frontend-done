@@ -176,6 +176,22 @@
     </div>
 </div>
 
+@if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showNotification('Success', '{{ session('success') }}');
+        });
+    </script>
+@endif
+
+@if(session('error'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showNotification('Error', '{{ session('error') }}', 'error');
+        });
+    </script>
+@endif
+
 @push('scripts')
 <script>
 const modal = document.getElementById('zoneModal');

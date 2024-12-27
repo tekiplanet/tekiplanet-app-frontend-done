@@ -14,7 +14,7 @@
 
     <div class="mt-6">
         <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
-            <form action="{{ route('admin.service-categories.store') }}" method="POST">
+            <form action="{{ route('admin.service-categories.store') }}" method="POST" x-data="{ loading: false }" @submit="loading = true">
                 @csrf
 
                 <div class="space-y-6">
@@ -57,6 +57,12 @@
                                value="{{ old('icon_name') }}"
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                                required>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Use Lucide icon names, e.g., "lucide-wrench", "lucide-tool", "lucide-settings". 
+                            <a href="https://lucide.dev/icons" target="_blank" class="text-indigo-600 hover:text-indigo-500">
+                                View all icons
+                            </a>
+                        </p>
                         @error('icon_name')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -76,8 +82,13 @@
 
                     <div class="flex justify-end">
                         <button type="submit"
-                                class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
-                            Create Category
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                                :disabled="loading">
+                            <svg x-show="loading" class="w-4 h-4 mr-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span x-text="loading ? 'Creating...' : 'Create Category'"></span>
                         </button>
                     </div>
                 </div>

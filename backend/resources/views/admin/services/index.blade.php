@@ -1,17 +1,104 @@
 @extends('admin.layouts.app')
 
 @section('content')
+<!-- Debug session data -->
+@if(session()->has('success') || session()->has('error'))
+    <script>
+        console.log('Session data:', @json(session()->all()));
+    </script>
+@endif
+
+@include('admin.components.notification')
+
+@if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showNotification('Success', '{{ session('success') }}');
+        });
+    </script>
+@endif
+
+@if(session('error'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showNotification('Error', '{{ session('error') }}', 'error');
+        });
+    </script>
+@endif
+
 <div class="container px-6 mx-auto">
-    <div class="flex justify-between items-center">
-        <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">
-            Services
-        </h2>
-        <a href="{{ route('admin.services.create') }}"
-           class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
-            Add Service
-        </a>
+    <!-- Debug button -->
+    <!-- @if(config('app.debug'))
+    <button onclick="showNotification('Test notification', 'success')" 
+            class="mb-4 px-4 py-2 bg-gray-200 rounded">
+        Test Notification
+    </button>
+    @endif -->
+
+    <div class="sm:flex sm:items-center sm:justify-between">
+        <div>
+            <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">
+                Services
+            </h2>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                Manage your services and their details
+            </p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <a href="{{ route('admin.services.create') }}"
+               class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add New Service
+            </a>
+        </div>
     </div>
 
+    <!-- Filters -->
+    <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow px-4 py-4 sm:px-6">
+        <form action="{{ route('admin.services.index') }}" method="GET" class="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:space-x-4">
+            <div class="flex-1">
+                <label for="search" class="sr-only">Search</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input type="text" 
+                           name="search" 
+                           id="search"
+                           value="{{ request('search') }}"
+                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                           placeholder="Search services...">
+                </div>
+            </div>
+            <div>
+                <select name="category" 
+                        class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200">
+                    <option value="">All Categories</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                            {{ $category->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="flex-shrink-0">
+                <button type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                    Filter
+                </button>
+                <a href="{{ route('admin.services.index') }}"
+                   class="ml-3 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                    Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Table -->
     <div class="mt-6">
         <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -92,7 +179,7 @@
             </table>
         </div>
         <div class="mt-4">
-            {{ $services->links() }}
+            {{ $services->withQueryString()->links() }}
         </div>
     </div>
 </div>
@@ -134,4 +221,5 @@ function deleteService(id) {
 }
 </script>
 @endpush
+
 @endsection 

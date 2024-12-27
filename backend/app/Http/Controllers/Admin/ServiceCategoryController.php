@@ -11,7 +11,14 @@ class ServiceCategoryController extends Controller
 {
     public function index()
     {
-        $categories = ServiceCategory::withCount('services')->latest()->paginate(10);
+        $categories = ServiceCategory::withCount('services')
+            ->when(request('search'), function($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate(10);
+
         return view('admin.services.categories.index', compact('categories'));
     }
 

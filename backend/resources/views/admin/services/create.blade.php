@@ -1,6 +1,7 @@
 @extends('admin.layouts.app')
 
 @section('content')
+@include('admin.components.notification')
 <div class="container px-6 mx-auto">
     <div class="flex items-center justify-between">
         <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">
@@ -14,7 +15,7 @@
 
     <div class="mt-6">
         <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
-            <form action="{{ route('admin.services.store') }}" method="POST">
+            <form action="{{ route('admin.services.store') }}" method="POST" id="createForm">
                 @csrf
 
                 <div class="space-y-6">
@@ -128,8 +129,13 @@
 
                     <div class="flex justify-end">
                         <button type="submit"
-                                class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
-                            Create Service
+                                id="submitButton"
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
+                            <svg id="loadingIcon" class="hidden w-4 h-4 mr-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span id="buttonText">Create Service</span>
                         </button>
                     </div>
                 </div>
@@ -137,4 +143,48 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.getElementById('createForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const button = document.getElementById('submitButton');
+    const loadingIcon = document.getElementById('loadingIcon');
+    const buttonText = document.getElementById('buttonText');
+    
+    button.disabled = true;
+    loadingIcon.classList.remove('hidden');
+    buttonText.textContent = 'Creating...';
+
+    try {
+        const formData = new FormData(this);
+        const response = await fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            showNotification(data.title, data.message);
+            window.location.href = data.redirect;
+        } else {
+            showNotification('Error', data.message || 'Failed to create service', 'error');
+            button.disabled = false;
+            loadingIcon.classList.add('hidden');
+            buttonText.textContent = 'Create Service';
+        }
+    } catch (error) {
+        showNotification('An error occurred while creating the service', 'error');
+        button.disabled = false;
+        loadingIcon.classList.add('hidden');
+        buttonText.textContent = 'Create Service';
+    }
+});
+</script>
+@endpush
 @endsection 

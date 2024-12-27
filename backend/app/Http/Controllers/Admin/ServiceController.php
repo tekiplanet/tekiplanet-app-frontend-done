@@ -11,8 +11,20 @@ class ServiceController extends Controller
 {
     public function index()
     {
-        $services = Service::with('category')->latest()->paginate(10);
-        return view('admin.services.index', compact('services'));
+        $services = Service::with('category')
+            ->when(request('search'), function($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('short_description', 'like', "%{$search}%")
+                    ->orWhere('long_description', 'like', "%{$search}%");
+            })
+            ->when(request('category'), function($query, $category) {
+                $query->where('category_id', $category);
+            })
+            ->latest()
+            ->paginate(10);
+
+        $categories = ServiceCategory::all();
+        return view('admin.services.index', compact('services', 'categories'));
     }
 
     public function create()
@@ -33,11 +45,35 @@ class ServiceController extends Controller
             'is_featured' => 'boolean'
         ]);
 
-        Service::create($validated);
-
-        return redirect()
-            ->route('admin.services.index')
-            ->with('success', 'Service created successfully');
+        try {
+            Service::create($validated);
+            
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'title' => 'Success',
+                    'message' => 'Service created successfully',
+                    'redirect' => route('admin.services.index')
+                ]);
+            }
+            
+            return redirect()
+                ->route('admin.services.index')
+                ->with('success', 'Service created successfully');
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'title' => 'Error',
+                    'message' => 'Failed to create service: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to create service: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     public function edit(Service $service)
@@ -58,11 +94,35 @@ class ServiceController extends Controller
             'is_featured' => 'boolean'
         ]);
 
-        $service->update($validated);
-
-        return redirect()
-            ->route('admin.services.index')
-            ->with('success', 'Service updated successfully');
+        try {
+            $service->update($validated);
+            
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'title' => 'Success',
+                    'message' => 'Service updated successfully',
+                    'redirect' => route('admin.services.index')
+                ]);
+            }
+            
+            return redirect()
+                ->route('admin.services.index')
+                ->with('success', 'Service updated successfully');
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'title' => 'Error',
+                    'message' => 'Failed to update service: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to update service: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     public function destroy(Service $service)
