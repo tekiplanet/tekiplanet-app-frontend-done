@@ -208,6 +208,151 @@
                 </div>
             </div>
         </div>
+
+        <!-- Chat Section -->
+        <div class="mt-6 bg-white rounded-lg shadow-md dark:bg-gray-800 p-6">
+            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">
+                Messages
+            </h3>
+            
+            <!-- Messages Container -->
+            <div id="messages-container" class="space-y-4 h-96 overflow-y-auto mb-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <!-- Messages will be loaded here -->
+            </div>
+
+            <!-- Message Input -->
+            <div class="flex gap-2">
+                <input type="text" 
+                       id="message-input"
+                       class="flex-1 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                       placeholder="Type your message...">
+                <button onclick="sendMessage()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                        id="send-message-btn">
+                    Send
+                </button>
+            </div>
+        </div>
+
+        @push('scripts')
+        <script>
+        let isLoadingMessages = false;
+        let lastMessageId = null;
+
+        // Message template function
+        function createMessageElement(message) {
+            const isAdmin = message.sender_type === 'admin';
+            return `
+                <div class="flex ${isAdmin ? 'justify-end' : 'justify-start'}">
+                    <div class="flex items-start gap-2 max-w-[80%] ${isAdmin ? 'flex-row-reverse' : ''}">
+                        <img class="w-8 h-8 rounded-full" 
+                             src="${message.sender_avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(message.sender_name)}" 
+                             alt="${message.sender_name}">
+                        <div>
+                            <div class="flex items-center gap-2 ${isAdmin ? 'flex-row-reverse' : ''}">
+                                <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                    ${message.sender_name}
+                                </span>
+                                <span class="text-xs text-gray-500">
+                                    ${message.created_at}
+                                </span>
+                            </div>
+                            <div class="mt-1 p-3 rounded-lg ${isAdmin ? 'bg-blue-100 dark:bg-blue-900' : 'bg-gray-100 dark:bg-gray-800'}">
+                                ${message.message}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Load messages
+        async function loadMessages() {
+            if (isLoadingMessages) return;
+            isLoadingMessages = true;
+
+            try {
+                const response = await fetch('{{ route('admin.hustles.messages', $hustle) }}');
+                const messages = await response.json();
+                
+                const container = document.getElementById('messages-container');
+                container.innerHTML = messages.map(message => createMessageElement(message)).join('');
+                
+                // Scroll to bottom
+                container.scrollTop = container.scrollHeight;
+            } catch (error) {
+                console.error('Failed to load messages:', error);
+            } finally {
+                isLoadingMessages = false;
+            }
+        }
+
+        // Send message
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const button = document.getElementById('send-message-btn');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            button.disabled = true;
+            input.disabled = true;
+
+            try {
+                const response = await fetch('{{ route('admin.hustles.messages.send', $hustle) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Add new message to container
+                    const container = document.getElementById('messages-container');
+                    container.insertAdjacentHTML('beforeend', createMessageElement(data.message));
+                    
+                    // Clear input
+                    input.value = '';
+                    
+                    // Scroll to bottom
+                    container.scrollTop = container.scrollHeight;
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                console.error('Failed to send message:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Failed to send message. Please try again.',
+                    icon: 'error'
+                });
+            } finally {
+                button.disabled = false;
+                input.disabled = false;
+                input.focus();
+            }
+        }
+
+        // Handle enter key
+        document.getElementById('message-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Load messages on page load
+        loadMessages();
+
+        // Poll for new messages every 5 seconds
+        setInterval(loadMessages, 5000);
+        </script>
+        @endpush
     @endif
 </div>
 @endsection

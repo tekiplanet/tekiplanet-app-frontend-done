@@ -14,6 +14,7 @@ use App\Models\HustlePayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Transaction;
+use App\Mail\NewHustleMessage;
 
 class HustleController extends Controller
 {
@@ -306,6 +307,89 @@ class HustleController extends Controller
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
             }
             return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function getMessages(Request $request, Hustle $hustle)
+    {
+        $messages = $hustle->messages()
+            ->with('user')
+            ->latest()
+            ->get()
+            ->map(function ($message) {
+                return [
+                    'id' => $message->id,
+                    'message' => $message->message,
+                    'sender_type' => $message->sender_type,
+                    'sender_name' => $message->user->name,
+                    'sender_avatar' => $message->user->avatar,
+                    'created_at' => $message->created_at->diffForHumans(),
+                    'is_admin' => $message->sender_type === 'admin'
+                ];
+            });
+
+        return response()->json($messages);
+    }
+
+    public function sendMessage(Request $request, Hustle $hustle)
+    {
+        try {
+            $validated = $request->validate([
+                'message' => 'required|string'
+            ]);
+
+            $message = $hustle->messages()->create([
+                'user_id' => auth()->id(),
+                'message' => $validated['message'],
+                'sender_type' => 'admin',
+                'is_read' => false
+            ]);
+
+            // Load the user relationship for the broadcast
+            $message->load('user');
+
+            // Broadcast the new message
+            broadcast(new NewHustleMessage($message))->toOthers();
+
+            // Send notification to professional
+            $professional = $hustle->assignedProfessional;
+            $notificationService = app(NotificationService::class);
+
+            $notificationData = [
+                'type' => 'new_message',
+                'title' => 'New Message',
+                'message' => "You have a new message regarding '{$hustle->title}'",
+                'icon' => 'chat',
+                'action_url' => '/dashboard/hustles/' . $hustle->id . '/messages',
+                'extra_data' => [
+                    'hustle_id' => $hustle->id,
+                    'message_id' => $message->id
+                ]
+            ];
+
+            $notificationService->send($notificationData, $professional->user);
+
+            // Send email
+            Mail::to($professional->user->email)
+                ->queue(new NewHustleMessage($hustle, $professional->user, $message));
+
+            return response()->json([
+                'success' => true,
+                'message' => [
+                    'id' => $message->id,
+                    'message' => $message->message,
+                    'sender_type' => $message->sender_type,
+                    'sender_name' => auth()->user()->name,
+                    'sender_avatar' => auth()->user()->avatar,
+                    'created_at' => $message->created_at->diffForHumans(),
+                    'is_admin' => true
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send message: ' . $e->getMessage()
+            ], 422);
         }
     }
 } 

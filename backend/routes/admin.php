@@ -222,5 +222,10 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
 
         Route::patch('hustles/{hustle}/payments/{payment}/status', [HustleController::class, 'updatePaymentStatus'])
             ->name('hustles.payments.update-status');
+
+        Route::get('hustles/{hustle}/messages', [HustleController::class, 'getMessages'])
+            ->name('hustles.messages');
+        Route::post('hustles/{hustle}/messages', [HustleController::class, 'sendMessage'])
+            ->name('hustles.messages.send');
     });
 }); 

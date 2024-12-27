@@ -6,6 +6,7 @@ use App\Models\HustleMessage;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
@@ -18,20 +19,19 @@ class NewHustleMessage implements ShouldBroadcast
 
     public function __construct(HustleMessage $message)
     {
-        $this->message = $message;
+        $this->message = [
+            'id' => $message->id,
+            'message' => $message->message,
+            'sender_type' => $message->sender_type,
+            'sender_name' => $message->user->name,
+            'sender_avatar' => $message->user->avatar,
+            'created_at' => $message->created_at->diffForHumans(),
+            'is_admin' => $message->sender_type === 'admin'
+        ];
     }
 
     public function broadcastOn()
     {
-        return new Channel('hustle.' . $this->message->hustle_id);
-    }
-
-    public function broadcastWith()
-    {
-        return [
-            'message' => array_merge($this->message->toArray(), [
-                'user' => $this->message->user
-            ])
-        ];
+        return new PrivateChannel('hustle.'.$this->message['hustle_id']);
     }
 } 

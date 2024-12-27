@@ -18,6 +18,7 @@
     @stack('styles')
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://js.pusher.com/8.0.1/pusher.min.js"></script>
 </head>
 <body class="h-full font-sans antialiased">
     @auth('admin')
