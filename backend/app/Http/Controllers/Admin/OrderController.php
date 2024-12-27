@@ -5,11 +5,21 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
+use App\Notifications\OrderStatusUpdated;
+use App\Notifications\OrderTrackingUpdated;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     public function index(Request $request)
     {
         $query = Order::with(['user', 'items', 'shippingAddress', 'shippingMethod']);
@@ -72,6 +82,27 @@ class OrderController extends Controller
             // Update order status
             $order->update(['status' => $validated['status']]);
 
+            // Send email notification
+            $order->user->notify(new OrderStatusUpdated(
+                $order,
+                $validated['status'],
+                $validated['notes']
+            ));
+
+            // Send in-app notification
+            $this->notificationService->send([
+                'type' => 'order_status_updated',
+                'title' => 'Order Status Updated',
+                'message' => "Your order #{$order->id} status has been updated to " . ucfirst($validated['status']),
+                'icon' => 'package',
+                'action_url' => "/orders/{$order->id}/tracking",
+                'extra_data' => [
+                    'order_id' => $order->id,
+                    'status' => $validated['status'],
+                    'notes' => $validated['notes']
+                ]
+            ], $order->user);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Order status updated successfully'
@@ -101,6 +132,29 @@ class OrderController extends Controller
                     'location' => $validated['location']
                 ]
             );
+
+            // Send email notification
+            $order->user->notify(new OrderTrackingUpdated(
+                $order,
+                $validated['status'],
+                $validated['location'],
+                $validated['description']
+            ));
+
+            // Send in-app notification
+            $this->notificationService->send([
+                'type' => 'order_tracking_updated',
+                'title' => 'Order Tracking Updated',
+                'message' => "New tracking update for order #{$order->id}: " . ucfirst($validated['status']),
+                'icon' => 'truck',
+                'action_url' => "/orders/{$order->id}/tracking",
+                'extra_data' => [
+                    'order_id' => $order->id,
+                    'status' => $validated['status'],
+                    'location' => $validated['location'],
+                    'description' => $validated['description']
+                ]
+            ], $order->user);
 
             return response()->json([
                 'success' => true,
