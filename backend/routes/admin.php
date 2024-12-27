@@ -254,6 +254,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
             Route::post('/timeslots', [ConsultingTimeSlotController::class, 'store'])->name('timeslots.store');
             Route::post('/timeslots/bulk-create', [ConsultingTimeSlotController::class, 'bulkCreate'])->name('timeslots.bulk-create');
             Route::post('/timeslots/bulk-delete', [ConsultingTimeSlotController::class, 'bulkDestroy'])->name('timeslots.bulk-destroy');
+            Route::get('/timeslots/{timeSlot}/edit', [ConsultingTimeSlotController::class, 'edit'])->name('timeslots.edit');
             Route::put('/timeslots/{timeSlot}', [ConsultingTimeSlotController::class, 'update'])->name('timeslots.update');
             Route::delete('/timeslots/{timeSlot}', [ConsultingTimeSlotController::class, 'destroy'])->name('timeslots.destroy');
         });

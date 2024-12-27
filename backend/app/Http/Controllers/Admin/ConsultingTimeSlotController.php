@@ -148,4 +148,12 @@ class ConsultingTimeSlotController extends Controller
             ], 500);
         }
     }
+
+    public function edit(ConsultingTimeSlot $timeSlot)
+    {
+        return response()->json([
+            'capacity' => $timeSlot->capacity,
+            'is_available' => $timeSlot->is_available
+        ]);
+    }
 } 

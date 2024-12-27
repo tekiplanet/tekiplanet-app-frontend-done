@@ -88,9 +88,9 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex gap-2">
-                                    <button onclick="openEditModal({{ $slot->id }})" 
+                                    <button onclick="openEditModal('{{ $slot->id }}')" 
                                             class="text-blue-600 hover:text-blue-900">Edit</button>
-                                    <button onclick="confirmDelete({{ $slot->id }})" 
+                                    <button onclick="openDeleteModal('{{ $slot->id }}')" 
                                             class="text-red-600 hover:text-red-900">Delete</button>
                                 </div>
                             </td>
@@ -246,8 +246,15 @@
                     Cancel
                 </button>
                 <button onclick="saveEdit()" 
+                        id="saveEditButton"
                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Save Changes
+                    <div class="flex items-center gap-2">
+                        <svg id="editSpinner" class="animate-spin h-4 w-4 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span id="editButtonText">Save Changes</span>
+                    </div>
                 </button>
             </div>
         </div>
@@ -296,7 +303,7 @@ function openCreateModal() {
 
 function openEditModal(id) {
     currentTimeSlotId = id;
-    fetch(`/admin/consulting/timeslots/${id}/edit`)
+    fetch(`{{ route('admin.consulting.timeslots.edit', ['timeSlot' => ':id']) }}`.replace(':id', id))
         .then(response => response.json())
         .then(data => {
             const form = document.getElementById('editForm');
@@ -315,8 +322,21 @@ function closeEditModal() {
 }
 
 function saveEdit() {
+    const editButton = document.getElementById('saveEditButton');
+    const editSpinner = document.getElementById('editSpinner');
+    const editButtonText = document.getElementById('editButtonText');
+
+    // Disable button and show loading state
+    editButton.disabled = true;
+    editSpinner.classList.remove('hidden');
+    editButtonText.textContent = 'Saving...';
+
     const form = document.getElementById('editForm');
     const formData = new FormData(form);
+    const data = {
+        capacity: parseInt(formData.get('capacity')),
+        is_available: formData.get('is_available') === 'on'
+    };
 
     fetch(`/admin/consulting/timeslots/${currentTimeSlotId}`, {
         method: 'PUT',
@@ -324,12 +344,13 @@ function saveEdit() {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': '{{ csrf_token() }}'
         },
-        body: JSON.stringify(Object.fromEntries(formData))
+        body: JSON.stringify(data)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             showNotification('Success', data.message);
+            closeEditModal();
             setTimeout(() => window.location.reload(), 1000);
         } else {
             throw new Error(data.message);
@@ -337,6 +358,10 @@ function saveEdit() {
     })
     .catch(error => {
         showNotification('Error', error.message, 'error');
+        // Reset button state on error
+        editButton.disabled = false;
+        editSpinner.classList.add('hidden');
+        editButtonText.textContent = 'Save Changes';
     });
 }
 
@@ -541,17 +566,6 @@ function openBulkDeleteModal() {
     document.getElementById('deleteModal').classList.remove('hidden');
     currentTimeSlotId = null; // Set to null to indicate bulk delete
 }
-
-// Update the onclick handlers in the table
-document.querySelectorAll('[onclick^="openEditModal("]').forEach(button => {
-    const id = button.getAttribute('onclick').match(/\d+/)[0];
-    button.setAttribute('onclick', `openEditModal('${id}')`);
-});
-
-document.querySelectorAll('[onclick^="confirmDelete("]').forEach(button => {
-    const id = button.getAttribute('onclick').match(/\d+/)[0];
-    button.setAttribute('onclick', `openDeleteModal('${id}')`);
-});
 </script>
 @endpush
 @endsection 
