@@ -105,10 +105,10 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <button 
                                 onclick="toggleFeatured('{{ $category->id }}')"
-                                class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 {{ $category->is_featured ? 'bg-primary-600' : 'bg-gray-200' }}"
+                                type="button"
+                                class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 {{ $category->is_featured ? 'bg-green-500' : 'bg-gray-200' }} dark:bg-gray-700"
                                 role="switch"
-                                aria-checked="{{ $category->is_featured ? 'true' : 'false' }}"
-                            >
+                                aria-checked="{{ $category->is_featured ? 'true' : 'false' }}">
                                 <span 
                                     aria-hidden="true" 
                                     class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {{ $category->is_featured ? 'translate-x-5' : 'translate-x-0' }}"
@@ -153,11 +153,16 @@ async function toggleFeatured(id) {
         });
 
         if (!response.ok) throw new Error('Failed to toggle featured status');
-
-        window.location.reload();
+        
+        const data = await response.json();
+        if (data.success) {
+            window.location.reload();
+        } else {
+            showNotification('Error', 'Failed to toggle featured status', 'error');
+        }
     } catch (error) {
         console.error('Error:', error);
-        alert('Failed to toggle featured status');
+        showNotification('Error', 'Failed to toggle featured status', 'error');
     }
 }
 
