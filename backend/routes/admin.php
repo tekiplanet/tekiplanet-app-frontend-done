@@ -18,6 +18,8 @@ use App\Http\Controllers\Admin\ShippingMethodController;
 use App\Http\Controllers\Admin\ShippingAddressController;
 use App\Http\Controllers\Admin\ServiceCategoryController;
 use App\Http\Controllers\Admin\ServiceController;
+use App\Http\Controllers\Admin\TransactionController;
+use App\Http\Controllers\Admin\BankAccountController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
@@ -175,5 +177,18 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::resource('services', ServiceController::class);
         Route::post('services/{service}/toggle-featured', [ServiceController::class, 'toggleFeatured'])
             ->name('services.toggle-featured');
+
+        // Add these inside the middleware('auth:admin') group
+        Route::prefix('transactions')->name('transactions.')->group(function () {
+            Route::get('/', [TransactionController::class, 'index'])->name('index');
+            Route::get('/{transaction}', [TransactionController::class, 'show'])->name('show');
+            Route::patch('/{transaction}/status', [TransactionController::class, 'updateStatus'])->name('update-status');
+        });
+
+        Route::prefix('bank-accounts')->name('bank-accounts.')->group(function () {
+            Route::get('/', [BankAccountController::class, 'index'])->name('index');
+            Route::get('/{bankAccount}', [BankAccountController::class, 'show'])->name('show');
+            Route::patch('/{bankAccount}/verification', [BankAccountController::class, 'updateVerification'])->name('update-verification');
+        });
     });
 }); 
