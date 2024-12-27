@@ -144,8 +144,8 @@
             <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">
                 Messages
             </h3>
-            <div class="space-y-4 max-h-96 overflow-y-auto mb-4" id="messages">
-                @foreach($quote->messages as $message)
+            <div class="flex flex-col space-y-4 max-h-96 overflow-y-auto mb-4" id="messages">
+                @foreach($quote->messages->sortBy('created_at') as $message)
                     <div class="flex gap-4 {{ $message->sender_type === 'admin' ? 'flex-row-reverse' : '' }}">
                         <div class="flex-shrink-0">
                             <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
@@ -310,32 +310,40 @@ document.getElementById('messageForm').addEventListener('submit', function(e) {
     });
 });
 
-// Listen for real-time messages from other users
-Echo.private(`quote.${quote.id}`)
+// Listen for real-time messages
+Echo.private('quote.{{ $quote->id }}')
     .listen('NewQuoteMessage', (e) => {
         const message = e.message;
-        if (message.sender_type !== 'admin') {
-            const messagesContainer = document.getElementById('messages');
-            const html = `
-                <div class="flex gap-4">
-                    <div class="flex-shrink-0">
-                        <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                            ${message.user.first_name.charAt(0)}
-                        </div>
-                    </div>
-                    <div class="flex-1 bg-gray-100 rounded-lg p-4">
-                        <div class="text-sm text-gray-600">
-                            ${message.user.first_name} ${message.user.last_name}
-                        </div>
-                        <div class="mt-1">${message.message}</div>
-                        <div class="text-xs text-gray-500 mt-1">Just now</div>
+        const messagesContainer = document.getElementById('messages');
+        const html = `
+            <div class="flex gap-4 ${message.sender_type === 'admin' ? 'flex-row-reverse' : ''}">
+                <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                        ${message.sender_type === 'admin' ? 
+                            message.user.name.charAt(0) : 
+                            message.user.first_name.charAt(0)}
                     </div>
                 </div>
-            `;
-            messagesContainer.insertAdjacentHTML('beforeend', html);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
+                <div class="flex-1 ${message.sender_type === 'admin' ? 'bg-blue-100' : 'bg-gray-100'} rounded-lg p-4">
+                    <div class="text-sm text-gray-600">
+                        ${message.sender_type === 'admin' ? 
+                            message.user.name : 
+                            `${message.user.first_name} ${message.user.last_name}`}
+                    </div>
+                    <div class="mt-1">${message.message}</div>
+                    <div class="text-xs text-gray-500 mt-1">Just now</div>
+                </div>
+            </div>
+        `;
+        messagesContainer.insertAdjacentHTML('beforeend', html);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
+
+// Scroll to bottom on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const messagesContainer = document.getElementById('messages');
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+});
 </script>
 @endpush
 @endsection 

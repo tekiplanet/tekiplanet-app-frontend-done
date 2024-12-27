@@ -6,6 +6,8 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use App\Models\Quote;
+use Illuminate\Support\Facades\Broadcast;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -25,7 +27,9 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Broadcast::channel('quote.{quote}', function ($user, Quote $quote) {
+            return true; // Or add your authorization logic here
+        });
     }
 
     /**
