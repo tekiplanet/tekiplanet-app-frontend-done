@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class BankAccount extends Model
 {
     use HasUuids;
+    use HasFactory;
 
     protected $fillable = [
         'user_id',
@@ -24,6 +26,11 @@ class BankAccount extends Model
         'is_verified' => 'boolean',
         'is_default' => 'boolean'
     ];
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'bank_account_id');
+    }
 
     public function user()
     {

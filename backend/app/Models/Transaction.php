@@ -31,6 +31,11 @@ class Transaction extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function bankAccount()
+    {
+        return $this->belongsTo(BankAccount::class);
+    }
+
     // Scope for easy filtering
     public function scopeCredits($query)
     {
