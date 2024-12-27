@@ -342,14 +342,34 @@ class HustleController extends Controller
             $professional = $hustle->assignedProfessional;
 
             $message = $hustle->messages()->create([
-                'user_id' => $professional->user_id,  // Use the professional's user_id
+                'user_id' => $professional->user_id,
                 'message' => $validated['message'],
-                'sender_type' => 'admin',  // This identifies it as an admin message
+                'sender_type' => 'admin',
                 'is_read' => false
             ]);
 
             // Load the user relationship
             $message->load('user');
+
+            // Send notification using NotificationService
+            $notificationService = app(NotificationService::class);
+            $notificationData = [
+                'type' => 'new_message',
+                'title' => 'New Message from Admin',
+                'message' => "You have received a new message regarding '{$hustle->title}'",
+                'icon' => 'chat',
+                'action_url' => '/dashboard/hustles/' . $hustle->id . '/messages',
+                'extra_data' => [
+                    'hustle_id' => $hustle->id,
+                    'message_id' => $message->id
+                ]
+            ];
+
+            $notificationService->send($notificationData, $professional->user);
+
+            // Send email
+            Mail::to($professional->user->email)
+                ->queue(new NewHustleMessage($hustle, $professional->user, $message));
 
             return response()->json([
                 'success' => true,
@@ -357,8 +377,8 @@ class HustleController extends Controller
                     'id' => $message->id,
                     'message' => $message->message,
                     'sender_type' => $message->sender_type,
-                    'sender_name' => 'Admin', // Just use 'Admin' as the sender name
-                    'sender_avatar' => null,  // You can set a default admin avatar if needed
+                    'sender_name' => 'Admin',
+                    'sender_avatar' => null,
                     'created_at' => $message->created_at->diffForHumans(),
                     'is_admin' => true
                 ]
