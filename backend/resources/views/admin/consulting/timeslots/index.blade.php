@@ -8,7 +8,8 @@
         </h2>
         <div class="flex gap-2">
             <button id="bulkDeleteBtn" 
-                    onclick="confirmBulkDelete()" 
+                    type="button"
+                    onclick="openBulkDeleteModal()"
                     disabled
                     class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed">
                 Delete Selected
@@ -218,6 +219,70 @@
     </div>
 </div>
 
+<!-- Edit Modal -->
+<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg max-w-md w-full dark:bg-gray-800">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Edit Time Slot</h3>
+                <form id="editForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Capacity</label>
+                        <input type="number" name="capacity" required min="1"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" name="is_available" id="edit_is_available"
+                               class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <label for="edit_is_available" class="ml-2 block text-sm text-gray-900 dark:text-gray-100">
+                            Available
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 flex justify-end gap-2">
+                <button onclick="closeEditModal()" 
+                        class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900">
+                    Cancel
+                </button>
+                <button onclick="saveEdit()" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg max-w-md w-full dark:bg-gray-800">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Confirm Delete</h3>
+                <p class="text-gray-700 dark:text-gray-300" id="deleteModalMessage">
+                    Are you sure you want to delete this time slot?
+                </p>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 flex justify-end gap-2">
+                <button onclick="closeDeleteModal()" 
+                        class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900">
+                    Cancel
+                </button>
+                <button onclick="confirmDelete()" 
+                        id="confirmDeleteButton"
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2">
+                    <svg id="deleteSpinner" class="animate-spin h-4 w-4 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span id="deleteButtonText">Delete</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 let currentTimeSlotId = null;
@@ -231,20 +296,48 @@ function openCreateModal() {
 
 function openEditModal(id) {
     currentTimeSlotId = id;
-    document.getElementById('modalTitle').textContent = 'Edit Time Slot';
-    
-    // Fetch time slot data and populate form
     fetch(`/admin/consulting/timeslots/${id}/edit`)
         .then(response => response.json())
         .then(data => {
-            const form = document.getElementById('timeSlotForm');
-            form.date.value = data.date;
-            form.time.value = data.time;
+            const form = document.getElementById('editForm');
             form.capacity.value = data.capacity;
             form.is_available.checked = data.is_available;
+            document.getElementById('editModal').classList.remove('hidden');
+        })
+        .catch(error => {
+            showNotification('Error', 'Failed to load time slot data', 'error');
         });
-    
-    document.getElementById('timeSlotModal').classList.remove('hidden');
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').classList.add('hidden');
+    currentTimeSlotId = null;
+}
+
+function saveEdit() {
+    const form = document.getElementById('editForm');
+    const formData = new FormData(form);
+
+    fetch(`/admin/consulting/timeslots/${currentTimeSlotId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify(Object.fromEntries(formData))
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Success', data.message);
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            throw new Error(data.message);
+        }
+    })
+    .catch(error => {
+        showNotification('Error', error.message, 'error');
+    });
 }
 
 function closeModal() {
@@ -334,9 +427,30 @@ function saveBulkCreate() {
     });
 }
 
-function confirmDelete(id) {
-    if (confirm('Are you sure you want to delete this time slot?')) {
-        fetch(`/admin/consulting/timeslots/${id}`, {
+function openDeleteModal(id) {
+    currentTimeSlotId = id;
+    document.getElementById('deleteModalMessage').textContent = 'Are you sure you want to delete this time slot?';
+    document.getElementById('deleteModal').classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+    currentTimeSlotId = null;
+}
+
+function confirmDelete() {
+    const deleteButton = document.getElementById('confirmDeleteButton');
+    const deleteSpinner = document.getElementById('deleteSpinner');
+    const deleteButtonText = document.getElementById('deleteButtonText');
+
+    // Disable button and show loading state
+    deleteButton.disabled = true;
+    deleteSpinner.classList.remove('hidden');
+    deleteButtonText.textContent = 'Deleting...';
+
+    if (currentTimeSlotId) {
+        // Single delete
+        fetch(`/admin/consulting/timeslots/${currentTimeSlotId}`, {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -354,6 +468,45 @@ function confirmDelete(id) {
         })
         .catch(error => {
             showNotification('Error', error.message, 'error');
+            // Reset button state on error
+            deleteButton.disabled = false;
+            deleteSpinner.classList.add('hidden');
+            deleteButtonText.textContent = 'Delete';
+        })
+        .finally(() => {
+            closeDeleteModal();
+        });
+    } else {
+        // Bulk delete
+        const selectedIds = Array.from(document.querySelectorAll('.slot-checkbox:checked'))
+            .map(checkbox => checkbox.value);
+
+        fetch(`{{ route("admin.consulting.timeslots.bulk-destroy") }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ ids: selectedIds })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Success', data.message);
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                throw new Error(data.message);
+            }
+        })
+        .catch(error => {
+            showNotification('Error', error.message, 'error');
+            // Reset button state on error
+            deleteButton.disabled = false;
+            deleteSpinner.classList.add('hidden');
+            deleteButtonText.textContent = 'Delete';
+        })
+        .finally(() => {
+            closeDeleteModal();
         });
     }
 }
@@ -377,35 +530,28 @@ slotCheckboxes.forEach(checkbox => {
 function updateBulkDeleteButton() {
     const selectedCount = document.querySelectorAll('.slot-checkbox:checked').length;
     bulkDeleteBtn.disabled = selectedCount === 0;
+    bulkDeleteBtn.textContent = selectedCount > 0 ? `Delete Selected (${selectedCount})` : 'Delete Selected';
 }
 
-function confirmBulkDelete() {
-    const selectedIds = Array.from(document.querySelectorAll('.slot-checkbox:checked'))
-        .map(checkbox => checkbox.value);
-
-    if (confirm(`Are you sure you want to delete ${selectedIds.length} time slots?`)) {
-        fetch('{{ route("admin.consulting.timeslots.bulk-destroy") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({ ids: selectedIds })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('Success', data.message);
-                setTimeout(() => window.location.reload(), 1000);
-            } else {
-                throw new Error(data.message);
-            }
-        })
-        .catch(error => {
-            showNotification('Error', error.message, 'error');
-        });
-    }
+function openBulkDeleteModal() {
+    const selectedCount = document.querySelectorAll('.slot-checkbox:checked').length;
+    if (selectedCount === 0) return; // Don't open modal if no selections
+    document.getElementById('deleteModalMessage').textContent = 
+        `Are you sure you want to delete ${selectedCount} selected time slots?`;
+    document.getElementById('deleteModal').classList.remove('hidden');
+    currentTimeSlotId = null; // Set to null to indicate bulk delete
 }
+
+// Update the onclick handlers in the table
+document.querySelectorAll('[onclick^="openEditModal("]').forEach(button => {
+    const id = button.getAttribute('onclick').match(/\d+/)[0];
+    button.setAttribute('onclick', `openEditModal('${id}')`);
+});
+
+document.querySelectorAll('[onclick^="confirmDelete("]').forEach(button => {
+    const id = button.getAttribute('onclick').match(/\d+/)[0];
+    button.setAttribute('onclick', `openDeleteModal('${id}')`);
+});
 </script>
 @endpush
 @endsection 
