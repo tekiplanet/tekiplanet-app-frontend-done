@@ -20,6 +20,8 @@ use App\Http\Controllers\Admin\ServiceCategoryController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\BankAccountController;
+use App\Http\Controllers\Admin\HustleController;
+use App\Http\Controllers\Admin\HustleApplicationController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
@@ -191,6 +193,22 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
             Route::get('/', [BankAccountController::class, 'index'])->name('index');
             Route::get('/{bankAccount}', [BankAccountController::class, 'show'])->name('show');
             Route::patch('/{bankAccount}/verification', [BankAccountController::class, 'updateVerification'])->name('update-verification');
+        });
+
+        // Add these inside the middleware('auth:admin') group
+        Route::prefix('hustles')->name('hustles.')->group(function () {
+            Route::get('/', [HustleController::class, 'index'])->name('index');
+            Route::get('/create', [HustleController::class, 'create'])->name('create');
+            Route::post('/', [HustleController::class, 'store'])->name('store');
+            Route::get('/{hustle}', [HustleController::class, 'show'])->name('show');
+            Route::get('/{hustle}/edit', [HustleController::class, 'edit'])->name('edit');
+            Route::put('/{hustle}', [HustleController::class, 'update'])->name('update');
+            Route::delete('/{hustle}', [HustleController::class, 'destroy'])->name('destroy');
+            
+            // Applications routes
+            Route::get('/{hustle}/applications', [HustleApplicationController::class, 'index'])->name('applications.index');
+            Route::get('/{hustle}/applications/{application}', [HustleApplicationController::class, 'show'])->name('applications.show');
+            Route::patch('/{hustle}/applications/{application}/status', [HustleApplicationController::class, 'updateStatus'])->name('applications.update-status');
         });
     });
 }); 
