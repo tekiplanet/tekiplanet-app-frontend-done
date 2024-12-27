@@ -196,18 +196,14 @@ function addQuoteField() {
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
                         <option value="text">Text</option>
                         <option value="textarea">Textarea</option>
-                        <option value="select">Select (Single)</option>
-                        <option value="multiselect">Select (Multiple)</option>
-                        <option value="checkbox">Checkbox</option>
-                        <option value="radio">Radio</option>
-                        <option value="date">Date</option>
-                        <option value="datetime">Date & Time</option>
-                        <option value="time">Time</option>
                         <option value="number">Number</option>
+                        <option value="select">Select</option>
+                        <option value="multi-select">Multi Select</option>
+                        <option value="radio">Radio</option>
+                        <option value="checkbox">Checkbox</option>
+                        <option value="date">Date</option>
                         <option value="email">Email</option>
-                        <option value="tel">Phone</option>
-                        <option value="url">URL</option>
-                        <option value="file">File Upload</option>
+                        <option value="phone">Phone</option>
                     </select>
                 </div>
                 <div>
@@ -241,7 +237,7 @@ function toggleOptions(id) {
     const select = document.querySelector(`[name="quote_fields[${id}][type]"]`);
     const optionsContainer = document.getElementById(`options-${id}`);
     
-    if (['select', 'multiselect', 'checkbox', 'radio'].includes(select.value)) {
+    if (['select', 'multi-select', 'checkbox', 'radio'].includes(select.value)) {
         optionsContainer.classList.remove('hidden');
     } else {
         optionsContainer.classList.add('hidden');

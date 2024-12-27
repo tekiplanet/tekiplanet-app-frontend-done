@@ -46,7 +46,19 @@ class QuoteController extends Controller
 
     public function show(Quote $quote)
     {
-        $quote->load(['user', 'service.quoteFields', 'assignedTo', 'messages.user']);
+        $quote->load([
+            'user', 
+            'service',
+            'assignedTo', 
+            'messages.user'
+        ]);
+
+        if ($quote->service) {
+            $quote->service->load(['quoteFields' => function($query) {
+                $query->orderBy('order');
+            }]);
+        }
+
         $admins = Admin::where('is_active', true)->get();
         
         return view('admin.quotes.show', compact('quote', 'admins'));

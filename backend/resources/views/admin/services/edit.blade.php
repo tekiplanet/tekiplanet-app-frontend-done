@@ -168,18 +168,14 @@
                                                 @foreach([
                                                     'text' => 'Text',
                                                     'textarea' => 'Textarea',
-                                                    'select' => 'Select (Single)',
-                                                    'multiselect' => 'Select (Multiple)',
-                                                    'checkbox' => 'Checkbox',
-                                                    'radio' => 'Radio',
-                                                    'date' => 'Date',
-                                                    'datetime' => 'Date & Time',
-                                                    'time' => 'Time',
                                                     'number' => 'Number',
+                                                    'select' => 'Select',
+                                                    'multi-select' => 'Multi Select',
+                                                    'radio' => 'Radio',
+                                                    'checkbox' => 'Checkbox',
+                                                    'date' => 'Date',
                                                     'email' => 'Email',
-                                                    'tel' => 'Phone',
-                                                    'url' => 'URL',
-                                                    'file' => 'File Upload'
+                                                    'phone' => 'Phone'
                                                 ] as $value => $label)
                                                     <option value="{{ $value }}" 
                                                             {{ $field->type === $value ? 'selected' : '' }}>
@@ -196,7 +192,7 @@
                                                 <option value="0" {{ !$field->required ? 'selected' : '' }}>No</option>
                                             </select>
                                         </div>
-                                        <div class="options-container {{ !in_array($field->type, ['select', 'checkbox', 'radio']) ? 'hidden' : '' }} col-span-2" 
+                                        <div class="options-container {{ !in_array($field->type, ['select', 'multi-select', 'checkbox', 'radio']) ? 'hidden' : '' }} col-span-2" 
                                              id="options-{{ $loop->index }}">
                                                <label class="block text-sm font-medium text-gray-700">Options (one per line)</label>
                                                <textarea name="quote_fields[{{ $loop->index }}][options]" 
@@ -270,9 +266,14 @@ function addQuoteField() {
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
                         <option value="text">Text</option>
                         <option value="textarea">Textarea</option>
+                        <option value="number">Number</option>
                         <option value="select">Select</option>
-                        <option value="checkbox">Checkbox</option>
+                        <option value="multi-select">Multi Select</option>
                         <option value="radio">Radio</option>
+                        <option value="checkbox">Checkbox</option>
+                        <option value="date">Date</option>
+                        <option value="email">Email</option>
+                        <option value="phone">Phone</option>
                     </select>
                 </div>
                 <div>
@@ -306,7 +307,7 @@ function toggleOptions(id) {
     const select = document.querySelector(`[name="quote_fields[${id}][type]"]`);
     const optionsContainer = document.getElementById(`options-${id}`);
     
-    if (['select', 'multiselect', 'checkbox', 'radio'].includes(select.value)) {
+    if (['select', 'multi-select', 'checkbox', 'radio'].includes(select.value)) {
         optionsContainer.classList.remove('hidden');
     } else {
         optionsContainer.classList.add('hidden');
