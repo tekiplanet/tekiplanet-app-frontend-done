@@ -28,10 +28,21 @@ class OrderController extends Controller
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
                 $q->where('id', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('user', function($query) use ($request) {
-                      $query->where('name', 'like', '%' . $request->search . '%')
-                            ->orWhere('email', 'like', '%' . $request->search . '%');
-                  });
+                   ->orWhere('status', 'like', '%' . $request->search . '%')
+                   ->orWhere('payment_status', 'like', '%' . $request->search . '%')
+                   ->orWhere('payment_method', 'like', '%' . $request->search . '%')
+                   ->orWhereHas('user', function($query) use ($request) {
+                       $query->where('first_name', 'like', '%' . $request->search . '%')
+                           ->orWhere('last_name', 'like', '%' . $request->search . '%')
+                           ->orWhere('email', 'like', '%' . $request->search . '%');
+                   })
+                   ->orWhereHas('shippingAddress', function($q) use ($request) {
+                       $q->where('first_name', 'like', '%' . $request->search . '%')
+                         ->orWhere('phone', 'like', '%' . $request->search . '%')
+                         ->orWhere('last_name', 'like', '%' . $request->search . '%')
+                         ->orWhere('address', 'like', '%' . $request->search . '%')
+                         ->orWhere('city', 'like', '%' . $request->search . '%');
+                   });
             });
         }
 
