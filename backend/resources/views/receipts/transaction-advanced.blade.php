@@ -1,54 +1,61 @@
+@php
+    use App\Models\Setting;
+@endphp
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Transaction Receipt</title>
     <style>
+        @page {
+            size: 8.5cm 21cm;  /* Standard receipt width and reasonable height */
+            margin: 0;
+        }
         body {
             font-family: 'Helvetica', sans-serif;
             margin: 0;
             padding: 0;
             background: #fff;
             color: #333;
-            font-size: 14px;
+            font-size: 12px;  /* Reduced font size for smaller receipt */
             line-height: 1.4;
         }
         .receipt {
-            max-width: 800px;
+            width: 8cm;  /* Slightly less than page width to ensure margins */
             margin: 0 auto;
-            padding: 40px;
-            border: 2px solid #ddd;
+            padding: 20px;  /* Reduced padding */
+            border: 1px solid #ddd;
         }
         .header {
             text-align: center;
             border-bottom: 2px solid #141F78;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
         }
         .logo {
-            max-width: 200px;
-            margin-bottom: 15px;
+            max-width: 120px;  /* Smaller logo */
+            margin-bottom: 10px;
         }
         .receipt-title {
-            font-size: 24px;
+            font-size: 18px;  /* Smaller title */
             color: #141F78;
-            margin: 10px 0;
+            margin: 8px 0;
             font-weight: bold;
         }
         .receipt-number {
             color: #666;
-            font-size: 16px;
+            font-size: 14px;
         }
         .status-stamp {
             position: absolute;
-            top: 100px;
-            right: 50px;
+            top: 60px;
+            right: 30px;
             transform: rotate(-15deg);
-            font-size: 24px;
+            font-size: 18px;  /* Smaller stamp */
             font-weight: bold;
-            padding: 10px 20px;
-            border: 3px solid;
-            border-radius: 10px;
+            padding: 8px 15px;
+            border: 2px solid;
+            border-radius: 8px;
             opacity: 0.5;
         }
         .status-completed {
@@ -68,35 +75,36 @@
             border-color: #4B5563;
         }
         .section {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         .section-title {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             color: #141F78;
             border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
-            margin-bottom: 15px;
+            padding-bottom: 4px;
+            margin-bottom: 10px;
         }
         .info-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+            grid-template-columns: 1fr;  /* Single column for narrow receipt */
+            gap: 10px;
         }
         .info-item {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .label {
             color: #666;
-            font-size: 12px;
-            margin-bottom: 3px;
+            font-size: 10px;
+            margin-bottom: 2px;
         }
         .value {
             font-weight: 600;
             color: #333;
+            font-size: 12px;
         }
         .amount {
-            font-size: 20px;
+            font-size: 16px;
             font-weight: bold;
             color: #141F78;
         }
@@ -107,12 +115,12 @@
             color: #DC2626;
         }
         .footer {
-            margin-top: 40px;
-            padding-top: 20px;
+            margin-top: 20px;
+            padding-top: 15px;
             border-top: 1px solid #ddd;
             text-align: center;
             color: #666;
-            font-size: 12px;
+            font-size: 10px;
         }
     </style>
 </head>
@@ -121,7 +129,7 @@
         <div class="header">
             <img src="{{ public_path('images/logo.png') }}" alt="TekiPlanet" class="logo">
             <div class="receipt-title">Transaction Receipt</div>
-            <div class="receipt-number">Reference: {{ $transaction->reference_number }}</div>
+            <div class="receipt-number">Ref: {{ $transaction->reference_number }}</div>
         </div>
 
         <!-- Status Stamp -->
@@ -133,17 +141,18 @@
             <div class="section-title">Transaction Details</div>
             <div class="info-grid">
                 <div class="info-item">
-                    <div class="label">Transaction Date</div>
+                    <div class="label">Date & Time</div>
                     <div class="value">{{ $transaction->created_at->format('M d, Y h:i A') }}</div>
                 </div>
                 <div class="info-item">
-                    <div class="label">Transaction Type</div>
+                    <div class="label">Type</div>
                     <div class="value">{{ ucfirst($transaction->type) }}</div>
                 </div>
                 <div class="info-item">
                     <div class="label">Amount</div>
                     <div class="value amount {{ $transaction->type === 'credit' ? 'credit' : 'debit' }}">
-                        {{ $transaction->type === 'credit' ? '+' : '-' }} ${{ number_format($transaction->amount, 2) }}
+                        {{ $transaction->type === 'credit' ? '+' : '-' }} 
+                        {{ $settings['currency_symbol'] }}{{ number_format($transaction->amount, 2) }}
                     </div>
                 </div>
                 <div class="info-item">
@@ -172,7 +181,7 @@
                 @endif
                 <div class="info-item">
                     <div class="label">Current Balance</div>
-                    <div class="value">${{ number_format($transaction->user->wallet_balance, 2) }}</div>
+                    <div class="value">{{ $settings['currency_symbol'] }}{{ number_format($transaction->user->wallet_balance, 2) }}</div>
                 </div>
             </div>
         </div>
@@ -185,9 +194,9 @@
         @endif
 
         <div class="footer">
-            <p>This is an electronically generated receipt. No signature is required.</p>
-            <p>© {{ date('Y') }} TekiPlanet. All rights reserved.</p>
-            <p>For any queries, please contact our support team.</p>
+            <p>This is an electronically generated receipt.</p>
+            <p>© {{ date('Y') }} {{ $settings['site_name'] }}.</p>
+            <p>{{ $settings['support_email'] }}</p>
         </div>
     </div>
 </body>

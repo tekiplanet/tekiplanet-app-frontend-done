@@ -13,6 +13,7 @@ use App\Jobs\SendTransactionEmail;
 use App\Jobs\SendTransactionNotification;
 use PDF;
 use App\Mail\TransactionReceipt;
+use App\Models\Setting;
 
 class TransactionController extends Controller
 {
@@ -188,8 +189,15 @@ class TransactionController extends Controller
 
     public function downloadReceipt(Transaction $transaction)
     {
+        $settings = [
+            'currency_symbol' => Setting::getSetting('currency_symbol', '₦'),
+            'site_name' => Setting::getSetting('site_name', 'TekiPlanet'),
+            'support_email' => Setting::getSetting('support_email', 'support@tekiplanet.com')
+        ];
+
         $pdf = PDF::loadView('receipts.transaction-advanced', [
-            'transaction' => $transaction
+            'transaction' => $transaction,
+            'settings' => $settings
         ]);
 
         return $pdf->download("transaction-{$transaction->reference_number}.pdf");
