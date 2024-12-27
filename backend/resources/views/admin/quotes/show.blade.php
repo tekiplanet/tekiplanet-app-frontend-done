@@ -28,7 +28,27 @@
                 <div>
                     <dt class="text-sm font-medium text-gray-500">Customer</dt>
                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                        {{ $quote->user->name }}
+                        <div class="space-y-2">
+                            <div class="font-medium">
+                                {{ $quote->user->first_name }} {{ $quote->user->last_name }}
+                            </div>
+                            <div class="text-gray-600">
+                                <div>Email: {{ $quote->user->email }}</div>
+                                @if($quote->user->phone)
+                                    <div>Phone: {{ $quote->user->phone }}</div>
+                                @endif
+                            </div>
+                            <div>
+                                <a href="{{ route('admin.users.show', $quote->user->id) }}" 
+                                   class="inline-flex items-center text-sm text-blue-600 hover:text-blue-700">
+                                    <span>View Full Profile</span>
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
                     </dd>
                 </div>
                 <div>
@@ -49,6 +69,43 @@
                         {{ $quote->project_description }}
                     </dd>
                 </div>
+                <!-- Debug Info -->
+                @php
+                    \Log::info('Quote Fields:', ['fields' => $quote->quote_fields]);
+                    \Log::info('Service Quote Fields:', ['fields' => $quote->service->quoteFields]);
+                @endphp
+
+                @if($quote->quote_fields)
+                    <div class="col-span-2">
+                        <dt class="text-sm font-medium text-gray-500 mb-2">Additional Information</dt>
+                        <dd class="mt-1">
+                            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                <dl class="grid grid-cols-1 gap-3">
+                                    @foreach($quote->service->quoteFields as $field)
+                                        @if(isset($quote->quote_fields[$field->id]))
+                                        <div>
+                                            <dt class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                {{ $field->label }}
+                                            </dt>
+                                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                                                @if(is_array($quote->quote_fields[$field->id]))
+                                                    <ul class="list-disc list-inside">
+                                                        @foreach($quote->quote_fields[$field->id] as $item)
+                                                            <li>{{ $item }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                @else
+                                                    {{ $quote->quote_fields[$field->id] }}
+                                                @endif
+                                            </dd>
+                                        </div>
+                                        @endif
+                                    @endforeach
+                                </dl>
+                            </div>
+                        </dd>
+                    </div>
+                @endif
             </dl>
 
             <!-- Status and Assignment Section -->
@@ -92,12 +149,20 @@
                     <div class="flex gap-4 {{ $message->sender_type === 'admin' ? 'flex-row-reverse' : '' }}">
                         <div class="flex-shrink-0">
                             <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                                {{ substr($message->user->name, 0, 1) }}
+                                @if($message->sender_type === 'admin')
+                                    {{ substr($message->user->name, 0, 1) }}
+                                @else
+                                    {{ substr($message->user->first_name, 0, 1) }}
+                                @endif
                             </div>
                         </div>
                         <div class="flex-1 {{ $message->sender_type === 'admin' ? 'bg-blue-100' : 'bg-gray-100' }} rounded-lg p-4">
                             <div class="text-sm text-gray-600">
-                                {{ $message->user->name }}
+                                @if($message->sender_type === 'admin')
+                                    {{ $message->user->name }}
+                                @else
+                                    {{ $message->user->first_name }} {{ $message->user->last_name }}
+                                @endif
                             </div>
                             <div class="mt-1">
                                 {{ $message->message }}
