@@ -105,8 +105,10 @@
                 </tbody>
             </table>
         </div>
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-            {{ $timeSlots->links() }}
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 overflow-x-auto">
+            <div class="min-w-full flex justify-center sm:justify-between items-center flex-wrap gap-4">
+                {{ $timeSlots->links() }}
+            </div>
         </div>
     </div>
 </div>
