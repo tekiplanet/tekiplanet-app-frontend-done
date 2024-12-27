@@ -16,6 +16,7 @@ class QuoteMessageReceived extends Mailable
     public function __construct(QuoteMessage $message)
     {
         $this->message = $message;
+        $this->afterCommit();
     }
 
     public function build()

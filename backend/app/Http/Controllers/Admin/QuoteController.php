@@ -122,7 +122,7 @@ class QuoteController extends Controller
 
         // Send email notification (queued)
         \Mail::to($quote->user)
-            ->send(new QuoteMessageReceived($message));
+            ->queue((new QuoteMessageReceived($message))->onQueue('default'));
 
         // Send notification (using existing NotificationService)
         $this->notificationService->send([
