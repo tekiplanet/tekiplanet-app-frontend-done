@@ -124,7 +124,17 @@
                         @forelse($hustle->applications->take(5) as $application)
                             <tr>
                                 <td class="px-6 py-4">
-                                    {{ $application->professional->user->name }}
+                                    <div>
+                                        <div class="font-medium text-gray-900 dark:text-gray-100">
+                                            {{ $application->professional->user->name }}
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            {{ $application->professional->user->email }}
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            {{ $application->professional->category->name }}
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
@@ -143,6 +153,30 @@
                                        class="text-blue-600 hover:text-blue-900">
                                         View
                                     </a>
+                                    @if($application->status === 'pending')
+                                        <form action="{{ route('admin.hustles.applications.update-status', [$hustle, $application]) }}" 
+                                              method="POST" 
+                                              class="inline ml-2">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="status" value="approved">
+                                            <button type="submit" 
+                                                    class="text-green-600 hover:text-green-900">
+                                                Approve
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('admin.hustles.applications.update-status', [$hustle, $application]) }}" 
+                                              method="POST" 
+                                              class="inline ml-2">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="status" value="rejected">
+                                            <button type="submit" 
+                                                    class="text-red-600 hover:text-red-900">
+                                                Reject
+                                            </button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

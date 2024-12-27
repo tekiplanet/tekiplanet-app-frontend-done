@@ -111,7 +111,14 @@ class HustleController extends Controller
 
     public function show(Hustle $hustle)
     {
-        $hustle->load(['category', 'assignedProfessional', 'applications.professional', 'messages']);
+        $hustle->load([
+            'category',
+            'assignedProfessional.user',
+            'applications.professional.user',
+            'applications.professional.category',
+            'messages'
+        ]);
+        
         return view('admin.hustles.show', compact('hustle'));
     }
 
