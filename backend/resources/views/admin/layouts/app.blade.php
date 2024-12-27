@@ -16,6 +16,8 @@
     
     <!-- Additional Styles -->
     @stack('styles')
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="h-full font-sans antialiased">
     @auth('admin')

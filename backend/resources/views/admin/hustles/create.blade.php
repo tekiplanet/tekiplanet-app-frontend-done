@@ -140,11 +140,12 @@ document.getElementById('createHustleForm').addEventListener('submit', async fun
         // Send AJAX request
         const response = await fetch(form.action, {
             method: 'POST',
+            body: formData,
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             },
-            body: formData
+            credentials: 'same-origin'
         });
 
         const data = await response.json();
@@ -154,21 +155,48 @@ document.getElementById('createHustleForm').addEventListener('submit', async fun
         }
 
         // Show success message
-        Toast.success('Hustle created successfully');
+        await Swal.fire({
+            title: 'Success!',
+            text: 'Hustle created successfully',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+        });
 
         // Redirect to show page
-        window.location.href = data.redirect || '/admin/hustles/' + data.hustle.id;
+        window.location.href = data.redirect;
 
     } catch (error) {
-        // Show error message
-        Toast.error(error.message || 'Failed to create hustle');
-        
         // Reset button state
         submitButton.disabled = false;
         loadingIcon.classList.add('hidden');
         buttonText.textContent = 'Create Hustle';
+
+        // Show error message
+        await Swal.fire({
+            title: 'Error!',
+            text: error.message || 'Failed to create hustle',
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
     }
 });
+
+// Add form validation feedback using SweetAlert2
+function showValidationError(message) {
+    Swal.fire({
+        title: 'Validation Error',
+        text: message,
+        icon: 'warning',
+        confirmButtonText: 'OK'
+    });
+}
+
+// Add client-side validation
+document.getElementById('createHustleForm').addEventListener('invalid', function(e) {
+    e.preventDefault();
+    showValidationError('Please fill in all required fields correctly');
+}, true);
 </script>
 @endpush
 @endsection 

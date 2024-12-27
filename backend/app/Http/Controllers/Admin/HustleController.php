@@ -84,8 +84,9 @@ class HustleController extends Controller
                     ->queue(new HustleCreated($hustle, $professional));
             }
 
-            if ($request->wantsJson()) {
+            if ($request->ajax()) {
                 return response()->json([
+                    'success' => true,
                     'message' => 'Hustle created successfully',
                     'hustle' => $hustle,
                     'redirect' => route('admin.hustles.show', $hustle)
@@ -95,14 +96,16 @@ class HustleController extends Controller
             return redirect()->route('admin.hustles.show', $hustle)
                 ->with('success', 'Hustle created successfully.');
         } catch (\Exception $e) {
-            if ($request->wantsJson()) {
+            \Log::error('Failed to create hustle: ' . $e->getMessage());
+            
+            if ($request->ajax()) {
                 return response()->json([
-                    'message' => 'Failed to create hustle',
-                    'errors' => [$e->getMessage()]
+                    'success' => false,
+                    'message' => 'Failed to create hustle: ' . $e->getMessage()
                 ], 422);
             }
 
-            throw $e;
+            return back()->withInput()->withErrors(['error' => 'Failed to create hustle: ' . $e->getMessage()]);
         }
     }
 
