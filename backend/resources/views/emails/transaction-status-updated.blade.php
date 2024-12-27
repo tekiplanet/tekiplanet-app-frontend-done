@@ -3,11 +3,20 @@
         Hello {{ $user->first_name }},
     </x-slot>
 
-    <p>Your transaction with reference number <strong>{{ $transaction->reference_number }}</strong> has been updated.</p>
+    @php
+        $statusMessage = match ($transaction->status) {
+            'failed' => "We regret to inform you that your transaction has failed.",
+            'cancelled' => "Your transaction has been cancelled.",
+            'completed' => "Great news! Your transaction has been completed successfully.",
+            default => "Your transaction status has been updated."
+        };
+    @endphp
 
-    <p>Details:</p>
+    <p>{{ $statusMessage }}</p>
+
+    <p>Transaction Details:</p>
     <ul>
-        <li>Status: <strong>{{ ucfirst($transaction->status) }}</strong></li>
+        <li>Reference Number: <strong>{{ $transaction->reference_number }}</strong></li>
         <li>Amount: <strong>{{ number_format($transaction->amount, 2) }}</strong></li>
         <li>Type: <strong>{{ ucfirst($transaction->type) }}</strong></li>
         @if(isset($transaction->notes['status_update']['note']))
@@ -19,6 +28,14 @@
     </ul>
 
     <p>Current Wallet Balance: <strong>{{ number_format($user->wallet_balance, 2) }}</strong></p>
+
+    @if($transaction->status === 'failed')
+        <p>If you believe this is an error, please contact our support team for assistance.</p>
+    @elseif($transaction->status === 'cancelled')
+        <p>If you didn't request this cancellation, please contact our support team immediately.</p>
+    @elseif($transaction->status === 'completed')
+        <p>Thank you for using our services!</p>
+    @endif
 
     <p>You can view the complete transaction details in your account.</p>
 

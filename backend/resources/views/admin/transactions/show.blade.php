@@ -86,30 +86,36 @@
                         <div>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Notes History</dt>
                             <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                                <div class="space-y-3">
-                                    @foreach($transaction->notes as $note)
-                                        <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                                            @if(isset($note['status_update']))
-                                                <div class="mb-2">
-                                                    <span class="font-medium">Status Update ({{ $note['status_update']['date'] }})</span>
-                                                    <div class="ml-4">
-                                                        <div>From: <span class="font-medium">{{ ucfirst($note['status_update']['from']) }}</span></div>
-                                                        <div>To: <span class="font-medium">{{ ucfirst($note['status_update']['to']) }}</span></div>
-                                                        @if(isset($note['status_update']['note']))
-                                                            <div class="mt-1">Note: {{ $note['status_update']['note'] }}</div>
-                                                        @endif
+                                @if(is_array($transaction->notes))
+                                    <div class="space-y-3">
+                                        @foreach($transaction->notes as $note)
+                                            <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                                                @if(isset($note['status_update']))
+                                                    <div class="mb-2">
+                                                        <span class="font-medium">Status Update ({{ $note['status_update']['date'] }})</span>
+                                                        <div class="ml-4">
+                                                            <div>From: <span class="font-medium">{{ ucfirst($note['status_update']['from']) }}</span></div>
+                                                            <div>To: <span class="font-medium">{{ ucfirst($note['status_update']['to']) }}</span></div>
+                                                            @if(isset($note['status_update']['note']))
+                                                                <div class="mt-1">Note: {{ $note['status_update']['note'] }}</div>
+                                                            @endif
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            @endif
+                                                @endif
 
-                                            @if(isset($note['wallet_update']))
-                                                <div class="text-green-600 dark:text-green-400">
-                                                    {{ $note['wallet_update'] }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @endforeach
-                                </div>
+                                                @if(isset($note['wallet_update']))
+                                                    <div class="text-green-600 dark:text-green-400">
+                                                        {{ $note['wallet_update'] }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                                        {{ $transaction->notes }}
+                                    </div>
+                                @endif
                             </dd>
                         </div>
                     @endif

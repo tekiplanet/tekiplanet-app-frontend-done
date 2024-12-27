@@ -122,16 +122,35 @@ class TransactionController extends Controller
                 'notes' => $updatedNotes
             ]);
 
+            // Prepare notification message based on status
+            $notificationMessage = match ($validated['status']) {
+                'failed' => "Your transaction #{$transaction->reference_number} has failed.",
+                'cancelled' => "Your transaction #{$transaction->reference_number} has been cancelled.",
+                'completed' => "Your transaction #{$transaction->reference_number} has been completed successfully.",
+                default => "Your transaction #{$transaction->reference_number} status has been updated to " . ucfirst($validated['status'])
+            };
+
+            // Add wallet balance info if applicable
+            if (isset($newNote['wallet_update'])) {
+                $notificationMessage .= " " . $newNote['wallet_update'];
+            }
+
             // Prepare notification data
             $notificationData = [
                 'type' => 'transaction_status_updated',
-                'title' => 'Transaction Status Updated',
-                'message' => "Your transaction #{$transaction->reference_number} status has been updated to " . ucfirst($validated['status']),
+                'title' => match ($validated['status']) {
+                    'failed' => 'Transaction Failed',
+                    'cancelled' => 'Transaction Cancelled',
+                    'completed' => 'Transaction Completed',
+                    default => 'Transaction Status Updated'
+                },
+                'message' => $notificationMessage,
                 'action_url' => "/transactions/{$transaction->id}",
                 'extra_data' => [
                     'transaction_id' => $transaction->id,
                     'old_status' => $transaction->status,
                     'new_status' => $validated['status'],
+                    'wallet_updated' => isset($newNote['wallet_update'])
                 ]
             ];
 
