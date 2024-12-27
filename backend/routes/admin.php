@@ -16,6 +16,8 @@ use App\Http\Controllers\Admin\ProductImageController;
 use App\Http\Controllers\Admin\ShippingZoneController;
 use App\Http\Controllers\Admin\ShippingMethodController;
 use App\Http\Controllers\Admin\ShippingAddressController;
+use App\Http\Controllers\Admin\ServiceCategoryController;
+use App\Http\Controllers\Admin\ServiceController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
@@ -163,5 +165,15 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
             Route::put('/addresses/{address}', [ShippingAddressController::class, 'update'])->name('addresses.update');
             Route::delete('/addresses/{address}', [ShippingAddressController::class, 'destroy'])->name('addresses.destroy');
         });
+
+        // Service Categories
+        Route::resource('service-categories', ServiceCategoryController::class);
+        Route::post('service-categories/{serviceCategory}/toggle-featured', [ServiceCategoryController::class, 'toggleFeatured'])
+            ->name('service-categories.toggle-featured');
+
+        // Services
+        Route::resource('services', ServiceController::class);
+        Route::post('services/{service}/toggle-featured', [ServiceController::class, 'toggleFeatured'])
+            ->name('services.toggle-featured');
     });
 }); 
