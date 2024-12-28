@@ -4,18 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ProjectFile extends Model
 {
-    use HasUuids;
+    use HasFactory, HasUuids;
 
     protected $fillable = [
-        'project_id',
         'name',
         'file_path',
-        'file_size',
         'file_type',
-        'uploaded_by'
+        'file_size',
+        'uploaded_by',
+        'project_id'
     ];
 
     public function project()
