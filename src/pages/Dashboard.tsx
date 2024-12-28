@@ -1071,30 +1071,12 @@ const Dashboard = ({ children }: { children?: React.ReactNode }) => {
           </header>
 
           {/* Main Content */}
-          <div className="flex-1 overflow-y-auto bg-background pb-16 md:pb-0">
-            {/* <PullToRefresh
-              onRefresh={handleRefresh}
-              pullingContent={
-                <div className="flex items-center justify-center py-1 text-sm text-muted-foreground bg-background/50 backdrop-blur-sm">
-                  Pull down to refresh...
-                </div>
-              }
-              refreshingContent={
-                <div className="flex items-center justify-center gap-2 py-1 text-sm bg-background/50 backdrop-blur-sm">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                </div>
-              }
-              resistance={2}
-              maxPullDownDistance={200}
-              pullDownThreshold={67}
-              className="h-full"
-            > */}
-              <main className="h-full">
-                <div className="container mx-auto px-3 py-0.5 md:px-4 md:py-1 max-w-7xl">
-                  <Outlet />
-                </div>
-              </main>
-            {/* </PullToRefresh> */}
+          <div className="flex-1 overflow-y-auto bg-background">
+            <main className="min-h-[calc(100vh-5rem)] mb-20 md:mb-0">
+              <div className="container mx-auto px-3 py-0.5 md:px-4 md:py-1 max-w-7xl">
+                <Outlet />
+              </div>
+            </main>
           </div>
 
           {/* Mobile Bottom Navigation */}

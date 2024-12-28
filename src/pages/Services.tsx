@@ -415,14 +415,6 @@ const ServicesPage: React.FC = () => {
                   <MessagesSquare className="mr-2 h-5 w-5" />
                   Consult an Expert
                 </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-zinc-700 hover:bg-white/5 text-white"
-                  onClick={() => navigate('/dashboard/services/quote/consultation/rates')}
-                >
-                  View Pricing
-                </Button>
               </div>
             </div>
 
