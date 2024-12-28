@@ -2,39 +2,54 @@
 
 namespace App\Mail;
 
-use App\Models\Project;
-use App\Models\ProjectTeamMember;
-use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use App\Models\ProjectTeamMember;
 
 class ProjectTeamMemberUpdated extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $project;
-    public $member;
-    public $user;
-    public $action;
+    protected $teamMemberId;
+    public $teamMember;
+    protected $oldStatus;
+    protected $isForBusinessOwner;
 
-    public function __construct(Project $project, ProjectTeamMember $member, User $user, string $action)
+    public function __construct(ProjectTeamMember $teamMember, string $oldStatus, bool $isForBusinessOwner = false)
     {
-        $this->project = $project;
-        $this->member = $member;
-        $this->user = $user;
-        $this->action = $action;
+        $this->teamMemberId = $teamMember->id;
+        $this->oldStatus = $oldStatus;
+        $this->isForBusinessOwner = $isForBusinessOwner;
+        $this->afterCommit();
     }
 
     public function build()
     {
-        return $this->view('emails.projects.team-member-updated')
-            ->subject("Project Team Member {$this->action} - {$this->project->name}")
+        // Fetch fresh data when processing the queue
+        $this->teamMember = ProjectTeamMember::with(['project', 'professional.user'])
+            ->findOrFail($this->teamMemberId);
+
+        $view = $this->isForBusinessOwner 
+            ? 'emails.project-team-member-updated-owner'
+            : 'emails.project-team-member-updated';
+
+        $greeting = $this->isForBusinessOwner
+            ? 'Hello ' . $this->teamMember->project->businessProfile->user->first_name . ','
+            : 'Hello ' . $this->teamMember->professional->user->first_name . ',';
+
+        $subject = $this->oldStatus === 'removed'
+            ? ($this->isForBusinessOwner ? 'Team Member Removed from Project: ' : 'Removed from Project Team: ') 
+            . $this->teamMember->project->name
+            : 'Project Team Status Updated: ' . $this->teamMember->project->name;
+
+        return $this->view($view)
+            ->subject($subject)
             ->with([
-                'project' => $this->project,
-                'member' => $this->member,
-                'user' => $this->user,
-                'action' => $this->action
+                'greeting' => $greeting,
+                'closing' => 'Best regards,<br>TekiPlanet Team',
+                'teamMember' => $this->teamMember,
+                'oldStatus' => $this->oldStatus
             ]);
     }
 } 

@@ -13,10 +13,12 @@ class ProjectTeamMemberAdded extends Mailable
 
     protected $teamMemberId;
     public $teamMember;
+    protected $isForBusinessOwner;
 
-    public function __construct(ProjectTeamMember $teamMember)
+    public function __construct(ProjectTeamMember $teamMember, bool $isForBusinessOwner = false)
     {
         $this->teamMemberId = $teamMember->id;
+        $this->isForBusinessOwner = $isForBusinessOwner;
         $this->afterCommit();
     }
 
@@ -26,10 +28,18 @@ class ProjectTeamMemberAdded extends Mailable
         $this->teamMember = ProjectTeamMember::with(['project', 'professional.user'])
             ->findOrFail($this->teamMemberId);
 
-        return $this->view('emails.project-team-member-added')
-            ->subject('Added to Project Team: ' . $this->teamMember->project->name)
+        $view = $this->isForBusinessOwner 
+            ? 'emails.project-team-member-added-owner'
+            : 'emails.project-team-member-added';
+
+        $greeting = $this->isForBusinessOwner
+            ? 'Hello ' . $this->teamMember->project->businessProfile->user->first_name . ','
+            : 'Hello ' . $this->teamMember->professional->user->first_name . ',';
+
+        return $this->view($view)
+            ->subject('Team Member Added to Project: ' . $this->teamMember->project->name)
             ->with([
-                'greeting' => 'Hello ' . $this->teamMember->professional->user->first_name . ',',
+                'greeting' => $greeting,
                 'closing' => 'Best regards,<br>TekiPlanet Team',
                 'teamMember' => $this->teamMember
             ]);

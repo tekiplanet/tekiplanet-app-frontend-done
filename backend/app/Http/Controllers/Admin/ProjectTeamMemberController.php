@@ -55,6 +55,10 @@ class ProjectTeamMemberController extends Controller
             Mail::to($teamMember->professional->user->email)
                 ->queue(new ProjectTeamMemberAdded($teamMember));
 
+            // Send email to business owner
+            Mail::to($project->businessProfile->user->email)
+                ->queue(new ProjectTeamMemberAdded($teamMember, true)); // true indicates it's for business owner
+
             return response()->json([
                 'success' => true,
                 'message' => 'Team member added successfully',
@@ -119,8 +123,12 @@ class ProjectTeamMemberController extends Controller
     public function destroy(Project $project, ProjectTeamMember $member)
     {
         try {
-            // Load relationships before deletion
+            // Load relationships before anything else
             $member->load(['professional.user', 'project']);
+
+            // Store email data before deletion
+            $userEmail = $member->professional->user->email;
+            $businessEmail = $project->businessProfile->user->email;
 
             // Send notification to business owner
             $this->notificationService->send([
@@ -134,10 +142,15 @@ class ProjectTeamMemberController extends Controller
                 ]
             ], $project->businessProfile->user);
 
-            // Send email to the team member
-            Mail::to($member->professional->user->email)
+            // Send email to the team member before deletion
+            Mail::to($userEmail)
                 ->queue(new ProjectTeamMemberUpdated($member, 'removed'));
 
+            // Send email to business owner
+            Mail::to($businessEmail)
+                ->queue(new ProjectTeamMemberUpdated($member, 'removed', true));
+
+            // Delete after sending notifications and emails
             $member->delete();
 
             return response()->json([
@@ -146,6 +159,11 @@ class ProjectTeamMemberController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('Team Member Removal Error:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to remove team member: ' . $e->getMessage()
