@@ -10,13 +10,16 @@ return new class extends Migration
     {
         Schema::create('project_files', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('project_id')->constrained()->onDelete('cascade');
+            $table->uuid('project_id');
             $table->string('name');
             $table->string('file_path');
-            $table->string('file_size');
             $table->string('file_type');
-            $table->foreignUuid('uploaded_by')->constrained('users')->onDelete('cascade');
+            $table->bigInteger('file_size');
+            $table->uuid('uploaded_by');
             $table->timestamps();
+
+            $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
+            $table->foreign('uploaded_by')->references('id')->on('admins')->onDelete('cascade');
         });
     }
 

@@ -251,7 +251,7 @@
                                         {{ number_format($file->size / 1024, 2) }} KB
                                     </td>
                                     <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                        {{ $file->uploadedBy->name }}
+                                        {{ $file->uploadedBy->first_name }} {{ $file->uploadedBy->last_name }}
                                     </td>
                                     <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                         {{ $file->created_at->format('M d, Y H:i') }}
