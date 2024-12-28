@@ -16,11 +16,13 @@ class ProjectInvoiceUpdated extends Mailable
     protected $projectId;
     public $invoice;
     public $project;
+    protected $action;
 
-    public function __construct(ProjectInvoice $invoice)
+    public function __construct(ProjectInvoice $invoice, string $action = 'created')
     {
         $this->invoiceId = $invoice->id;
         $this->projectId = $invoice->project_id;
+        $this->action = $action;
         $this->afterCommit();
     }
 
@@ -30,8 +32,16 @@ class ProjectInvoiceUpdated extends Mailable
         $this->invoice = ProjectInvoice::findOrFail($this->invoiceId);
         $this->project = Project::findOrFail($this->projectId);
 
-        return $this->view('emails.project-invoice-updated')
-            ->subject('Invoice Updated: ' . $this->invoice->invoice_number)
+        $view = $this->action === 'created' 
+            ? 'emails.project-invoice-created'
+            : 'emails.project-invoice-updated';
+
+        $subject = $this->action === 'created'
+            ? 'New Invoice Created: ' . $this->invoice->invoice_number
+            : 'Invoice Updated: ' . $this->invoice->invoice_number;
+
+        return $this->view($view)
+            ->subject($subject)
             ->with([
                 'greeting' => 'Hello,',
                 'closing' => 'Best regards,<br>TekiPlanet Team',

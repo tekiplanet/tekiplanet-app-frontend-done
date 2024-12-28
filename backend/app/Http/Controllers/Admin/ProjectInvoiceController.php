@@ -62,7 +62,7 @@ class ProjectInvoiceController extends Controller
 
             // Queue email
             Mail::to($project->businessProfile->user->email)
-                ->queue(new ProjectInvoiceUpdated($invoice));
+                ->queue(new ProjectInvoiceUpdated($invoice, 'created'));
 
             return response()->json([
                 'success' => true,
