@@ -28,6 +28,8 @@ use App\Http\Controllers\Admin\QuoteController;
 use App\Http\Controllers\Admin\ConsultingBookingController;
 use App\Http\Controllers\Admin\ConsultingTimeSlotController;
 use App\Http\Controllers\Admin\ConsultingBookingReminderController;
+use App\Http\Controllers\Admin\WorkstationPlanController;
+use App\Http\Controllers\Admin\WorkstationSubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
@@ -264,6 +266,26 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
             // Reminders
             Route::post('/bookings/{booking}/send-reminder', [ConsultingBookingReminderController::class, 'sendReminder'])
                 ->name('bookings.send-reminder');
+        });
+
+        // Workstation Plans
+        Route::prefix('workstation')->name('workstation.')->group(function () {
+            // Plans
+            Route::get('/plans', [WorkstationPlanController::class, 'index'])->name('plans.index');
+            Route::get('/plans/create', [WorkstationPlanController::class, 'create'])->name('plans.create');
+            Route::post('/plans', [WorkstationPlanController::class, 'store'])->name('plans.store');
+            Route::get('/plans/{plan}', [WorkstationPlanController::class, 'show'])->name('plans.show');
+            Route::get('/plans/{plan}/edit', [WorkstationPlanController::class, 'edit'])->name('plans.edit');
+            Route::put('/plans/{plan}', [WorkstationPlanController::class, 'update'])->name('plans.update');
+            Route::post('/plans/{plan}/toggle-status', [WorkstationPlanController::class, 'toggleStatus'])
+                ->name('plans.toggle-status');
+
+            // Subscriptions
+            Route::get('/subscriptions', [WorkstationSubscriptionController::class, 'index'])->name('subscriptions.index');
+            Route::get('/subscriptions/{subscription}', [WorkstationSubscriptionController::class, 'show'])
+                ->name('subscriptions.show');
+            Route::patch('/subscriptions/{subscription}/status', [WorkstationSubscriptionController::class, 'updateStatus'])
+                ->name('subscriptions.update-status');
         });
     });
 }); 
