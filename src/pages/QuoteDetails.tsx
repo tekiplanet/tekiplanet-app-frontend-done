@@ -191,24 +191,24 @@ function QuoteDetails() {
 
         <TabsContent value="details">
           <Card>
-            <CardContent className="space-y-6 pt-6">
+            <CardContent className="space-y-6 p-6">
               {/* Standard Fields */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="font-medium mb-1">Industry</h3>
-                  <p>{quote.industry}</p>
+                  <h3 className="font-medium mb-2 text-muted-foreground">Industry</h3>
+                  <p className="break-words">{quote.industry}</p>
                 </div>
                 <div>
-                  <h3 className="font-medium mb-1">Budget Range</h3>
-                  <p>{quote.budget_range}</p>
+                  <h3 className="font-medium mb-2 text-muted-foreground">Budget Range</h3>
+                  <p className="break-words">{quote.budget_range}</p>
                 </div>
                 <div>
-                  <h3 className="font-medium mb-1">Contact Method</h3>
-                  <p>{quote.contact_method}</p>
+                  <h3 className="font-medium mb-2 text-muted-foreground">Contact Method</h3>
+                  <p className="break-words">{quote.contact_method}</p>
                 </div>
                 <div>
-                  <h3 className="font-medium mb-1">Project Deadline</h3>
-                  <p>{format(new Date(quote.project_deadline), 'MMM d, yyyy')}</p>
+                  <h3 className="font-medium mb-2 text-muted-foreground">Project Deadline</h3>
+                  <p className="break-words">{format(new Date(quote.project_deadline), 'MMM d, yyyy')}</p>
                 </div>
               </div>
 
@@ -217,13 +217,13 @@ function QuoteDetails() {
                 <>
                   <div className="border-t pt-6">
                     <h2 className="text-lg font-semibold mb-4">Additional Information</h2>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {Object.entries(quote.quote_fields).map(([title, value]) => (
                         <div key={title}>
-                          <h3 className="font-medium mb-1">
+                          <h3 className="font-medium mb-2 text-muted-foreground">
                             {title}
                           </h3>
-                          <p>
+                          <p className="break-words">
                             {typeof value === 'boolean' 
                               ? (value ? 'Yes' : 'No')
                               : String(value)
@@ -340,30 +340,43 @@ function QuoteDetails() {
                   )}
                 </div>
 
-                {/* Message Input */}
+                {/* Message Input - Updated with conditional rendering */}
                 <div className="flex-shrink-0 p-4 bg-background/80 backdrop-blur-sm border-t">
-                  <div className="relative max-w-4xl mx-auto">
-                    <Input
-                      placeholder="Type your message..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage();
-                        }
-                      }}
-                      className="pr-12 py-6 rounded-full border-muted-foreground/20 bg-background shadow-sm"
-                    />
-                    <Button 
-                      onClick={handleSendMessage}
-                      size="icon"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full h-9 w-9 bg-primary hover:bg-primary/90"
-                      disabled={!newMessage.trim()}
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {quote.status === 'accepted' || quote.status === 'rejected' ? (
+                    <div className="max-w-4xl mx-auto">
+                      <div className="bg-muted/50 rounded-full px-4 py-3 flex items-center justify-center gap-2">
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">
+                          {quote.status === 'accepted' 
+                            ? "This quote has been accepted. New messages are disabled."
+                            : "This quote has been rejected. New messages are disabled."}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative max-w-4xl mx-auto">
+                      <Input
+                        placeholder="Type your message..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
+                          }
+                        }}
+                        className="pr-12 py-6 rounded-full border-muted-foreground/20 bg-background shadow-sm"
+                      />
+                      <Button 
+                        onClick={handleSendMessage}
+                        size="icon"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full h-9 w-9 bg-primary hover:bg-primary/90"
+                        disabled={!newMessage.trim()}
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
