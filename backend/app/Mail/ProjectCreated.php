@@ -2,10 +2,10 @@
 
 namespace App\Mail;
 
-use App\Models\Project;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use App\Models\Project;
 
 class ProjectCreated extends Mailable
 {
@@ -20,10 +20,7 @@ class ProjectCreated extends Mailable
 
     public function build()
     {
-        return $this->view('emails.projects.created')
-            ->subject("New Project Created - {$this->project->name}")
-            ->with([
-                'project' => $this->project
-            ]);
+        return $this->subject('New Project Created: ' . $this->project->name)
+                    ->view('emails.project-created');
     }
 } 

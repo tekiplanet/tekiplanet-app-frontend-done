@@ -2,10 +2,10 @@
 
 namespace App\Mail;
 
-use App\Models\Project;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use App\Models\Project;
 
 class ProjectStatusUpdated extends Mailable
 {
@@ -13,24 +13,20 @@ class ProjectStatusUpdated extends Mailable
 
     public $project;
     public $oldStatus;
+    public $newStatus;
     public $notes;
 
-    public function __construct(Project $project, string $oldStatus, ?string $notes)
+    public function __construct(Project $project, string $oldStatus, string $newStatus, ?string $notes)
     {
         $this->project = $project;
         $this->oldStatus = $oldStatus;
+        $this->newStatus = $newStatus;
         $this->notes = $notes;
     }
 
     public function build()
     {
-        return $this->view('emails.projects.status-updated')
-            ->subject("Project Status Updated - {$this->project->name}")
-            ->with([
-                'project' => $this->project,
-                'oldStatus' => $this->oldStatus,
-                'newStatus' => $this->project->status,
-                'notes' => $this->notes
-            ]);
+        return $this->subject('Project Status Updated: ' . $this->project->name)
+                    ->view('emails.project-status-updated');
     }
 } 

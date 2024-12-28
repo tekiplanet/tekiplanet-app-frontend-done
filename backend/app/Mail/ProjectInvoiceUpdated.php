@@ -2,35 +2,41 @@
 
 namespace App\Mail;
 
-use App\Models\Project;
-use App\Models\ProjectInvoice;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use App\Models\ProjectInvoice;
+use App\Models\Project;
 
 class ProjectInvoiceUpdated extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $project;
+    protected $invoiceId;
+    protected $projectId;
     public $invoice;
-    public $action;
+    public $project;
 
-    public function __construct(Project $project, ProjectInvoice $invoice, string $action)
+    public function __construct(ProjectInvoice $invoice)
     {
-        $this->project = $project;
-        $this->invoice = $invoice;
-        $this->action = $action;
+        $this->invoiceId = $invoice->id;
+        $this->projectId = $invoice->project_id;
+        $this->afterCommit();
     }
 
     public function build()
     {
-        return $this->view('emails.projects.invoice-updated')
-            ->subject("Project Invoice {$this->action} - {$this->project->name}")
+        // Fetch fresh data when processing the queue
+        $this->invoice = ProjectInvoice::findOrFail($this->invoiceId);
+        $this->project = Project::findOrFail($this->projectId);
+
+        return $this->view('emails.project-invoice-updated')
+            ->subject('Invoice Updated: ' . $this->invoice->invoice_number)
             ->with([
-                'project' => $this->project,
+                'greeting' => 'Hello,',
+                'closing' => 'Best regards,<br>TekiPlanet Team',
                 'invoice' => $this->invoice,
-                'action' => $this->action
+                'project' => $this->project
             ]);
     }
 } 

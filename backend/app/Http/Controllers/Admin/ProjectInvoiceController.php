@@ -24,12 +24,28 @@ class ProjectInvoiceController extends Controller
         try {
             $validated = $request->validate([
                 'amount' => 'required|numeric|min:0',
-                'description' => 'required|string',
+                'description' => 'nullable|string',
                 'due_date' => 'required|date',
-                'status' => 'required|in:pending,paid,overdue,cancelled'
+                'status' => 'required|in:pending,paid,cancelled'
             ]);
 
-            $invoice = $project->invoices()->create($validated);
+            $invoice = $project->invoices()->create([
+                'amount' => $validated['amount'],
+                'description' => $validated['description'] ?? null,
+                'due_date' => $validated['due_date'],
+                'status' => $validated['status'],
+                'project_id' => $project->id
+            ]);
+
+            // Debug the relationship
+            \Log::info('New Invoice:', ['invoice' => $invoice->toArray()]);
+            \Log::info('Project Relationship:', ['project' => $invoice->project]);
+
+            // Force refresh from database with relationships
+            $invoice = ProjectInvoice::with(['project', 'project.businessProfile'])
+                ->findOrFail($invoice->id);
+
+            \Log::info('Refreshed Invoice:', ['invoice' => $invoice->toArray()]);
 
             // Send notification
             $this->notificationService->send([
@@ -46,15 +62,20 @@ class ProjectInvoiceController extends Controller
 
             // Queue email
             Mail::to($project->businessProfile->user->email)
-                ->queue(new ProjectInvoiceUpdated($project, $invoice, 'created'));
+                ->queue(new ProjectInvoiceUpdated($invoice));
 
             return response()->json([
                 'success' => true,
                 'message' => 'Invoice created successfully',
-                'invoice' => $invoice
+                'data' => $invoice
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('Invoice Creation Error:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create invoice: ' . $e->getMessage()
@@ -92,7 +113,7 @@ class ProjectInvoiceController extends Controller
 
             // Queue email
             Mail::to($project->businessProfile->user->email)
-                ->queue(new ProjectInvoiceUpdated($project, $invoice, 'updated'));
+                ->queue(new ProjectInvoiceUpdated($invoice, 'updated'));
 
             return response()->json([
                 'success' => true,
@@ -128,7 +149,7 @@ class ProjectInvoiceController extends Controller
 
             // Queue email
             Mail::to($project->businessProfile->user->email)
-                ->queue(new ProjectInvoiceUpdated($project, $invoice, 'deleted'));
+                ->queue(new ProjectInvoiceUpdated($invoice, 'deleted'));
 
             return response()->json([
                 'success' => true,
