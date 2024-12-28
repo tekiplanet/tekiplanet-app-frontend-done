@@ -439,3 +439,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::patch('projects/{project}', [ProjectController::class, 'update']);
     Route::patch('projects/{project}/progress', [ProjectController::class, 'updateProgress']);
 });
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/projects/{project}/files/{file}/download', [ProjectController::class, 'downloadFile']);
+});

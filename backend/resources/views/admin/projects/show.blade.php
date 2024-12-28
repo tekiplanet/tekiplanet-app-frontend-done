@@ -238,7 +238,7 @@
                                 @foreach($project->files as $file)
                                 <tr>
                                     <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                        <a href="{{ Storage::url($file->path) }}" 
+                                        <a href="{{ Storage::disk('public')->url($file->file_path) }}" 
                                            target="_blank"
                                            class="text-indigo-600 hover:text-indigo-900">
                                             {{ $file->name }}

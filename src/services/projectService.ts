@@ -79,5 +79,13 @@ export const projectService = {
       project: ProjectDetail;
     }>(`/projects/${id}`);
     return response.data;
+  },
+
+  async downloadFile(projectId: string, fileId: string) {
+    const response = await apiClient.get(
+      `/projects/${projectId}/files/${fileId}/download`,
+      { responseType: 'blob' }
+    );
+    return response.data;
   }
 }; 

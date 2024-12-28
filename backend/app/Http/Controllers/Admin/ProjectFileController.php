@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\ProjectFile;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProjectFileController extends Controller
 {
@@ -22,8 +23,16 @@ class ProjectFileController extends Controller
             // Generate a unique name for storage
             $uniqueName = uniqid() . '-' . $fileName;
             
-            // Store the file
-            $path = $file->storeAs('project-files', $uniqueName, 'public');
+            // Store the file in the public disk under project-files directory
+            $path = $file->storePublicly('project-files', 'public');
+
+            // Debug log
+            \Log::info('File Upload:', [
+                'original_name' => $fileName,
+                'stored_path' => $path,
+                'full_url' => Storage::disk('public')->url($path),
+                'exists' => Storage::disk('public')->exists($path)
+            ]);
 
             // Create file record
             $projectFile = $project->files()->create([
@@ -37,10 +46,19 @@ class ProjectFileController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'File uploaded successfully',
-                'data' => $projectFile
+                'data' => [
+                    'file' => $projectFile,
+                    'url' => Storage::disk('public')->url($path),
+                    'exists' => Storage::disk('public')->exists($path),
+                    'storage_path' => storage_path('app/public/' . $path)
+                ]
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('File Upload Error:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to upload file: ' . $e->getMessage()

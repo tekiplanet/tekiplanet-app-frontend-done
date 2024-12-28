@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\ProjectFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class ProjectController extends Controller
 {
@@ -133,6 +135,27 @@ class ProjectController extends Controller
                 'success' => false,
                 'message' => 'Failed to fetch project details',
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function downloadFile(Project $project, ProjectFile $file)
+    {
+        try {
+            // Check if file exists in storage
+            if (!Storage::disk('public')->exists($file->file_path)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File not found'
+                ], 404);
+            }
+
+            return Storage::disk('public')->download($file->file_path, $file->name);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to download file: ' . $e->getMessage()
             ], 500);
         }
     }

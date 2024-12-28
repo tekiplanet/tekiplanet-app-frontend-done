@@ -136,6 +136,7 @@ function ProjectDetails() {
   const [receiptData, setReceiptData] = useState<any>(null);
   const [isLoadingReceipt, setIsLoadingReceipt] = useState(false);
   const [isDownloadingReceipt, setIsDownloadingReceipt] = useState(false);
+  const [isFileDownloading, setIsFileDownloading] = useState<string | null>(null);
 
   console.log('Full location:', location);
   console.log('All params:', useParams());
@@ -622,9 +623,33 @@ function ProjectDetails() {
                             variant="ghost" 
                             size="icon"
                             className="shrink-0 h-8 w-8"
-                            onClick={() => window.open(file.file_path, '_blank')}
+                            disabled={isFileDownloading === file.id}
+                            onClick={async () => {
+                                try {
+                                    setIsFileDownloading(file.id);
+                                    const blob = await projectService.downloadFile(project.id, file.id);
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = file.name;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    window.URL.revokeObjectURL(url);
+                                    document.body.removeChild(a);
+                                    toast.success('File downloaded successfully');
+                                } catch (error) {
+                                    console.error('Download failed:', error);
+                                    toast.error('Failed to download file');
+                                } finally {
+                                    setIsFileDownloading(null);
+                                }
+                            }}
                           >
-                            <Download className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                            {isFileDownloading === file.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Download className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                            )}
                           </Button>
                         </div>
                       </CardContent>
