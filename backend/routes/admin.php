@@ -56,7 +56,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // User management routes - accessible by super admin and admin
-        Route::middleware('admin.roles:super_admin,admin')->group(function () {
+        Route::middleware('admin.roles:super_admin,admin,finance')->group(function () {
             Route::get('users', [UserController::class, 'index'])->name('users.index');
             Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
             Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
@@ -196,6 +196,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::resource('services', ServiceController::class);
         Route::post('services/{service}/toggle-featured', [ServiceController::class, 'toggleFeatured'])
             ->name('services.toggle-featured');
+
+
 
         // Add these inside the middleware('auth:admin') group
         Route::prefix('transactions')->name('transactions.')->group(function () {

@@ -3,30 +3,89 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Enums\AdminRole;
 use Illuminate\Http\Request;
-use App\Models\User;
-use App\Models\Course;
-use App\Models\BusinessProfile;
-use App\Models\Professional;
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\Transaction;
+use App\Models\BankAccount;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // Get counts for dashboard stats
-        $stats = [
-            'total_users' => User::count(),
-            'total_courses' => Course::count(),
-            'total_businesses' => BusinessProfile::count(),
-            'total_professionals' => Professional::count(),
-        ];
+        $admin = auth('admin')->user();
 
-        // Get recent users
-        $recent_users = User::latest()->take(5)->get();
+        // Return different dashboard views based on role
+        return match($admin->role) {
+            AdminRole::SUPER_ADMIN => $this->superAdminDashboard(),
+            AdminRole::ADMIN => $this->adminDashboard(),
+            AdminRole::SALES => $this->salesDashboard(),
+            AdminRole::FINANCE => $this->financeDashboard(),
+            AdminRole::TUTOR => $this->tutorDashboard(),
+            AdminRole::MANAGEMENT => $this->managementDashboard(),
+            default => abort(403, 'Unauthorized role'),
+        };
+    }
 
-        // Get recent courses
-        $recent_courses = Course::latest()->take(5)->get();
+    private function superAdminDashboard()
+    {
+        // Fetch data for super admin dashboard
+        return view('admin.dashboard.super_admin');
+    }
 
-        return view('admin.dashboard', compact('stats', 'recent_users', 'recent_courses'));
+    private function adminDashboard()
+    {
+        // Fetch data for admin dashboard
+        return view('admin.dashboard.admin');
+    }
+
+    private function salesDashboard()
+    {
+        // Fetch data specific to sales role
+        $recentOrders = Order::latest()->take(5)->get();
+        $totalSales = Order::sum('total');
+        
+        // Instead of using withCount, let's just get basic product stats
+        $productStats = Product::latest()->take(5)->get();
+        
+        return view('admin.dashboard.sales', compact(
+            'recentOrders',
+            'totalSales',
+            'productStats'
+        ));
+    }
+
+    private function financeDashboard()
+    {
+        $totalRevenue = Transaction::where('type', 'credit')->sum('amount');
+        $monthlyRevenue = Transaction::where('type', 'credit')
+            ->whereMonth('created_at', now()->month)
+            ->sum('amount');
+        $pendingTransactions = Transaction::where('status', 'pending')->count();
+        $activeBankAccounts = BankAccount::where('is_verified', true)->count();
+        $recentTransactions = Transaction::latest()->take(5)->get();
+        $bankAccounts = BankAccount::latest()->take(5)->get();
+
+        return view('admin.dashboard.finance', compact(
+            'totalRevenue',
+            'monthlyRevenue',
+            'pendingTransactions',
+            'activeBankAccounts',
+            'recentTransactions',
+            'bankAccounts'
+        ));
+    }
+
+    private function tutorDashboard()
+    {
+        // Fetch tutor specific data
+        return view('admin.dashboard.tutor');
+    }
+
+    private function managementDashboard()
+    {
+        // Fetch management specific data
+        return view('admin.dashboard.management');
     }
 } 
