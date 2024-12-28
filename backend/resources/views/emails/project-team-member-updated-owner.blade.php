@@ -11,16 +11,16 @@
         @endif
         
         <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <p><strong>Project:</strong> {{ $teamMember->project->name }}</p>
-            <p><strong>Team Member:</strong> {{ $teamMember->professional->user->first_name }} {{ $teamMember->professional->user->last_name }}</p>
-            <p><strong>Role:</strong> {{ ucwords(str_replace('_', ' ', $teamMember->role)) }}</p>
+            <p><strong>Project:</strong> {{ $projectName }}</p>
+            <p><strong>Team Member:</strong> {{ $memberName }}</p>
+            <p><strong>Role:</strong> {{ ucwords(str_replace('_', ' ', $memberRole)) }}</p>
             @if($oldStatus !== 'removed')
                 <p><strong>Previous Status:</strong> {{ ucfirst($oldStatus) }}</p>
-                <p><strong>New Status:</strong> {{ ucfirst($teamMember->status) }}</p>
+                <p><strong>New Status:</strong> {{ ucfirst($newStatus) }}</p>
             @endif
         </div>
 
-        <p class="mt-4">You can manage project team members from your dashboard.</p>
+        <p class="mt-4">You can see project team members from your dashboard.</p>
     </div>
 
     <x-slot:closing>

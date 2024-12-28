@@ -13,7 +13,7 @@
             <p><strong>Start Date:</strong> {{ $teamMember->joined_at->format('M d, Y') }}</p>
         </div>
 
-        <p class="mt-4">You can manage project team members from your dashboard.</p>
+        <p class="mt-4">You can see project team members from your dashboard.</p>
     </div>
 
     <x-slot:closing>

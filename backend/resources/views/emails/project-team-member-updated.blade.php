@@ -11,11 +11,11 @@
         @endif
         
         <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <p><strong>Project:</strong> {{ $teamMember->project->name }}</p>
-            <p><strong>Role:</strong> {{ ucwords(str_replace('_', ' ', $teamMember->role)) }}</p>
+            <p><strong>Project:</strong> {{ $projectName }}</p>
+            <p><strong>Role:</strong> {{ ucwords(str_replace('_', ' ', $memberRole)) }}</p>
             @if($oldStatus !== 'removed')
                 <p><strong>Previous Status:</strong> {{ ucfirst($oldStatus) }}</p>
-                <p><strong>New Status:</strong> {{ ucfirst($teamMember->status) }}</p>
+                <p><strong>New Status:</strong> {{ ucfirst($newStatus) }}</p>
             @endif
         </div>
 
