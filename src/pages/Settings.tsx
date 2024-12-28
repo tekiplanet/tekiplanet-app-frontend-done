@@ -352,47 +352,62 @@ const AccountSettingsForm = () => {
 
 const BusinessProfileForm = () => {
   const { user, updateUser } = useAuthStore();
-  // Fix: Use camelCase to access businessProfile
-  const businessProfile = user?.businessProfile;
+  const businessProfile = user?.business_profile;
 
-  // Add debug logging
+  // Add more detailed debug logging
   console.log('BusinessProfileForm Debug:', {
     user,
     businessProfile,
-    status: businessProfile?.status,
-    hasProfile: Boolean(businessProfile),
-    isActive: businessProfile?.status === 'active'
+    formDefaultValues: {
+      business_name: businessProfile?.business_name,
+      business_email: businessProfile?.business_email,
+      phone_number: businessProfile?.phone_number,
+      registration_number: businessProfile?.registration_number,
+      tax_number: businessProfile?.tax_number,
+      website: businessProfile?.website,
+      description: businessProfile?.description,
+      address: businessProfile?.address,
+      city: businessProfile?.city,
+      state: businessProfile?.state,
+      country: businessProfile?.country,
+    }
   });
 
-  if (!businessProfile) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 text-center">
-        <Building2 className="w-12 h-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No Business Profile</h3>
-        <p className="text-muted-foreground mb-4">
-          You don't have a business profile yet. Create one to access business features.
-        </p>
-        <Button asChild>
-          <Link to="/business/setup">Create Business Profile</Link>
-        </Button>
-      </div>
-    );
-  }
+  const form = useForm<z.infer<typeof businessFormSchema>>({
+    resolver: zodResolver(businessFormSchema),
+    defaultValues: {
+      business_name: businessProfile?.business_name || "",
+      business_email: businessProfile?.business_email || "",
+      phone_number: businessProfile?.phone_number || "",
+      registration_number: businessProfile?.registration_number || "",
+      tax_number: businessProfile?.tax_number || "",
+      website: businessProfile?.website || "",
+      description: businessProfile?.description || "",
+      address: businessProfile?.address || "",
+      city: businessProfile?.city || "",
+      state: businessProfile?.state || "",
+      country: businessProfile?.country || "Nigeria",
+    },
+  });
 
-  if (businessProfile.status !== 'active') {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 text-center">
-        <AlertCircle className="w-12 h-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Inactive Business Profile</h3>
-        <p className="text-muted-foreground mb-4">
-          Your business profile is currently inactive. Please complete the setup process.
-        </p>
-        <Button asChild>
-          <Link to="/business/setup">Complete Setup</Link>
-        </Button>
-      </div>
-    );
-  }
+  // Add this to force form reset when businessProfile changes
+  useEffect(() => {
+    if (businessProfile) {
+      form.reset({
+        business_name: businessProfile.business_name || "",
+        business_email: businessProfile.business_email || "",
+        phone_number: businessProfile.phone_number || "",
+        registration_number: businessProfile.registration_number || "",
+        tax_number: businessProfile.tax_number || "",
+        website: businessProfile.website || "",
+        description: businessProfile.description || "",
+        address: businessProfile.address || "",
+        city: businessProfile.city || "",
+        state: businessProfile.state || "",
+        country: businessProfile.country || "Nigeria",
+      });
+    }
+  }, [businessProfile, form]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -451,23 +466,6 @@ const BusinessProfileForm = () => {
       setPreviewUrl(null);
     }
   };
-
-  const form = useForm<z.infer<typeof businessFormSchema>>({
-    resolver: zodResolver(businessFormSchema),
-    defaultValues: {
-      business_name: businessProfile?.business_name || "",
-      business_email: businessProfile?.business_email || "",
-      phone_number: businessProfile?.phone_number || "",
-      registration_number: businessProfile?.registration_number || "",
-      tax_number: businessProfile?.tax_number || "",
-      website: businessProfile?.website || "",
-      description: businessProfile?.description || "",
-      address: businessProfile?.address || "",
-      city: businessProfile?.city || "",
-      state: businessProfile?.state || "",
-      country: "Nigeria"
-    },
-  });
 
   const onSubmit = async (values: z.infer<typeof businessFormSchema>) => {
     const loadingToast = toast.loading('Updating business profile...');
