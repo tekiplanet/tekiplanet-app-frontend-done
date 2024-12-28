@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\CourseTopicController;
 use App\Http\Controllers\Admin\CourseScheduleController;
 use App\Http\Controllers\Admin\CourseExamController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\WorkstationPlanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -149,3 +150,6 @@ Route::post('/admin/courses/{course}/enrollments/bulk-update', [CourseController
 
 Route::get('/admin/courses/{course}/enrollments/{enrollment}', [CourseController::class, 'showEnrollment'])
     ->name('admin.courses.enrollments.show');
+
+Route::post('/workstation/plans/{plan}/toggle-status', [WorkstationPlanController::class, 'toggleStatus'])
+    ->name('admin.workstation.plans.toggle-status');

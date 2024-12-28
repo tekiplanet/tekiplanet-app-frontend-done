@@ -74,14 +74,16 @@
                                             {{ $plan->subscriptions_count }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <a href="{{ route('admin.workstation.plans.show', $plan) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">View</a>
-                                            <a href="{{ route('admin.workstation.plans.edit', $plan) }}" class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
-                                            <form action="{{ route('admin.workstation.plans.toggle-status', $plan) }}" method="POST" class="inline">
-                                                @csrf
-                                                <button type="submit" class="text-{{ $plan->is_active ? 'red' : 'green' }}-600 hover:text-{{ $plan->is_active ? 'red' : 'green' }}-900">
-                                                    {{ $plan->is_active ? 'Deactivate' : 'Activate' }}
-                                                </button>
-                                            </form>
+                                            <a href="{{ route('admin.workstation.plans.show', $plan) }}" 
+                                               class="text-indigo-600 hover:text-indigo-900 mr-3">View</a>
+                                            <a href="{{ route('admin.workstation.plans.edit', $plan) }}" 
+                                               class="text-blue-600 hover:text-blue-900 mr-3">Edit</a>
+                                            <button type="button" 
+                                                data-plan-id="{{ $plan->id }}"
+                                                data-is-active="{{ $plan->is_active }}"
+                                                class="toggle-plan-status text-{{ $plan->is_active ? 'red' : 'green' }}-600 hover:text-{{ $plan->is_active ? 'red' : 'green' }}-900">
+                                                {{ $plan->is_active ? 'Deactivate' : 'Activate' }}
+                                            </button>
                                         </td>
                                     </tr>
                                 @empty
@@ -99,8 +101,131 @@
                     <div class="mt-4">
                         {{ $plans->links() }}
                     </div>
+
+                    <!-- Confirmation Modal -->
+                    @include('admin.components.confirmation-modal')
                 </div>
             </div>
         </div>
     </div>
-@endsection 
+@endsection
+
+@push('scripts')
+<script>
+const modal = document.getElementById('confirmationModal');
+const modalTitle = document.getElementById('modalTitle');
+const modalMessage = document.getElementById('modalMessage');
+const modalIcon = document.getElementById('modalIcon');
+const confirmButton = document.getElementById('confirmButton');
+const confirmButtonText = document.getElementById('confirmButtonText');
+const confirmButtonLoader = document.getElementById('confirmButtonLoader');
+const cancelButton = document.getElementById('cancelButton');
+
+function showModal(options) {
+    modalTitle.textContent = options.title;
+    modalMessage.textContent = options.message;
+    confirmButtonText.textContent = options.confirmText;
+    
+    // Set modal type (danger/warning)
+    if (options.type === 'danger') {
+        modalIcon.classList.add('bg-red-100');
+        modalIcon.querySelector('svg').classList.add('text-red-600');
+        confirmButton.classList.add('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
+    } else {
+        modalIcon.classList.add('bg-yellow-100');
+        modalIcon.querySelector('svg').classList.add('text-yellow-600');
+        confirmButton.classList.add('bg-yellow-600', 'hover:bg-yellow-700', 'focus:ring-yellow-500');
+    }
+    
+    confirmButton.onclick = async () => {
+        try {
+            confirmButton.disabled = true;
+            confirmButtonLoader.classList.remove('hidden');
+            await options.onConfirm();
+        } finally {
+            hideModal();
+        }
+    };
+    
+    cancelButton.onclick = hideModal;
+    
+    modal.classList.remove('hidden');
+}
+
+function hideModal() {
+    modal.classList.add('hidden');
+    modalIcon.classList.remove('bg-red-100', 'bg-yellow-100');
+    modalIcon.querySelector('svg').classList.remove('text-red-600', 'text-yellow-600');
+    confirmButton.classList.remove(
+        'bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500',
+        'bg-yellow-600', 'hover:bg-yellow-700', 'focus:ring-yellow-500'
+    );
+    confirmButton.disabled = false;
+    confirmButtonLoader.classList.add('hidden');
+}
+
+// Add event listeners to all toggle buttons
+document.querySelectorAll('.toggle-plan-status').forEach(button => {
+    button.addEventListener('click', function() {
+        const planId = this.dataset.planId;
+        const isActive = this.dataset.isActive === "1";
+        const actionType = isActive ? 'deactivate' : 'activate';
+        
+        showModal({
+            title: `${isActive ? 'Deactivate' : 'Activate'} Plan`,
+            message: `Are you sure you want to ${actionType} this plan?`,
+            confirmText: isActive ? 'Deactivate' : 'Activate',
+            type: isActive ? 'danger' : 'warning',
+            onConfirm: async () => {
+                try {
+                    const response = await fetch(`/admin/workstation/plans/${planId}/toggle-status`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => null);
+                        throw new Error(errorData?.message || 'Failed to update status');
+                    }
+
+                    const result = await response.json();
+
+                    // Show success message
+                    await Swal.fire({
+                        title: 'Success!',
+                        text: result.message || `Plan ${actionType}d successfully`,
+                        icon: 'success',
+                        confirmButtonText: 'OK',
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+
+                    window.location.reload();
+                } catch (error) {
+                    console.error('Error:', error);
+                    
+                    // Show error message
+                    await Swal.fire({
+                        title: 'Error!',
+                        text: 'An error occurred while updating the plan status',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            }
+        });
+    });
+});
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    if (event.target === modal) {
+        hideModal();
+    }
+}
+</script>
+@endpush 

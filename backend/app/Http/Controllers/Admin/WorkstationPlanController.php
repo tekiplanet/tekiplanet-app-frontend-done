@@ -98,8 +98,19 @@ class WorkstationPlanController extends Controller
 
     public function toggleStatus(WorkstationPlan $plan)
     {
-        $plan->update(['is_active' => !$plan->is_active]);
+        try {
+            $plan->is_active = !$plan->is_active;
+            $plan->save();
 
-        return back()->with('success', 'Plan status updated successfully');
+            return response()->json([
+                'success' => true,
+                'message' => $plan->is_active ? 'Plan activated successfully.' : 'Plan deactivated successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update plan status.'
+            ], 500);
+        }
     }
 } 
