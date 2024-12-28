@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ConsultingBookingStatusUpdated;
 use App\Mail\ConsultingBookingCancelled;
+use App\Mail\ConsultingBookingExpertAssigned;
 
 class ConsultingBookingController extends Controller
 {
@@ -146,51 +147,58 @@ class ConsultingBookingController extends Controller
 
     public function assignExpert(Request $request, ConsultingBooking $booking)
     {
-        $validated = $request->validate([
-            'expert_id' => 'required|exists:professionals,id'
-        ]);
+        try {
+            $validated = $request->validate([
+                'expert_id' => 'required|exists:professionals,id'
+            ]);
 
-        // Get the professional
-        $expert = Professional::with('user')->find($validated['expert_id']);
+            // Get the professional
+            $expert = Professional::with('user')->find($validated['expert_id']);
 
-        // Check if the professional is the same as the booking user
-        if ($expert->user_id === $booking->user_id) {
+            // Check if the professional is the same as the booking user
+            if ($expert->user_id === $booking->user_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A professional cannot be assigned to their own booking'
+                ], 422);
+            }
+
+            // Check if this is a reassignment
+            $isReassignment = $booking->assigned_expert_id !== null;
+            $oldExpertName = $isReassignment ? $booking->expert->user->full_name : null;
+
+            $booking->update([
+                'assigned_expert_id' => $validated['expert_id'],
+                'expert_assigned_at' => now()
+            ]);
+
+            // Prepare notification message
+            $message = $isReassignment
+                ? "Your booking has been reassigned to a new expert: {$expert->user->full_name}"
+                : "An expert has been assigned to your booking: {$expert->user->full_name}";
+
+            // Send notification
+            $this->notificationService->send([
+                'type' => 'expert_assigned',
+                'title' => $isReassignment ? 'Expert Reassigned' : 'Expert Assigned',
+                'message' => $message,
+                'action_url' => "/bookings/{$booking->id}",
+                'icon' => 'user-check'
+            ], $booking->user);
+
+            // Send email
+            Mail::to($booking->user->email)
+                ->queue(new ConsultingBookingExpertAssigned($booking, $isReassignment));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Expert assigned successfully'
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'A professional cannot be assigned to their own booking'
-            ], 422);
+                'message' => 'Failed to assign expert: ' . $e->getMessage()
+            ], 500);
         }
-
-        // Debug log to check values
-        \Log::info('Assigning expert', [
-            'booking_id' => $booking->id,
-            'expert_id' => $validated['expert_id'],
-            'current_time' => now()
-        ]);
-
-        $booking->update([
-            'assigned_expert_id' => $validated['expert_id'],
-            'expert_assigned_at' => now()
-        ]);
-
-        // Verify the update
-        $booking->refresh();
-        \Log::info('After update', [
-            'assigned_expert_id' => $booking->assigned_expert_id,
-            'expert_assigned_at' => $booking->expert_assigned_at
-        ]);
-
-        // Notify the expert
-        $this->notificationService->send([
-            'type' => 'booking_assigned',
-            'title' => 'New Booking Assigned',
-            'message' => "You have been assigned to a new consulting booking",
-            'action_url' => "/bookings/{$booking->id}"
-        ], $expert->user);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Expert assigned successfully'
-        ]);
     }
 } 
