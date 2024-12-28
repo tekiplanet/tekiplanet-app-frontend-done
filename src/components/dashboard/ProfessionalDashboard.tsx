@@ -102,7 +102,7 @@ const ProfessionalDashboard: React.FC<DashboardProps> = ({ isLoading = false }) 
 
   if (isLoading || profileLoading || dashboardLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col space-y-2">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-4 w-72" />
@@ -168,7 +168,7 @@ const ProfessionalDashboard: React.FC<DashboardProps> = ({ isLoading = false }) 
       variants={container}
       initial="hidden"
       animate="show"
-      className="space-y-6"
+      className="space-y-6 px-4 sm:px-6 lg:px-8"
     >
       {/* Welcome Section */}
       <motion.div variants={item} className="space-y-1">
