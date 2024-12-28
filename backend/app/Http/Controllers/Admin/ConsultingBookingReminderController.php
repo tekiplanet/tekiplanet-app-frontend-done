@@ -30,7 +30,7 @@ class ConsultingBookingReminderController extends Controller
             $this->notificationService->send([
                 'type' => 'booking_reminder',
                 'title' => 'Booking Reminder',
-                'message' => "Your booking is scheduled for {$booking->selected_date->format('M d, Y')} at {$booking->selected_time->format('h:i A')} (in {$validated['time_until']})",
+                'message' => "Your booking scheduled for {$booking->selected_date->format('M d, Y')} at {$booking->selected_time->format('h:i A')} is in {$validated['time_until']}",
                 'action_url' => "/bookings/{$booking->id}",
                 'extra_data' => [
                     'note' => $validated['note']
