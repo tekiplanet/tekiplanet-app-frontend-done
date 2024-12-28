@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\WorkstationSubscription;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SubscriptionStatusUpdated;
 
 class WorkstationSubscriptionController extends Controller
 {
@@ -64,7 +66,7 @@ class WorkstationSubscriptionController extends Controller
             $oldStatus = $subscription->status;
             $subscription->update($validated);
 
-            // Send notification
+            // Send in-app notification
             $this->notificationService->send([
                 'type' => 'subscription_status_updated',
                 'title' => 'Subscription Status Updated',
@@ -72,6 +74,10 @@ class WorkstationSubscriptionController extends Controller
                 'action_url' => "/subscriptions/{$subscription->id}",
                 'icon' => 'office-building'
             ], $subscription->user);
+
+            // Send email notification
+            Mail::to($subscription->user)
+                ->send(new SubscriptionStatusUpdated($subscription, $validated['status']));
 
             return response()->json([
                 'success' => true,
