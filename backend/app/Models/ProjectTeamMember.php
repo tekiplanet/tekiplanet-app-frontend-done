@@ -30,7 +30,7 @@ class ProjectTeamMember extends Model
 
     public function professional()
     {
-        return $this->belongsTo(Professional::class)->with('user');
+        return $this->belongsTo(Professional::class);
     }
 
     public function scopeConsultingExperts($query)

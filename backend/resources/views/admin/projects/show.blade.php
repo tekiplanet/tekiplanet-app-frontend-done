@@ -156,7 +156,7 @@
                                 @foreach($project->teamMembers as $member)
                                 <tr>
                                     <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                        {{ $member->professional->user->name }}
+                                        {{ $member->professional->user->first_name }} {{ $member->professional->user->last_name }}
                                     </td>
                                     <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                         {{ $member->role }}
@@ -424,38 +424,63 @@
             <form id="teamMemberForm" onsubmit="handleTeamMemberSubmit(event)">
                 <input type="hidden" id="memberId" name="memberId">
                 <div class="space-y-4">
-                    <div id="userSelectContainer">
-                        <label for="userId" class="block text-sm font-medium text-gray-700">User</label>
-                        <select id="userId" name="user_id" required
-                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                            <option value="">Select a user</option>
-                            @foreach(\App\Models\User::all() as $user)
-                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                    <div id="professionalSelectContainer">
+                        <label for="professional_id" class="block text-sm font-medium text-gray-700">Professional</label>
+                        <select id="professional_id" 
+                                name="professional_id" 
+                                required 
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white text-gray-900">
+                            <option value="" class="text-gray-900">Select a professional</option>
+                            @php
+                                $professionals = \App\Models\Professional::with(['user'])
+                                    ->whereHas('user')
+                                    ->get();
+                            @endphp
+                            @foreach($professionals as $professional)
+                                <option value="{{ $professional->id }}" class="text-gray-900">
+                                    {{ $professional->user->first_name }} {{ $professional->user->last_name }} - 
+                                    {{ $professional->specialization ?? $professional->expertise ?? 'No expertise' }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
                     <div>
-                        <label for="memberRole" class="block text-sm font-medium text-gray-700">Role</label>
-                        <input type="text" id="memberRole" name="role" required
-                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="memberStatus" class="block text-sm font-medium text-gray-700">Status</label>
-                        <select id="memberStatus" name="status" required
-                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
+                        <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
+                        <select id="role" 
+                                name="role" 
+                                required 
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white text-gray-900">
+                            <option value="project_manager" class="text-gray-900">Project Manager</option>
+                            <option value="developer" class="text-gray-900">Developer</option>
+                            <option value="designer" class="text-gray-900">Designer</option>
+                            <option value="consultant" class="text-gray-900">Consultant</option>
+                            <option value="qa_engineer" class="text-gray-900">QA Engineer</option>
                         </select>
                     </div>
                     <div>
-                        <label for="memberJoinedAt" class="block text-sm font-medium text-gray-700">Joined Date</label>
-                        <input type="date" id="memberJoinedAt" name="joined_at" required
-                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                        <select id="status" 
+                                name="status" 
+                                required 
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white text-gray-900">
+                            <option value="active" class="text-gray-900">Active</option>
+                            <option value="inactive" class="text-gray-900">Inactive</option>
+                        </select>
                     </div>
                     <div>
-                        <label for="memberLeftAt" class="block text-sm font-medium text-gray-700">Left Date</label>
-                        <input type="date" id="memberLeftAt" name="left_at"
-                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <label for="joined_at" class="block text-sm font-medium text-gray-700">Join Date</label>
+                        <input type="date" 
+                               id="joined_at" 
+                               name="joined_at" 
+                               required
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="left_at" class="block text-sm font-medium text-gray-700">Leave Date</label>
+                        <input type="date" 
+                               id="left_at" 
+                               name="left_at"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                     </div>
                 </div>
                 <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
@@ -791,8 +816,8 @@ function deleteStage(stageId) {
 
 function openAddTeamMemberModal() {
     document.getElementById('memberId').value = '';
-    document.getElementById('userSelectContainer').style.display = 'block';
     document.getElementById('teamMemberForm').reset();
+    document.getElementById('professionalSelectContainer').style.display = 'block';
     document.getElementById('teamMemberModal').classList.remove('hidden');
 }
 
@@ -807,9 +832,14 @@ function editTeamMember(memberId) {
     
     // Populate form
     document.getElementById('memberId').value = memberId;
-    document.getElementById('memberRole').value = member.role;
-    document.getElementById('memberStatus').value = member.status;
-    document.getElementById('memberLeftAt').value = member.left_at ? member.left_at.split('T')[0] : '';
+    document.getElementById('professional_id').value = member.professional_id;
+    document.getElementById('role').value = member.role;
+    document.getElementById('status').value = member.status;
+    document.getElementById('joined_at').value = member.joined_at.split(' ')[0];
+    document.getElementById('left_at').value = member.left_at ? member.left_at.split(' ')[0] : '';
+    
+    // Hide professional select since we can't change the professional
+    document.getElementById('professionalSelectContainer').style.display = 'none';
     
     // Show modal
     document.getElementById('teamMemberModal').classList.remove('hidden');

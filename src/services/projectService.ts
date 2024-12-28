@@ -23,10 +23,15 @@ export interface ProjectStage {
 
 export interface TeamMember {
   id: string;
-  user: {
+  professional: {
     id: string;
-    name: string;
-    avatar: string | null;
+    user: {
+      id: string;
+      first_name: string;
+      last_name: string;
+      avatar: string | null;
+    };
+    expertise: string;
   };
   role: string;
   status: string;

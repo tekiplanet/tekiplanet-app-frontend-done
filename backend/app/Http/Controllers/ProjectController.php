@@ -22,7 +22,7 @@ class ProjectController extends Controller
             }
 
             $projects = Project::where('business_id', $businessProfile->id)
-                ->with(['stages', 'teamMembers', 'teamMembers.user', 'businessProfile'])
+                ->with(['stages', 'teamMembers.professional.user', 'businessProfile'])
                 ->latest()
                 ->get()
                 ->map(function ($project) {
@@ -57,7 +57,7 @@ class ProjectController extends Controller
             $project = Project::with([
                 'businessProfile',
                 'stages',
-                'teamMembers.user',
+                'teamMembers.professional.user',
                 'files',
                 'invoices'
             ])->findOrFail($id);
@@ -96,10 +96,15 @@ class ProjectController extends Controller
                     ]),
                     'team_members' => $project->teamMembers->map(fn($member) => [
                         'id' => $member->id,
-                        'user' => [
-                            'id' => $member->user->id,
-                            'name' => $member->user->first_name . ' ' . $member->user->last_name,
-                            'avatar' => $member->user->avatar,
+                        'professional' => [
+                            'id' => $member->professional->id,
+                            'user' => [
+                                'id' => $member->professional->user->id,
+                                'first_name' => $member->professional->user->first_name,
+                                'last_name' => $member->professional->user->last_name,
+                                'avatar' => $member->professional->user->avatar,
+                            ],
+                            'expertise' => $member->professional->expertise
                         ],
                         'role' => $member->role,
                         'status' => $member->status,

@@ -108,6 +108,13 @@ function getDaysBetweenDates(startDate: string, endDate: string) {
   return diffDays;
 }
 
+function formatRole(role: string) {
+  return role
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 // Components
 export default function ProjectDetailsPage() {
   return <ProjectDetails />;
@@ -552,21 +559,23 @@ function ProjectDetails() {
                     <Card className="bg-card border-none hover:shadow-lg transition-all duration-300">
                       <CardContent className="p-4">
                         <div className="flex items-center gap-4">
-                          {member.user.avatar ? (
+                          {member.professional.user.avatar ? (
                             <img 
-                              src={member.user.avatar} 
-                              alt={member.user.name} 
+                              src={member.professional.user.avatar} 
+                              alt={`${member.professional.user.first_name} ${member.professional.user.last_name}`} 
                               className="h-12 w-12 rounded-full object-cover ring-2 ring-primary/10" 
                             />
                           ) : (
                             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold ring-2 ring-primary/5">
-                              {member.user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                              {`${member.professional.user.first_name[0]}${member.professional.user.last_name[0]}`}
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold truncate">{member.user.name}</h3>
+                            <h3 className="font-semibold truncate">
+                              {`${member.professional.user.first_name} ${member.professional.user.last_name}`}
+                            </h3>
                             <Badge variant="outline" className="mt-1 bg-primary/5 text-primary border-0">
-                              {member.role}
+                              {formatRole(member.role)}
                             </Badge>
                           </div>
                         </div>
