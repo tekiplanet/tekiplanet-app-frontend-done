@@ -4,8 +4,12 @@
     </x-slot>
 
     <div>
-        @if($isProgressUpdate)
+        @if(isset($type) && $type === 'progress')
             <p>The progress of your project has been updated:</p>
+            <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <p><strong>Project:</strong> {{ $projectName }}</p>
+                <p><strong>New Progress:</strong> {{ $progress }}</p>
+            </div>
         @else
             <p>Your project details have been updated:</p>
         @endif

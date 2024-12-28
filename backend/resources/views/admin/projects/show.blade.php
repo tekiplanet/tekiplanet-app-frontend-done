@@ -736,7 +736,7 @@ function updateStatus(event) {
             });
 
             // Send AJAX request
-            fetch(`{{ route('admin.projects.update-status', $project) }}`, {
+            fetch(`/admin/projects/{{ $project->id }}/status`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -744,7 +744,12 @@ function updateStatus(event) {
                 },
                 body: JSON.stringify({ status, notes })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     Swal.fire({

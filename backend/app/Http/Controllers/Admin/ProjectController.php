@@ -132,7 +132,11 @@ class ProjectController extends Controller
 
             // Queue email
             Mail::to($project->businessProfile->user->email)
-                ->queue(new ProjectStatusUpdated($project, $oldStatus, $validated['status'], $validated['notes'] ?? null));
+                ->queue(new ProjectStatusUpdated($project, [
+                    'old_status' => ucwords(str_replace('_', ' ', $oldStatus)),
+                    'new_status' => ucwords(str_replace('_', ' ', $validated['status'])),
+                    'notes' => $validated['notes'] ?? null
+                ]));
 
             return response()->json([
                 'success' => true,
@@ -213,14 +217,18 @@ class ProjectController extends Controller
                 'action_url' => "/projects/{$project->id}",
                 'extra_data' => [
                     'project_id' => $project->id,
-                    'old_progress' => $oldProgress,
-                    'new_progress' => $project->progress
+                    'old_progress' => "{$oldProgress}%",
+                    'new_progress' => "{$project->progress}%"
                 ]
             ], $project->businessProfile->user);
 
             // Send email
             Mail::to($project->businessProfile->user->email)
-                ->queue(new ProjectStatusUpdated($project, [], true));
+                ->queue(new ProjectStatusUpdated($project, [
+                    'progress' => $project->progress . '%',
+                    'old_progress' => $oldProgress . '%',
+                    'type' => 'progress'
+                ]));
 
             return response()->json([
                 'success' => true,
