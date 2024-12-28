@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Project;
+use App\Models\BusinessProfile;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
-use App\Mail\ProjectStatusUpdated;
+use App\Mail\ProjectCreated;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 class ProjectController extends Controller
 {
@@ -18,37 +20,80 @@ class ProjectController extends Controller
         $this->notificationService = $notificationService;
     }
 
-    public function index(Request $request)
+    public function index()
     {
-        $projects = Project::with(['businessProfile', 'stages'])
-            ->when($request->search, function($query, $search) {
-                $query->where(function($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('client_name', 'like', "%{$search}%")
-                      ->orWhereHas('businessProfile', function($q) use ($search) {
-                          $q->where('business_name', 'like', "%{$search}%");
-                      });
-                });
-            })
-            ->when($request->status, function($query, $status) {
-                $query->where('status', $status);
-            })
+        $projects = Project::with(['businessProfile', 'stages', 'teamMembers', 'files'])
             ->latest()
             ->paginate(10);
 
         return view('admin.projects.index', compact('projects'));
     }
 
+    public function create()
+    {
+        $businesses = BusinessProfile::with('user')->get();
+        return view('admin.projects.create', compact('businesses'));
+    }
+
+    public function store(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'required|string',
+                'business_profile_id' => 'required|exists:business_profiles,id',
+                'client_name' => 'required|string|max:255',
+                'start_date' => 'required|date',
+                'end_date' => 'nullable|date|after:start_date',
+                'status' => 'required|in:pending,in_progress,completed,on_hold,cancelled',
+                'progress' => 'required|integer|min:0|max:100',
+                'budget' => 'required|numeric|min:0'
+            ]);
+
+            $validated['business_id'] = $validated['business_profile_id'];
+            unset($validated['business_profile_id']);
+
+            $project = Project::create($validated);
+
+            // Send notification
+            $this->notificationService->send([
+                'type' => 'project_created',
+                'title' => 'New Project Created',
+                'message' => "Project '{$project->name}' has been created",
+                'icon' => 'folder-plus',
+                'action_url' => "/projects/{$project->id}",
+                'extra_data' => [
+                    'project_id' => $project->id
+                ]
+            ], $project->businessProfile->user);
+
+            // Queue email
+            Mail::to($project->businessProfile->user->email)
+                ->queue(new ProjectCreated($project));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Project created successfully',
+                'redirect' => route('admin.projects.show', $project)
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create project: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function show(Project $project)
     {
-        $project->load([
-            'businessProfile',
-            'stages',
-            'teamMembers.user',
-            'files',
-            'invoices'
-        ]);
-
+        $project->load(['businessProfile.user', 'stages', 'teamMembers.user', 'files.uploadedBy', 'invoices']);
         return view('admin.projects.show', compact('project'));
     }
 
@@ -56,7 +101,7 @@ class ProjectController extends Controller
     {
         try {
             $validated = $request->validate([
-                'status' => 'required|in:pending,in_progress,completed',
+                'status' => 'required|in:pending,in_progress,completed,on_hold,cancelled',
                 'notes' => 'nullable|string'
             ]);
 
@@ -67,20 +112,19 @@ class ProjectController extends Controller
             $this->notificationService->send([
                 'type' => 'project_status_updated',
                 'title' => 'Project Status Updated',
-                'message' => "Your project '{$project->name}' status has been updated to " . ucfirst($validated['status']),
-                'icon' => 'briefcase',
+                'message' => "Project '{$project->name}' status changed from {$oldStatus} to {$validated['status']}",
+                'icon' => 'refresh',
                 'action_url' => "/projects/{$project->id}",
                 'extra_data' => [
                     'project_id' => $project->id,
                     'old_status' => $oldStatus,
-                    'new_status' => $validated['status'],
-                    'notes' => $validated['notes'] ?? null
+                    'new_status' => $validated['status']
                 ]
             ], $project->businessProfile->user);
 
             // Queue email
             Mail::to($project->businessProfile->user->email)
-                ->queue(new ProjectStatusUpdated($project, $oldStatus, $validated['notes'] ?? null));
+                ->queue(new ProjectStatusUpdated($project, $oldStatus, $validated['status'], $validated['notes'] ?? null));
 
             return response()->json([
                 'success' => true,
