@@ -9,6 +9,13 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\BankAccount;
+use App\Models\WorkstationSubscription;
+use App\Models\User;
+use App\Models\ConsultingBooking;
+use App\Models\Course;
+use App\Models\Setting;
+use App\Models\BusinessProfile;
+use App\Models\Professional;
 
 class DashboardController extends Controller
 {
@@ -30,8 +37,22 @@ class DashboardController extends Controller
 
     private function superAdminDashboard()
     {
-        // Fetch data for super admin dashboard
-        return view('admin.dashboard.super_admin');
+        $currency = Setting::getSetting('currency_symbol', '$');
+        
+        $stats = [
+            'total_users' => User::count(),
+            'total_revenue' => Transaction::where('type', 'credit')->sum('amount'),
+            'active_subscriptions' => WorkstationSubscription::where('status', 'active')->count(),
+            'pending_consultations' => ConsultingBooking::where('status', 'pending')->count(),
+            'total_courses' => Course::count(),
+            'total_businesses' => BusinessProfile::count(),
+            'total_professionals' => Professional::count(),
+        ];
+
+        $recent_users = User::latest()->take(5)->get();
+        $recent_courses = Course::latest()->take(5)->get();
+
+        return view('admin.dashboard.super_admin', compact('stats', 'recent_users', 'recent_courses', 'currency'));
     }
 
     private function adminDashboard()
@@ -85,7 +106,16 @@ class DashboardController extends Controller
 
     private function managementDashboard()
     {
-        // Fetch management specific data
-        return view('admin.dashboard.management');
+        $totalWorkstations = WorkstationSubscription::count();
+        $activeUsers = User::count();
+        $pendingConsultations = ConsultingBooking::where('status', 'pending')->count();
+        $totalCourses = Course::count();
+
+        return view('admin.dashboard.management', compact(
+            'totalWorkstations',
+            'activeUsers',
+            'pendingConsultations',
+            'totalCourses'
+        ));
     }
 } 
