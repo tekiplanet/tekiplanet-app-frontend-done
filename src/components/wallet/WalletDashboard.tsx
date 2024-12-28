@@ -442,7 +442,7 @@ export default function WalletDashboard() {
   }
 
   return (
-    <div className="space-y-4 py-4 md:py-6">
+    <div className="space-y-4 py-4 md:py-6 px-4 sm:px-6 lg:px-8">
       {/* Header Section - Stack on mobile */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
