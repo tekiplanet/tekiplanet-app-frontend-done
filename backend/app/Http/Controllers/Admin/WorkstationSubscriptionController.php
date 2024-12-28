@@ -56,22 +56,32 @@ class WorkstationSubscriptionController extends Controller
 
     public function updateStatus(Request $request, WorkstationSubscription $subscription)
     {
-        $validated = $request->validate([
-            'status' => 'required|in:active,expired,cancelled,pending'
-        ]);
+        try {
+            $validated = $request->validate([
+                'status' => 'required|in:active,expired,cancelled,pending'
+            ]);
 
-        $oldStatus = $subscription->status;
-        $subscription->update($validated);
+            $oldStatus = $subscription->status;
+            $subscription->update($validated);
 
-        // Send notification
-        $this->notificationService->send([
-            'type' => 'subscription_status_updated',
-            'title' => 'Subscription Status Updated',
-            'message' => "Your workstation subscription status has been updated to {$validated['status']}",
-            'action_url' => "/subscriptions/{$subscription->id}",
-            'icon' => 'office-building'
-        ], $subscription->user);
+            // Send notification
+            $this->notificationService->send([
+                'type' => 'subscription_status_updated',
+                'title' => 'Subscription Status Updated',
+                'message' => "Your workstation subscription status has been updated to {$validated['status']}",
+                'action_url' => "/subscriptions/{$subscription->id}",
+                'icon' => 'office-building'
+            ], $subscription->user);
 
-        return back()->with('success', 'Subscription status updated successfully');
+            return response()->json([
+                'success' => true,
+                'message' => 'Subscription status updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update subscription status'
+            ], 500);
+        }
     }
 } 

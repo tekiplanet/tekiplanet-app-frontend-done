@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\CourseScheduleController;
 use App\Http\Controllers\Admin\CourseExamController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\WorkstationPlanController;
+use App\Http\Controllers\Admin\WorkstationSubscriptionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -153,3 +154,6 @@ Route::get('/admin/courses/{course}/enrollments/{enrollment}', [CourseController
 
 Route::post('/workstation/plans/{plan}/toggle-status', [WorkstationPlanController::class, 'toggleStatus'])
     ->name('admin.workstation.plans.toggle-status');
+
+Route::patch('/workstation/subscriptions/{subscription}/status', [WorkstationSubscriptionController::class, 'updateStatus'])
+    ->name('admin.workstation.subscriptions.update-status');
