@@ -7,6 +7,9 @@ use App\Models\ConsultingBooking;
 use App\Models\Professional;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ConsultingBookingStatusUpdated;
+use App\Mail\ConsultingBookingCancelled;
 
 class ConsultingBookingController extends Controller
 {
@@ -52,6 +55,14 @@ class ConsultingBookingController extends Controller
             ->with('user')
             ->get();
 
+        $statusColors = [
+            'pending' => 'bg-yellow-100 text-yellow-800',
+            'confirmed' => 'bg-blue-100 text-blue-800',
+            'ongoing' => 'bg-purple-100 text-purple-800',
+            'completed' => 'bg-green-100 text-green-800',
+            'cancelled' => 'bg-red-100 text-red-800'
+        ];
+
         // For debugging - count all professionals vs filtered ones
         $totalProfessionals = Professional::count();
         $activeCount = Professional::where('status', 'active')->count();
@@ -64,7 +75,7 @@ class ConsultingBookingController extends Controller
             'final_filtered_count' => $experts->count()
         ]);
 
-        return view('admin.consulting.bookings.show', compact('booking', 'experts'));
+        return view('admin.consulting.bookings.show', compact('booking', 'experts', 'statusColors'));
     }
 
     public function updateStatus(Request $request, ConsultingBooking $booking)
@@ -75,15 +86,57 @@ class ConsultingBookingController extends Controller
         ]);
 
         $oldStatus = $booking->status;
-        $booking->update($validated);
+        
+        // Handle cancellation
+        if ($validated['status'] === 'cancelled') {
+            $booking->update([
+                'status' => 'cancelled',
+                'cancellation_reason' => $validated['cancellation_reason'],
+                'cancelled_at' => now()
+            ]);
 
-        // Send notification to user
-        $this->notificationService->send([
-            'type' => 'booking_status_updated',
-            'title' => 'Booking Status Updated',
-            'message' => "Your booking status has been updated to " . ucfirst($validated['status']),
-            'action_url' => "/bookings/{$booking->id}"
-        ], $booking->user);
+            // Send cancellation notification
+            $this->notificationService->send([
+                'type' => 'booking_cancelled',
+                'title' => 'Booking Cancelled',
+                'message' => "Your booking has been cancelled. Reason: {$validated['cancellation_reason']}",
+                'action_url' => "/bookings/{$booking->id}",
+                'icon' => 'x-circle'
+            ], $booking->user);
+
+            // Send cancellation email
+            Mail::to($booking->user->email)
+                ->queue(new ConsultingBookingCancelled($booking));
+
+        } else {
+            $booking->update(['status' => $validated['status']]);
+
+            // Prepare notification message based on status
+            $message = match($validated['status']) {
+                'confirmed' => 'Your booking has been confirmed',
+                'ongoing' => 'Your consulting session is now in progress',
+                'completed' => 'Your consulting session has been marked as completed',
+                default => "Your booking status has been updated to " . ucfirst($validated['status'])
+            };
+
+            // Send status update notification
+            $this->notificationService->send([
+                'type' => 'booking_status_updated',
+                'title' => 'Booking Status Updated',
+                'message' => $message,
+                'action_url' => "/bookings/{$booking->id}",
+                'icon' => match($validated['status']) {
+                    'confirmed' => 'check-circle',
+                    'ongoing' => 'play-circle',
+                    'completed' => 'check-circle',
+                    default => 'info'
+                }
+            ], $booking->user);
+
+            // Send status update email
+            Mail::to($booking->user->email)
+                ->queue(new ConsultingBookingStatusUpdated($booking, $oldStatus));
+        }
 
         return response()->json([
             'success' => true,

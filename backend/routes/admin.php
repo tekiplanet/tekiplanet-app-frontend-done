@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\Auth\LogoutController;
 use App\Http\Controllers\Admin\QuoteController;
 use App\Http\Controllers\Admin\ConsultingBookingController;
 use App\Http\Controllers\Admin\ConsultingTimeSlotController;
+use App\Http\Controllers\Admin\ConsultingBookingReminderController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
@@ -259,6 +260,10 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
             Route::get('/timeslots/{timeSlot}/edit', [ConsultingTimeSlotController::class, 'edit'])->name('timeslots.edit');
             Route::put('/timeslots/{timeSlot}', [ConsultingTimeSlotController::class, 'update'])->name('timeslots.update');
             Route::delete('/timeslots/{timeSlot}', [ConsultingTimeSlotController::class, 'destroy'])->name('timeslots.destroy');
+
+            // Reminders
+            Route::post('/bookings/{booking}/send-reminder', [ConsultingBookingReminderController::class, 'sendReminder'])
+                ->name('bookings.send-reminder');
         });
     });
 }); 

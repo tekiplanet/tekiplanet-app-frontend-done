@@ -20,17 +20,19 @@
                 <div>
                     <label class="text-sm text-gray-500">Status</label>
                     <div class="flex items-center gap-2">
-                        <span class="px-2 py-1 text-sm rounded-full 
-                            {{ $booking->status === 'completed' ? 'bg-green-100 text-green-800' : 
-                               ($booking->status === 'ongoing' ? 'bg-blue-100 text-blue-800' : 
-                               ($booking->status === 'cancelled' ? 'bg-red-100 text-red-800' : 
-                               'bg-yellow-100 text-yellow-800')) }}">
+                        <span class="px-2 py-1 text-sm rounded-full {{ $statusColors[$booking->status] }}">
                             {{ ucfirst($booking->status) }}
                         </span>
                         <button onclick="openStatusModal()" 
                                 class="text-sm text-blue-600 hover:text-blue-800">
                             Update
                         </button>
+                        @if(in_array($booking->status, ['pending', 'confirmed']))
+                            <button onclick="openReminderModal()" 
+                                    class="text-sm text-blue-600 hover:text-blue-800">
+                                Send Reminder
+                            </button>
+                        @endif
                     </div>
                 </div>
 
@@ -183,8 +185,15 @@
                     Cancel
                 </button>
                 <button onclick="updateStatus()" 
+                        id="updateStatusButton"
                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Update
+                    <div class="flex items-center gap-2">
+                        <svg id="statusSpinner" class="animate-spin h-4 w-4 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span id="statusButtonText">Update</span>
+                    </div>
                 </button>
             </div>
         </div>
@@ -235,6 +244,43 @@
     </div>
 </div>
 
+<!-- Reminder Modal -->
+<div id="reminderModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg max-w-md w-full">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-4">Send Booking Reminder</h3>
+                <form id="reminderForm" class="space-y-4">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-4" id="timeUntilBooking"></p>
+                        <label class="block text-sm font-medium text-gray-700">Additional Note (Optional)</label>
+                        <textarea name="note" rows="3" 
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                placeholder="Add any additional information..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 flex justify-end gap-2">
+                <button onclick="closeReminderModal()" 
+                        class="px-4 py-2 text-gray-700 hover:text-gray-900">
+                    Cancel
+                </button>
+                <button onclick="sendReminder()" 
+                        id="sendReminderButton"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    <div class="flex items-center gap-2">
+                        <svg id="reminderSpinner" class="animate-spin h-4 w-4 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span id="reminderButtonText">Send Reminder</span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 // Status Modal Functions
@@ -247,6 +293,15 @@ function closeStatusModal() {
 }
 
 function updateStatus() {
+    const updateButton = document.getElementById('updateStatusButton');
+    const statusSpinner = document.getElementById('statusSpinner');
+    const statusButtonText = document.getElementById('statusButtonText');
+
+    // Disable button and show loading state
+    updateButton.disabled = true;
+    statusSpinner.classList.remove('hidden');
+    statusButtonText.textContent = 'Updating...';
+
     const form = document.getElementById('statusForm');
     const formData = new FormData(form);
 
@@ -269,6 +324,10 @@ function updateStatus() {
     })
     .catch(error => {
         showNotification('Error', error.message, 'error');
+        // Reset button state on error
+        updateButton.disabled = false;
+        statusSpinner.classList.add('hidden');
+        statusButtonText.textContent = 'Update';
     });
 }
 
@@ -325,6 +384,82 @@ document.querySelector('select[name="status"]').addEventListener('change', funct
     const cancellationField = document.getElementById('cancellationReasonField');
     cancellationField.classList.toggle('hidden', this.value !== 'cancelled');
 });
+
+function calculateTimeUntilBooking() {
+    const bookingDate = new Date('{{ $booking->selected_date }}T{{ $booking->selected_time }}');
+    const now = new Date();
+    const diff = bookingDate - now;
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    let timeText = '';
+    if (days > 0) {
+        timeText = `${days} days`;
+    } else if (hours > 0) {
+        timeText = `${hours} hours`;
+    } else {
+        timeText = `${minutes} minutes`;
+    }
+    
+    return timeText;
+}
+
+function openReminderModal() {
+    const timeUntil = calculateTimeUntilBooking();
+    document.getElementById('timeUntilBooking').textContent = 
+        `This booking is scheduled for {{ $booking->selected_date->format('M d, Y') }} at {{ $booking->selected_time->format('h:i A') }} (in ${timeUntil})`;
+    document.getElementById('reminderModal').classList.remove('hidden');
+}
+
+function closeReminderModal() {
+    document.getElementById('reminderModal').classList.add('hidden');
+}
+
+function sendReminder() {
+    const reminderButton = document.getElementById('sendReminderButton');
+    const reminderSpinner = document.getElementById('reminderSpinner');
+    const reminderButtonText = document.getElementById('reminderButtonText');
+
+    // Disable button and show loading state
+    reminderButton.disabled = true;
+    reminderSpinner.classList.remove('hidden');
+    reminderButtonText.textContent = 'Sending...';
+
+    const form = document.getElementById('reminderForm');
+    const formData = new FormData(form);
+
+    fetch(`{{ route('admin.consulting.bookings.send-reminder', $booking->id) }}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            note: formData.get('note'),
+            time_until: calculateTimeUntilBooking()
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Success', 'Reminder sent successfully');
+            closeReminderModal();
+        } else {
+            throw new Error(data.message);
+        }
+    })
+    .catch(error => {
+        showNotification('Error', error.message, 'error');
+    })
+    .finally(() => {
+        // Reset button state
+        reminderButton.disabled = false;
+        reminderSpinner.classList.add('hidden');
+        reminderButtonText.textContent = 'Send Reminder';
+    });
+}
 </script>
 @endpush
 @endsection 

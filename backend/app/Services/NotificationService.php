@@ -11,8 +11,6 @@ class NotificationService
 {
     public function send($data, $users)
     {
-        \Log::info('Creating notification:', $data);
-        
         // Create the notification
         $notification = Notification::create([
             'type' => $data['type'],
@@ -23,26 +21,20 @@ class NotificationService
             'data' => $data['extra_data'] ?? null,
         ]);
 
-        \Log::info('Notification created:', ['id' => $notification->id]);
-
         // If users is a single user, convert to array
         $users = is_array($users) ? $users : [$users];
 
-        // Attach notification to users
+        // Attach notification to users and queue broadcasts
         foreach ($users as $user) {
-            // \Log::info('Attaching notification to user:', [
-            //     'notification_id' => $notification->id,
-            //     'user_id' => $user->id
-            // ]);
-
             $notification->users()->attach($user->id, [
                 'id' => Str::uuid(),
                 'read' => false
             ]);
 
-            // Broadcast to each user
-            \Log::info('Broadcasting notification');
-            event(new NewNotification($notification, $user));
+            // Queue the broadcast event
+            dispatch(function () use ($notification, $user) {
+                event(new NewNotification($notification, $user));
+            })->onQueue('default');
         }
 
         return $notification;
