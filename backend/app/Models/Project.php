@@ -40,7 +40,7 @@ class Project extends Model
 
     public function teamMembers()
     {
-        return $this->hasMany(ProjectTeamMember::class)->with('user');
+        return $this->hasMany(ProjectTeamMember::class)->with('professional');
     }
 
     public function files()

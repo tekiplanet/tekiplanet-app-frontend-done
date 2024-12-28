@@ -11,7 +11,7 @@ class ProjectTeamMember extends Model
 
     protected $fillable = [
         'project_id',
-        'user_id',
+        'professional_id',
         'role',
         'status',
         'joined_at',
@@ -28,9 +28,9 @@ class ProjectTeamMember extends Model
         return $this->belongsTo(Project::class);
     }
 
-    public function user()
+    public function professional()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Professional::class)->with('user');
     }
 
     public function scopeConsultingExperts($query)

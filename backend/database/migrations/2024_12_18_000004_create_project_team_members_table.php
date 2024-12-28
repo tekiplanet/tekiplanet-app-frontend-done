@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('project_team_members', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('project_id')->constrained()->onDelete('cascade');
-            $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('professional_id')->constrained()->onDelete('cascade');
             $table->string('role');
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamp('joined_at');
