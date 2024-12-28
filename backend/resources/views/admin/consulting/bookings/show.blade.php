@@ -386,7 +386,10 @@ document.querySelector('select[name="status"]').addEventListener('change', funct
 });
 
 function calculateTimeUntilBooking() {
-    const bookingDate = new Date('{{ $booking->selected_date }}T{{ $booking->selected_time }}');
+    // Format date and time properly for JavaScript
+    const dateStr = '{{ $booking->selected_date->format("Y-m-d") }}';
+    const timeStr = '{{ $booking->selected_time->format("H:i:s") }}';
+    const bookingDate = new Date(`${dateStr}T${timeStr}`);
     const now = new Date();
     const diff = bookingDate - now;
     
@@ -402,6 +405,18 @@ function calculateTimeUntilBooking() {
     } else {
         timeText = `${minutes} minutes`;
     }
+    
+    // For debugging
+    console.log({
+        dateStr,
+        timeStr,
+        bookingDate,
+        now,
+        diff,
+        days,
+        hours,
+        minutes
+    });
     
     return timeText;
 }
