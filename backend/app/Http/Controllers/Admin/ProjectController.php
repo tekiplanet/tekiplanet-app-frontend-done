@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Mail\ProjectCreated;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
+use App\Mail\ProjectStatusUpdated;
 
 class ProjectController extends Controller
 {
@@ -142,6 +143,95 @@ class ProjectController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update project status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function update(Request $request, Project $project)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'sometimes|required|string|max:255',
+                'description' => 'sometimes|required|string',
+                'client_name' => 'sometimes|required|string|max:255',
+                'start_date' => 'sometimes|required|date',
+                'end_date' => 'sometimes|required|date|after:start_date',
+                'budget' => 'sometimes|required|numeric|min:0',
+                'status' => 'sometimes|required|in:pending,in_progress,completed,cancelled'
+            ]);
+
+            $changes = array_intersect_key($validated, $project->getDirty());
+            $project->update($validated);
+
+            // Send notification
+            $this->notificationService->send([
+                'type' => 'project_updated',
+                'title' => 'Project Details Updated',
+                'message' => "Project '{$project->name}' details have been updated",
+                'icon' => 'pencil',
+                'action_url' => "/projects/{$project->id}",
+                'extra_data' => [
+                    'project_id' => $project->id,
+                    'changes' => $changes
+                ]
+            ], $project->businessProfile->user);
+
+            // Send email
+            Mail::to($project->businessProfile->user->email)
+                ->queue(new ProjectStatusUpdated($project, $changes));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Project updated successfully',
+                'data' => $project
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update project: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateProgress(Request $request, Project $project)
+    {
+        try {
+            $validated = $request->validate([
+                'progress' => 'required|integer|min:0|max:100'
+            ]);
+
+            $oldProgress = $project->progress;
+            $project->update($validated);
+
+            // Send notification
+            $this->notificationService->send([
+                'type' => 'project_progress_updated',
+                'title' => 'Project Progress Updated',
+                'message' => "Project '{$project->name}' progress has been updated from {$oldProgress}% to {$project->progress}%",
+                'icon' => 'chart-bar',
+                'action_url' => "/projects/{$project->id}",
+                'extra_data' => [
+                    'project_id' => $project->id,
+                    'old_progress' => $oldProgress,
+                    'new_progress' => $project->progress
+                ]
+            ], $project->businessProfile->user);
+
+            // Send email
+            Mail::to($project->businessProfile->user->email)
+                ->queue(new ProjectStatusUpdated($project, [], true));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Project progress updated successfully',
+                'data' => $project
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update project progress: ' . $e->getMessage()
             ], 500);
         }
     }

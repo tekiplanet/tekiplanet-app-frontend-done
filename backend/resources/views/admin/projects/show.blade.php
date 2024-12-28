@@ -10,7 +10,23 @@
             <h1 class="text-2xl font-semibold text-gray-900">{{ $project->name }}</h1>
             <p class="mt-2 text-sm text-gray-700">Client: {{ $project->client_name }}</p>
         </div>
-        <div class="mt-4 sm:mt-0">
+        <div class="mt-4 sm:mt-0 space-x-3">
+            <button type="button" 
+                    onclick="openEditModal()"
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit Project
+            </button>
+            <button type="button" 
+                    onclick="openProgressModal()"
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Update Progress
+            </button>
             <button type="button" 
                     onclick="openStatusModal()"
                     class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -578,6 +594,95 @@
                             onclick="closeInvoiceModal()"
                             class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">
                         Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Project Modal -->
+<div id="editModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden z-50" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen p-4 overflow-y-auto">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full relative my-8">
+            <form id="editForm" onsubmit="handleEditSubmit(event)" class="p-6 max-h-[calc(100vh-8rem)] overflow-y-auto">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Project</h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Project Name</label>
+                        <input type="text" name="name" id="editName" required
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea name="description" id="editDescription" rows="4" required
+                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Client Name</label>
+                        <input type="text" name="client_name" id="editClientName" required
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Start Date</label>
+                            <input type="date" name="start_date" id="editStartDate" required
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">End Date</label>
+                            <input type="date" name="end_date" id="editEndDate" required
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Budget</label>
+                        <input type="number" name="budget" id="editBudget" required min="0" step="0.01"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <div class="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-3 space-y-3 space-y-reverse sm:space-y-0">
+                    <button type="button" onclick="closeEditModal()"
+                            class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Update Modal -->
+<div id="progressModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="bg-white rounded-lg overflow-hidden shadow-xl max-w-lg w-full mx-4">
+            <form id="progressForm" onsubmit="handleProgressSubmit(event)" class="p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Update Project Progress</h3>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Progress (%)</label>
+                    <input type="number" name="progress" id="progressValue" required min="0" max="100"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" onclick="closeProgressModal()"
+                            class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                        Update Progress
                     </button>
                 </div>
             </form>
@@ -1230,6 +1335,163 @@ function deleteInvoice(invoiceId) {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonColor: '#4f46e5'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    throw new Error(data.message);
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'Error!',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonColor: '#4f46e5'
+                });
+            });
+        }
+    });
+}
+
+function openEditModal() {
+    // Populate form with current values
+    document.getElementById('editName').value = '{{ $project->name }}';
+    document.getElementById('editDescription').value = '{{ $project->description }}';
+    document.getElementById('editClientName').value = '{{ $project->client_name }}';
+    document.getElementById('editStartDate').value = '{{ $project->start_date->format('Y-m-d') }}';
+    document.getElementById('editEndDate').value = '{{ $project->end_date ? $project->end_date->format('Y-m-d') : '' }}';
+    document.getElementById('editBudget').value = '{{ $project->budget }}';
+    
+    document.getElementById('editModal').classList.remove('hidden');
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').classList.add('hidden');
+}
+
+function openProgressModal() {
+    document.getElementById('progressValue').value = '{{ $project->progress }}';
+    document.getElementById('progressModal').classList.remove('hidden');
+}
+
+function closeProgressModal() {
+    document.getElementById('progressModal').classList.add('hidden');
+}
+
+function handleEditSubmit(event) {
+    event.preventDefault();
+    
+    const formData = {
+        name: document.getElementById('editName').value,
+        description: document.getElementById('editDescription').value,
+        client_name: document.getElementById('editClientName').value,
+        start_date: document.getElementById('editStartDate').value,
+        end_date: document.getElementById('editEndDate').value,
+        budget: document.getElementById('editBudget').value
+    };
+
+    // Show confirmation
+    Swal.fire({
+        title: 'Update Project?',
+        text: 'Are you sure you want to update this project?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, update it',
+        cancelButtonText: 'No, cancel',
+        confirmButtonColor: '#4f46e5',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Updating...',
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false
+            });
+
+            fetch('/admin/projects/{{ $project->id }}', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonColor: '#4f46e5'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    throw new Error(data.message);
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'Error!',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonColor: '#4f46e5'
+                });
+            });
+        }
+    });
+}
+
+function handleProgressSubmit(event) {
+    event.preventDefault();
+    
+    const formData = {
+        progress: parseInt(document.getElementById('progressValue').value)
+    };
+
+    Swal.fire({
+        title: 'Update Progress?',
+        text: 'Are you sure you want to update the project progress?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, update it',
+        cancelButtonText: 'No, cancel',
+        confirmButtonColor: '#4f46e5',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Updating...',
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false
+            });
+
+            fetch('/admin/projects/{{ $project->id }}/progress', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(formData)
             })
             .then(response => response.json())
             .then(data => {

@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\CourseExamController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\WorkstationPlanController;
 use App\Http\Controllers\Admin\WorkstationSubscriptionController;
+use App\Http\Controllers\Admin\ProjectController;
 
 /*
 |--------------------------------------------------------------------------
@@ -120,6 +121,12 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth:admin']], function () 
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.show');
     Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.update-status');
     Route::post('/orders/{order}/tracking', [OrderController::class, 'updateTracking'])->name('admin.orders.update-tracking');
+
+    // Project routes
+    Route::prefix('projects')->group(function () {
+        Route::patch('{project}', [ProjectController::class, 'update'])->name('admin.projects.update');
+        Route::patch('{project}/progress', [ProjectController::class, 'updateProgress'])->name('admin.projects.update-progress');
+    });
 });
 
 // Temporary debug route list

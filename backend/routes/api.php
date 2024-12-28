@@ -434,3 +434,8 @@ Route::middleware('auth:sanctum')->post('/broadcasting/auth', function (Request 
         ], 403);
     }
 });
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::patch('projects/{project}', [ProjectController::class, 'update']);
+    Route::patch('projects/{project}/progress', [ProjectController::class, 'updateProgress']);
+});
