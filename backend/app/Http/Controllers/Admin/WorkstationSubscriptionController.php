@@ -21,10 +21,19 @@ class WorkstationSubscriptionController extends Controller
         $subscriptions = WorkstationSubscription::query()
             ->with(['user', 'plan'])
             ->when($request->search, function ($query, $search) {
+                // Split search terms
+                $searchTerms = explode(' ', trim($search));
+                
                 $query->where('tracking_code', 'like', "%{$search}%")
-                    ->orWhereHas('user', function ($q) use ($search) {
-                        $q->where('name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhereHas('user', function ($q) use ($searchTerms) {
+                        $q->where(function ($query) use ($searchTerms) {
+                            foreach ($searchTerms as $term) {
+                                $query->orWhere('first_name', 'like', "%{$term}%")
+                                    ->orWhere('last_name', 'like', "%{$term}%");
+                            }
+                            // Also search by full email
+                            $query->orWhere('email', 'like', "%{$term}%");
+                        });
                     });
             })
             ->when($request->status, function ($query, $status) {
