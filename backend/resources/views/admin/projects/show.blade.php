@@ -562,6 +562,11 @@
 
 @push('scripts')
 <script>
+const baseUrl = '{{ url('admin/projects/' . $project->id . '/stages') }}';
+const teamMembersBaseUrl = '{{ url('admin/projects/' . $project->id . '/team-members') }}';
+const filesBaseUrl = '{{ url('admin/projects/' . $project->id . '/files') }}';
+const invoicesBaseUrl = '{{ url('admin/projects/' . $project->id . '/invoices') }}';
+
 function openStatusModal() {
     document.getElementById('statusModal').classList.remove('hidden');
 }
@@ -647,103 +652,90 @@ function closeStageModal() {
 }
 
 function editStage(stageId) {
-    // Find stage data
+    // Get stage data
     const stage = @json($project->stages);
-    const stageData = stage.find(s => s.id === stageId);
+    const currentStage = stage.find(s => s.id === stageId);
     
+    if (!currentStage) return;
+
     // Populate form
-    document.getElementById('stageId').value = stageId;
-    document.getElementById('stageName').value = stageData.name;
-    document.getElementById('stageDescription').value = stageData.description || '';
-    document.getElementById('stageStatus').value = stageData.status;
-    document.getElementById('stageStartDate').value = stageData.start_date.split('T')[0];
-    document.getElementById('stageEndDate').value = stageData.end_date ? stageData.end_date.split('T')[0] : '';
-    
+    document.getElementById('stageId').value = currentStage.id;
+    document.getElementById('stageName').value = currentStage.name;
+    document.getElementById('stageDescription').value = currentStage.description;
+    document.getElementById('stageStartDate').value = currentStage.start_date.split(' ')[0];
+    document.getElementById('stageEndDate').value = currentStage.end_date ? currentStage.end_date.split(' ')[0] : '';
+    document.getElementById('stageStatus').value = currentStage.status;
+
     // Show modal
     document.getElementById('stageModal').classList.remove('hidden');
 }
 
 function handleStageSubmit(event) {
     event.preventDefault();
-    
+
     const form = event.target;
-    const stageId = form.stageId.value;
+    const formData = new FormData(form);
+    const stageId = formData.get('stageId');
     const isEdit = !!stageId;
-    
-    const formData = {
-        name: form.name.value,
-        description: form.description.value,
-        status: form.status.value,
-        start_date: form.start_date.value,
-        end_date: form.end_date.value || null
-    };
 
-    // Show confirmation
-    Swal.fire({
-        title: `${isEdit ? 'Update' : 'Create'} Project Stage?`,
-        text: `Are you sure you want to ${isEdit ? 'update' : 'create'} this stage?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: isEdit ? 'Yes, update it' : 'Yes, create it',
-        cancelButtonText: 'No, cancel',
-        confirmButtonColor: '#4f46e5',
-        reverseButtons: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Show loading state
+    // Show loading state
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = isEdit ? 'Updating...' : 'Creating...';
+
+    // Convert FormData to JSON
+    const jsonData = {};
+    formData.forEach((value, key) => {
+        jsonData[key] = value;
+    });
+
+    // Determine URL based on whether this is an edit or create
+    const url = isEdit 
+        ? `${baseUrl}/${stageId}`  // For update: /admin/projects/{project}/stages/{stage}
+        : baseUrl;                  // For create: /admin/projects/{project}/stages
+
+    fetch(url, {
+        method: isEdit ? 'PATCH' : 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify(jsonData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
             Swal.fire({
-                title: `${isEdit ? 'Updating' : 'Creating'}...`,
-                didOpen: () => {
-                    Swal.showLoading();
-                },
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                allowEnterKey: false
+                title: 'Success!',
+                text: data.message,
+                icon: 'success',
+                confirmButtonColor: '#4f46e5'
+            }).then(() => {
+                window.location.reload();
             });
-
-            // Send request
-            const url = isEdit 
-                ? `{{ route('admin.projects.stages.update', ['project' => $project->id]) }}/${stageId}`
-                : `{{ route('admin.projects.stages.store', ['project' => $project->id]) }}`;
-
-            fetch(url, {
-                method: isEdit ? 'PATCH' : 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        title: 'Success!',
-                        text: data.message,
-                        icon: 'success',
-                        confirmButtonColor: '#4f46e5'
-                    }).then(() => {
-                        window.location.reload();
-                    });
-                } else {
-                    throw new Error(data.message);
-                }
-            })
-            .catch(error => {
-                Swal.fire({
-                    title: 'Error!',
-                    text: error.message,
-                    icon: 'error',
-                    confirmButtonColor: '#4f46e5'
-                });
-            });
+        } else {
+            throw new Error(data.message);
         }
+    })
+    .catch(error => {
+        Swal.fire({
+            title: 'Error!',
+            text: error.message,
+            icon: 'error',
+            confirmButtonColor: '#4f46e5'
+        });
+    })
+    .finally(() => {
+        // Reset button state
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
     });
 }
 
 function deleteStage(stageId) {
     Swal.fire({
-        title: 'Delete Project Stage?',
+        title: 'Delete Stage?',
         text: 'Are you sure you want to delete this stage? This action cannot be undone.',
         icon: 'warning',
         showCancelButton: true,
@@ -763,7 +755,7 @@ function deleteStage(stageId) {
                 allowEnterKey: false
             });
 
-            fetch(`{{ route('admin.projects.stages.destroy', ['project' => $project->id]) }}/${stageId}`, {
+            fetch(`${baseUrl}/${stageId}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -810,17 +802,13 @@ function closeTeamMemberModal() {
 
 function editTeamMember(memberId) {
     // Find member data
-    const members = @json($project->teamMembers->load('user'));
+    const members = @json($project->teamMembers);
     const member = members.find(m => m.id === memberId);
-    
-    // Hide user select since we can't change the user
-    document.getElementById('userSelectContainer').style.display = 'none';
     
     // Populate form
     document.getElementById('memberId').value = memberId;
     document.getElementById('memberRole').value = member.role;
     document.getElementById('memberStatus').value = member.status;
-    document.getElementById('memberJoinedAt').value = member.joined_at.split('T')[0];
     document.getElementById('memberLeftAt').value = member.left_at ? member.left_at.split('T')[0] : '';
     
     // Show modal
@@ -831,80 +819,62 @@ function handleTeamMemberSubmit(event) {
     event.preventDefault();
     
     const form = event.target;
-    const memberId = form.memberId.value;
+    const formData = new FormData(form);
+    const memberId = formData.get('memberId');
     const isEdit = !!memberId;
-    
-    const formData = {
-        role: form.role.value,
-        status: form.status.value,
-        joined_at: form.joined_at.value,
-        left_at: form.left_at.value || null
-    };
 
-    if (!isEdit) {
-        formData.user_id = form.user_id.value;
-    }
+    // Show loading state
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = isEdit ? 'Updating...' : 'Adding...';
 
-    // Show confirmation
-    Swal.fire({
-        title: `${isEdit ? 'Update' : 'Add'} Team Member?`,
-        text: `Are you sure you want to ${isEdit ? 'update' : 'add'} this team member?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: isEdit ? 'Yes, update it' : 'Yes, add it',
-        cancelButtonText: 'No, cancel',
-        confirmButtonColor: '#4f46e5',
-        reverseButtons: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Show loading state
+    // Convert FormData to JSON
+    const jsonData = {};
+    formData.forEach((value, key) => {
+        jsonData[key] = value;
+    });
+
+    // Determine URL based on whether this is an edit or create
+    const url = isEdit 
+        ? `${teamMembersBaseUrl}/${memberId}`
+        : teamMembersBaseUrl;
+
+    fetch(url, {
+        method: isEdit ? 'PATCH' : 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify(jsonData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
             Swal.fire({
-                title: `${isEdit ? 'Updating' : 'Adding'}...`,
-                didOpen: () => {
-                    Swal.showLoading();
-                },
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                allowEnterKey: false
+                title: 'Success!',
+                text: data.message,
+                icon: 'success',
+                confirmButtonColor: '#4f46e5'
+            }).then(() => {
+                window.location.reload();
             });
-
-            // Send request
-            const url = isEdit 
-                ? `{{ route('admin.projects.team-members.update', ['project' => $project->id]) }}/${memberId}`
-                : `{{ route('admin.projects.team-members.store', ['project' => $project->id]) }}`;
-
-            fetch(url, {
-                method: isEdit ? 'PATCH' : 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        title: 'Success!',
-                        text: data.message,
-                        icon: 'success',
-                        confirmButtonColor: '#4f46e5'
-                    }).then(() => {
-                        window.location.reload();
-                    });
-                } else {
-                    throw new Error(data.message);
-                }
-            })
-            .catch(error => {
-                Swal.fire({
-                    title: 'Error!',
-                    text: error.message,
-                    icon: 'error',
-                    confirmButtonColor: '#4f46e5'
-                });
-            });
+        } else {
+            throw new Error(data.message);
         }
+    })
+    .catch(error => {
+        Swal.fire({
+            title: 'Error!',
+            text: error.message,
+            icon: 'error',
+            confirmButtonColor: '#4f46e5'
+        });
+    })
+    .finally(() => {
+        // Reset button state
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
     });
 }
 
@@ -914,7 +884,7 @@ function deleteTeamMember(memberId) {
         text: 'Are you sure you want to remove this team member? This action cannot be undone.',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Yes, remove them',
+        confirmButtonText: 'Yes, remove',
         cancelButtonText: 'No, cancel',
         confirmButtonColor: '#ef4444',
         reverseButtons: true
@@ -930,7 +900,7 @@ function deleteTeamMember(memberId) {
                 allowEnterKey: false
             });
 
-            fetch(`{{ route('admin.projects.team-members.destroy', ['project' => $project->id]) }}/${memberId}`, {
+            fetch(`${teamMembersBaseUrl}/${memberId}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1009,7 +979,7 @@ function handleFileSubmit(event) {
             formData.append('file', file);
             formData.append('description', description);
 
-            fetch(`{{ route('admin.projects.files.store', $project) }}`, {
+            fetch(`${filesBaseUrl}`, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -1065,7 +1035,7 @@ function deleteFile(fileId) {
                 allowEnterKey: false
             });
 
-            fetch(`{{ route('admin.projects.files.destroy', ['project' => $project->id]) }}/${fileId}`, {
+            fetch(`${filesBaseUrl}/${fileId}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1164,8 +1134,8 @@ function handleInvoiceSubmit(event) {
 
             // Send request
             const url = isEdit 
-                ? `{{ route('admin.projects.invoices.update', ['project' => $project->id]) }}/${invoiceId}`
-                : `{{ route('admin.projects.invoices.store', ['project' => $project->id]) }}`;
+                ? `${invoicesBaseUrl}/${invoiceId}`
+                : `${invoicesBaseUrl}`;
 
             fetch(url, {
                 method: isEdit ? 'PATCH' : 'POST',
@@ -1224,7 +1194,7 @@ function deleteInvoice(invoiceId) {
                 allowEnterKey: false
             });
 
-            fetch(`{{ route('admin.projects.invoices.destroy', ['project' => $project->id]) }}/${invoiceId}`, {
+            fetch(`${invoicesBaseUrl}/${invoiceId}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',

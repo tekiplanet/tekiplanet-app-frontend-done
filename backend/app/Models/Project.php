@@ -12,20 +12,20 @@ class Project extends Model
     protected $fillable = [
         'business_id',
         'name',
-        'client_name',
         'description',
-        'status',
+        'client_name',
         'start_date',
         'end_date',
-        'budget',
-        'progress'
+        'status',
+        'progress',
+        'budget'
     ];
 
     protected $casts = [
         'start_date' => 'datetime',
         'end_date' => 'datetime',
-        'budget' => 'decimal:2',
-        'progress' => 'integer'
+        'progress' => 'integer',
+        'budget' => 'decimal:2'
     ];
 
     public function businessProfile()
@@ -40,7 +40,7 @@ class Project extends Model
 
     public function teamMembers()
     {
-        return $this->hasMany(ProjectTeamMember::class);
+        return $this->hasMany(ProjectTeamMember::class)->with('user');
     }
 
     public function files()
