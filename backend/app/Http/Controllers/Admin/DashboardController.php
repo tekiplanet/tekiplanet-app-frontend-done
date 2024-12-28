@@ -16,6 +16,9 @@ use App\Models\Course;
 use App\Models\Setting;
 use App\Models\BusinessProfile;
 use App\Models\Professional;
+use App\Models\Project;
+use App\Models\Quote;
+use App\Models\Service;
 
 class DashboardController extends Controller
 {
@@ -47,6 +50,8 @@ class DashboardController extends Controller
             'total_courses' => Course::count(),
             'total_businesses' => BusinessProfile::count(),
             'total_professionals' => Professional::count(),
+            'total_projects' => Project::count(),
+            'total_quotes' => Quote::count(),
         ];
 
         $recent_users = User::latest()->take(5)->get();
