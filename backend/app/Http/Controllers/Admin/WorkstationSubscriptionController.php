@@ -23,8 +23,7 @@ class WorkstationSubscriptionController extends Controller
             ->when($request->search, function ($query, $search) {
                 $query->where('tracking_code', 'like', "%{$search}%")
                     ->orWhereHas('user', function ($q) use ($search) {
-                        $q->where('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%")
+                        $q->where('name', 'like', "%{$search}%")
                             ->orWhere('email', 'like', "%{$search}%");
                     });
             })
