@@ -27,6 +27,11 @@ import PagePreloader from '@/components/ui/PagePreloader';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import 'swiper/css';
+import 'swiper/css/free-mode';
+import 'swiper/css/navigation';
+import 'swiper/css/thumbs';
+import 'swiper/css/pagination';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -161,6 +166,10 @@ export default function ProductDetails() {
               } : false}
               thumbs={{ swiper: thumbsSwiper }}
               modules={[FreeMode, Navigation, Thumbs, Pagination]}
+              initialSlide={0}
+              watchOverflow={true}
+              observer={true}
+              observeParents={true}
               className={cn(
                 "aspect-square rounded-lg overflow-hidden product-swiper",
                 isMobile && "mobile-swiper"
@@ -173,6 +182,7 @@ export default function ProductDetails() {
                       src={image}
                       alt={`${product.name} - Image ${index + 1}`}
                       className="w-full h-full object-cover"
+                      loading={index === 0 ? "eager" : "lazy"}
                     />
                   </div>
                 </SwiperSlide>
@@ -187,18 +197,23 @@ export default function ProductDetails() {
                 freeMode={true}
                 watchSlidesProgress={true}
                 modules={[FreeMode, Navigation, Thumbs]}
-                className="thumbs-swiper !h-24 mt-4"
+                className="thumbs-swiper mt-4 !h-24 max-w-full"
                 direction="horizontal"
                 style={{
-                  '--swiper-navigation-size': '20px'
+                  '--swiper-navigation-size': '20px',
+                  height: '96px'
                 } as React.CSSProperties}
               >
                 {product.images.map((image, index) => (
-                  <SwiperSlide key={index} className="cursor-pointer rounded-md overflow-hidden">
+                  <SwiperSlide 
+                    key={index} 
+                    className="cursor-pointer rounded-md overflow-hidden h-24 w-auto"
+                  >
                     <img
                       src={image}
                       alt={`Thumbnail ${index + 1}`}
-                      className="w-full h-24 object-cover hover:opacity-75 transition-opacity"
+                      className="w-full h-full object-cover hover:opacity-75 transition-opacity"
+                      loading="lazy"
                     />
                   </SwiperSlide>
                 ))}
@@ -479,6 +494,20 @@ export default function ProductDetails() {
       {/* Keep existing styles */}
       <style>
         {`
+          .thumbs-swiper {
+            width: 100% !important;
+            height: 96px !important;
+          }
+
+          .thumbs-swiper .swiper-slide {
+            opacity: 0.4;
+            transition: opacity 0.3s;
+          }
+
+          .thumbs-swiper .swiper-slide-thumb-active {
+            opacity: 1;
+          }
+
           .mobile-swiper .swiper-button-next,
           .mobile-swiper .swiper-button-prev {
             display: none !important;
@@ -495,6 +524,10 @@ export default function ProductDetails() {
             opacity: 1;
             width: 24px;
             border-radius: 4px;
+          }
+
+          .product-swiper .swiper-slide {
+            background-color: hsl(var(--background));
           }
 
           @media (max-width: 768px) {
