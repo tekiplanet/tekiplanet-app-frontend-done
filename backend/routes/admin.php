@@ -30,6 +30,11 @@ use App\Http\Controllers\Admin\ConsultingTimeSlotController;
 use App\Http\Controllers\Admin\ConsultingBookingReminderController;
 use App\Http\Controllers\Admin\WorkstationPlanController;
 use App\Http\Controllers\Admin\WorkstationSubscriptionController;
+use App\Http\Controllers\Admin\ProjectController;
+use App\Http\Controllers\Admin\ProjectStageController;
+use App\Http\Controllers\Admin\ProjectTeamMemberController;
+use App\Http\Controllers\Admin\ProjectFileController;
+use App\Http\Controllers\Admin\ProjectInvoiceController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
@@ -286,6 +291,42 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
                 ->name('subscriptions.show');
             Route::patch('/subscriptions/{subscription}/status', [WorkstationSubscriptionController::class, 'updateStatus'])
                 ->name('subscriptions.update-status');
+        });
+
+        // Project routes
+        Route::prefix('projects')->name('projects.')->group(function () {
+            Route::get('/', [ProjectController::class, 'index'])->name('index');
+            Route::get('/create', [ProjectController::class, 'create'])->name('create');
+            Route::post('/', [ProjectController::class, 'store'])->name('store');
+            Route::get('/{project}', [ProjectController::class, 'show'])->name('show');
+            Route::patch('/{project}/status', [ProjectController::class, 'updateStatus'])->name('update-status');
+
+            // Project Stages
+            Route::prefix('{project}/stages')->name('stages.')->group(function () {
+                Route::post('/', [ProjectStageController::class, 'store'])->name('store');
+                Route::patch('/{stage}', [ProjectStageController::class, 'update'])->name('update');
+                Route::delete('/{stage}', [ProjectStageController::class, 'destroy'])->name('destroy');
+            });
+
+            // Project Team Members
+            Route::prefix('{project}/team-members')->name('team-members.')->group(function () {
+                Route::post('/', [ProjectTeamMemberController::class, 'store'])->name('store');
+                Route::patch('/{member}', [ProjectTeamMemberController::class, 'update'])->name('update');
+                Route::delete('/{member}', [ProjectTeamMemberController::class, 'destroy'])->name('destroy');
+            });
+
+            // Project Files
+            Route::prefix('{project}/files')->name('files.')->group(function () {
+                Route::post('/', [ProjectFileController::class, 'store'])->name('store');
+                Route::delete('/{file}', [ProjectFileController::class, 'destroy'])->name('destroy');
+            });
+
+            // Project Invoices
+            Route::prefix('{project}/invoices')->name('invoices.')->group(function () {
+                Route::post('/', [ProjectInvoiceController::class, 'store'])->name('store');
+                Route::patch('/{invoice}', [ProjectInvoiceController::class, 'update'])->name('update');
+                Route::delete('/{invoice}', [ProjectInvoiceController::class, 'destroy'])->name('destroy');
+            });
         });
     });
 }); 

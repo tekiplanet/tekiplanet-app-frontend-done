@@ -152,8 +152,8 @@ Route::post('/admin/courses/{course}/enrollments/bulk-update', [CourseController
 Route::get('/admin/courses/{course}/enrollments/{enrollment}', [CourseController::class, 'showEnrollment'])
     ->name('admin.courses.enrollments.show');
 
-Route::post('/workstation/plans/{plan}/toggle-status', [WorkstationPlanController::class, 'toggleStatus'])
-    ->name('admin.workstation.plans.toggle-status');
+// Route::post('/workstation/plans/{plan}/toggle-status', [WorkstationPlanController::class, 'toggleStatus'])
+//     ->name('admin.workstation.plans.toggle-status');
 
-Route::patch('/workstation/subscriptions/{subscription}/status', [WorkstationSubscriptionController::class, 'updateStatus'])
-    ->name('admin.workstation.subscriptions.update-status');
+// Route::patch('/workstation/subscriptions/{subscription}/status', [WorkstationSubscriptionController::class, 'updateStatus'])
+//     ->name('admin.workstation.subscriptions.update-status');

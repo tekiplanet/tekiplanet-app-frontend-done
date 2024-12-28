@@ -69,12 +69,12 @@ class ConsultingBookingController extends Controller
         $activeCount = Professional::where('status', 'active')->count();
         $availableCount = Professional::where('availability_status', 'available')->count();
 
-        \Log::info('Professional counts', [
-            'total' => $totalProfessionals,
-            'active' => $activeCount,
-            'available' => $availableCount,
-            'final_filtered_count' => $experts->count()
-        ]);
+        // \Log::info('Professional counts', [
+        //     'total' => $totalProfessionals,
+        //     'active' => $activeCount,
+        //     'available' => $availableCount,
+        //     'final_filtered_count' => $experts->count()
+        // ]);
 
         return view('admin.consulting.bookings.show', compact('booking', 'experts', 'statusColors'));
     }
