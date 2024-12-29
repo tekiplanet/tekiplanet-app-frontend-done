@@ -58,24 +58,47 @@ class TwoFactorController extends Controller
 
     public function verify(Request $request)
     {
-        $request->validate([
+        // Add debug logging
+        \Log::info('2FA Verification Request:', $request->all());
+        
+        $validated = $request->validate([
+            'email' => 'required|email|exists:users,email',
             'code' => 'required|string|size:6'
         ]);
 
-        $user = $request->user();
-        $valid = $this->google2fa->verifyKey($user->two_factor_secret, $request->code);
-
-        if (!$valid) {
+        // Find user by email
+        $user = \App\Models\User::where('email', $validated['email'])->first();
+        
+        \Log::info('User found:', ['user_id' => $user?->id, 'has_2fa' => $user?->two_factor_enabled]);
+        
+        if (!$user || !$user->two_factor_enabled) {
             return response()->json([
-                'message' => 'Invalid authentication code'
+                'message' => 'Invalid verification attempt'
             ], 400);
         }
 
-        $user->two_factor_enabled = true;
-        $user->save();
+        // Verify 2FA code
+        $google2fa = new Google2FA();
+        $valid = $google2fa->verifyKey($user->two_factor_secret, $validated['code']);
+
+        if (!$valid) {
+            return response()->json([
+                'message' => 'Invalid two-factor authentication code'
+            ], 422);
+        }
+
+        // Generate token
+        $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Two-factor authentication enabled successfully'
+            'token' => $token,
+            'user' => $user->makeVisible([
+                'wallet_balance', 'dark_mode', 'two_factor_enabled', 
+                'email_notifications', 'push_notifications', 
+                'marketing_notifications', 'created_at', 'updated_at',
+                'email_verified_at', 'timezone', 'bio', 'profile_visibility',
+                'last_login_at', 'last_login_ip'
+            ])->toArray()
         ]);
     }
 

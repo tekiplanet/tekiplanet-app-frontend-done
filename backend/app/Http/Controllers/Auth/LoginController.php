@@ -57,7 +57,10 @@ class LoginController extends Controller
             if (!$code) {
                 return response()->json([
                     'requires_2fa' => true,
-                    'message' => 'Two-factor authentication code required'
+                    'message' => 'Two-factor authentication code required',
+                    'user' => [
+                        'email' => $user->email
+                    ]
                 ], 200);
             }
 

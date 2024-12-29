@@ -40,6 +40,7 @@ type AuthState = {
   theme: 'light' | 'dark';
   isAuthenticated: boolean;
   requiresVerification: boolean;
+  requires_2fa?: boolean;
   setTheme: (theme: 'light' | 'dark') => Promise<void>;
   login: (login: string, password: string, code?: string) => Promise<any>;
   logout: () => void;
@@ -85,28 +86,38 @@ const useAuthStore = create<AuthState>(
           // Set token in store before getting user data
           set({ token });
 
-          const userData = await authService.getCurrentUser();
-          
-          set({
-            user: userData,
-            isAuthenticated: true,
-            requiresVerification: false,
-            theme: userData.dark_mode ? 'dark' : 'light'
-          });
-
-          return userData;
+          try {
+            const userData = await authService.getCurrentUser();
+            set({
+              user: userData,
+              isAuthenticated: true,
+              requiresVerification: false,
+              theme: userData.dark_mode ? 'dark' : 'light'
+            });
+            return userData;
+          } catch (error: any) {
+            // If we get a 403, it might be because email isn't verified
+            if (error.response?.status === 403) {
+              // Keep the current state if we're in verification process
+              const currentState = get();
+              if (currentState.requiresVerification) {
+                return null;
+              }
+            }
+            
+            // For other errors, clear auth state
+            console.error('Initialization error:', error);
+            localStorage.removeItem('token');
+            set({
+              user: null,
+              token: null,
+              isAuthenticated: false,
+              requiresVerification: false
+            });
+            throw error;
+          }
         } catch (error: any) {
           console.error('Initialization error:', error);
-          
-          // Clear everything on error
-          localStorage.removeItem('token');
-          set({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            requiresVerification: false
-          });
-          
           throw error;
         }
       },
@@ -164,18 +175,47 @@ const useAuthStore = create<AuthState>(
         try {
           const response = await authService.login(login, password, code);
           
-          // Check if 2FA is required
-          if (response.requires_2fa) {
+          // Check if email verification is required
+          if (response.requires_verification) {
             set({
-              isAuthenticated: false,
-              requiresVerification: false,
-              user: null,
-              token: null
+              user: response.user,
+              token: response.token,
+              isAuthenticated: true,
+              requiresVerification: true
             });
-            return response; // Return early to show 2FA prompt
+            localStorage.setItem('token', response.token);
+            return response;
           }
 
-          // If we get here, either 2FA was successful or not required
+          // Check if 2FA is required
+          if (response.requires_2fa) {
+            // Add debug logging
+            console.log('2FA Response:', response);
+            
+            // Store email from user object instead of login field
+            const userEmail = response.user?.email;
+            console.log('User email from response:', userEmail);
+            
+            if (!userEmail) {
+              console.error('No user email found in response');
+              throw new Error('Unable to proceed with 2FA verification');
+            }
+            
+            localStorage.setItem('pending_2fa_email', userEmail);
+            
+            set({
+              user: response.user,
+              isAuthenticated: false,
+              requiresVerification: false,
+              requires_2fa: true
+            });
+            
+            // Navigate to 2FA page
+            window.location.href = '/two-factor-auth';
+            return response;
+          }
+
+          // If we get here, user is fully authenticated
           if (response.token) {
             localStorage.setItem('token', response.token);
             set({
@@ -345,10 +385,32 @@ const useAuthStore = create<AuthState>(
       verifyEmail: async (code: string) => {
         try {
           const response = await authService.verifyEmail(code);
-          set({
-            user: response.user,
-            requiresVerification: false
-          });
+          
+          // If user has 2FA enabled
+          if (response.user.two_factor_enabled) {
+            // Store email for 2FA
+            localStorage.setItem('pending_2fa_email', response.user.email);
+            
+            set({
+              user: response.user,
+              token: response.token,
+              isAuthenticated: false,
+              requiresVerification: false,
+              requires_2fa: true
+            });
+
+            // Navigate to 2FA page
+            window.location.href = '/two-factor-auth';
+          } else {
+            // If no 2FA, proceed as normal
+            set({
+              user: response.user,
+              token: response.token,
+              isAuthenticated: true,
+              requiresVerification: false
+            });
+          }
+          
           return response;
         } catch (error) {
           throw error;

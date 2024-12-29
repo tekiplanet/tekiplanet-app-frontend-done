@@ -285,4 +285,21 @@ export const authService = {
       throw error;
     }
   },
+
+  verify2FA: async (email: string, code: string): Promise<any> => {
+    try {
+      console.log('Sending 2FA verification request:', { email, code });
+      const response = await apiClient.post('/verify-2fa', {
+        email,
+        code
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('2FA Verification Error:', error.response?.data);
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw error;
+    }
+  },
 };

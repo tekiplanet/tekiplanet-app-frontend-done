@@ -17,14 +17,20 @@ const EmailVerification = () => {
   const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
+    const checkAuth = async () => {
+      // Only redirect if explicitly not authenticated
+      if (isAuthenticated === false && !localStorage.getItem('token')) {
+        navigate('/login');
+        return;
+      }
 
-    if (!requiresVerification) {
-      navigate('/dashboard');
-    }
+      // Only redirect to dashboard if explicitly verified
+      if (isAuthenticated && requiresVerification === false) {
+        navigate('/dashboard');
+      }
+    };
+
+    checkAuth();
   }, [isAuthenticated, requiresVerification, navigate]);
 
   // Countdown timer effect

@@ -73,6 +73,7 @@ const PaystackCallback = React.lazy(() => import('@/pages/PaystackCallback'));
 const ActivitiesPage = React.lazy(() => import('@/pages/dashboard/ActivitiesPage'));
 const CertificatesPage = lazy(() => import("@/pages/dashboard/CertificatesPage"));
 const EmailVerification = React.lazy(() => import('@/pages/EmailVerification'));
+const TwoFactorAuth = React.lazy(() => import('@/pages/TwoFactorAuth'));
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -84,7 +85,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (requiresVerification && location.pathname !== '/verify-email') {
-    return <Navigate to="/verify-email" />;
+    return <Navigate to="/verify-email" state={{ from: location }} />;
+  }
+
+  if (!requiresVerification && location.pathname === '/verify-email') {
+    return <Navigate to="/dashboard" />;
   }
 
   return children;
@@ -100,7 +105,18 @@ const AppContent = () => {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/verify-email" element={<EmailVerification />} />
+          <Route 
+            path="/verify-email" 
+            element={
+              <ProtectedRoute>
+                <EmailVerification />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/two-factor-auth" 
+            element={<TwoFactorAuth />} 
+          />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
             <Route index element={<DashboardHome />} />
             <Route path="store" element={<Store />} />

@@ -449,3 +449,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/projects/{project}/files/{file}/download', [ProjectController::class, 'downloadFile']);
 });
+
+// Add this with your other auth routes
+Route::post('/verify-2fa', [TwoFactorController::class, 'verify']);
