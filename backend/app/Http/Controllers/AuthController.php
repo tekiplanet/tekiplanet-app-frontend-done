@@ -11,6 +11,8 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 use PragmaRX\Google2FA\Google2FA;
 use App\Services\EmailVerificationService;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\WelcomeVerifiedUser;
 
 class AuthController extends Controller
 {
@@ -69,6 +71,10 @@ class AuthController extends Controller
                 'message' => 'Invalid or expired verification code'
             ], 422);
         }
+
+        // Send welcome email after successful verification
+        Mail::to($request->user()->email)
+            ->queue(new WelcomeVerifiedUser($request->user()));
 
         return response()->json([
             'message' => 'Email verified successfully',
