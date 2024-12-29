@@ -8,6 +8,8 @@ import { useAuthStore } from "@/store/useAuthStore";
 const EmailVerification = () => {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [countdown, setCountdown] = useState(0);
   const navigate = useNavigate();
   const authStore = useAuthStore();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -25,6 +27,16 @@ const EmailVerification = () => {
     }
   }, [isAuthenticated, requiresVerification, navigate]);
 
+  // Countdown timer effect
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [countdown]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -41,13 +53,20 @@ const EmailVerification = () => {
   };
 
   const handleResend = async () => {
+    if (countdown > 0) return;
+    
+    setResendLoading(true);
     try {
       await authStore.resendVerification();
       toast.success('Verification email sent');
       // Clear the input field when resending
       setCode('');
+      // Start countdown for 60 seconds
+      setCountdown(60);
     } catch (error: any) {
       toast.error(error.message || 'Failed to resend verification email');
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -62,7 +81,7 @@ const EmailVerification = () => {
         <div className="bg-white shadow-lg rounded-lg p-8">
           <h1 className="text-2xl font-bold text-center mb-2">Verify Your Email</h1>
           <p className="text-gray-600 text-center mb-6">
-            Please enter the verification code sent to {user.email}
+            Please enter the verification code sent to {user?.email}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -74,6 +93,7 @@ const EmailVerification = () => {
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 maxLength={6}
                 className="text-center text-2xl tracking-[0.5em] font-mono"
+                disabled={loading}
               />
             </div>
 
@@ -93,10 +113,16 @@ const EmailVerification = () => {
                 type="button"
                 variant="ghost"
                 onClick={handleResend}
-                disabled={loading}
+                disabled={resendLoading || countdown > 0}
                 className="text-primary hover:text-primary/90"
               >
-                Resend Code
+                {resendLoading ? (
+                  'Sending...'
+                ) : countdown > 0 ? (
+                  `Resend Code (${countdown}s)`
+                ) : (
+                  'Resend Code'
+                )}
               </Button>
             </div>
           </form>
