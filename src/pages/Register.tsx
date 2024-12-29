@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { RegisterForm, RegisterFormData } from "@/components/auth/RegisterForm";
@@ -39,8 +39,12 @@ const Register: React.FC = () => {
         type: data.type || 'student' // Default to student if not specified
       };
 
-      // Call the registration service
-      await authService.register(registrationData);
+      const response = await authService.register(registrationData);
+
+      if (response.requires_verification) {
+        navigate('/verify-email');
+        return;
+      }
 
       toast.success('Registration successful! Please login.');
       navigate('/login');

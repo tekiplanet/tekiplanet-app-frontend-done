@@ -39,6 +39,7 @@ type AuthState = {
   token: string | null;
   theme: 'light' | 'dark';
   isAuthenticated: boolean;
+  requiresVerification: boolean;
   setTheme: (theme: 'light' | 'dark') => Promise<void>;
   login: (login: string, password: string, code?: string) => Promise<any>;
   logout: () => void;
@@ -53,6 +54,8 @@ type AuthState = {
     marketing_notifications?: boolean;
     profile_visibility?: 'public' | 'private';
   }) => Promise<any>;
+  verifyEmail: (code: string) => Promise<any>;
+  resendVerification: () => Promise<any>;
 };
 
 const useAuthStore = create<AuthState>(
@@ -62,83 +65,38 @@ const useAuthStore = create<AuthState>(
       token: null,
       theme: localStorage.getItem('theme') as 'light' | 'dark' || 'light',
       isAuthenticated: false,
+      requiresVerification: false,
 
       initialize: async () => {
-        console.group('🔍 AuthStore Initialization');
-        console.log('Initial State:', {
-          token: localStorage.getItem('token'),
-          storedTheme: localStorage.getItem('theme'),
-          currentStoreTheme: get().theme,
-          isAuthenticated: get().isAuthenticated
-        });
-
-        const token = localStorage.getItem('token');
-        const storedTheme = localStorage.getItem('theme') as 'light' | 'dark';
-        
-        // Explicitly reset authentication if no token
-        if (!token) {
-          console.log('❌ No token found. Resetting authentication.');
-          set({ 
-            user: null, 
-            token: null, 
-            isAuthenticated: false 
-          });
-          console.groupEnd();
-          return null;
-        }
-
         try {
-          console.log('🌐 Fetching current user with token');
           const userData = await authService.getCurrentUser();
           
-          console.log('👤 User Data Received:', userData);
-
-          // Determine theme priority: server > localStorage > default
-          const theme = userData.dark_mode ? 'dark' : 'light';
-          
-          console.log('🎨 Theme Determination:', {
-            serverTheme: theme,
-            localStorageTheme: storedTheme,
-            finalTheme: theme
-          });
-
-          // Update localStorage and state
-          localStorage.setItem('theme', theme);
-          
           set({
-            user: {
-              ...userData,
-              wallet_balance: Number(userData.wallet_balance || 0),
-              preferences: {
-                dark_mode: userData.dark_mode ?? false,
-                theme: theme
-              }
-            },
-            token,
-            isAuthenticated: !!token, // Explicitly tie authentication to token
-            theme: theme
+            user: userData,
+            isAuthenticated: true,
+            requiresVerification: false,
+            theme: userData.dark_mode ? 'dark' : 'light'
           });
 
-          console.log('✅ Initialization Complete', {
-            user: get().user,
-            theme: get().theme,
-            isAuthenticated: get().isAuthenticated
-          });
-
-          console.groupEnd();
           return userData;
-        } catch (error) {
-          console.error('❌ Initialization Failed:', error);
-          
-          set({ 
-            user: null, 
-            token: null, 
-            isAuthenticated: false 
+        } catch (error: any) {
+          if (error.response?.status === 403 && error.response?.data?.requires_verification) {
+            set(state => ({
+              ...state,
+              requiresVerification: true
+            }));
+            return null;
+          }
+
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            requiresVerification: false
           });
           
           localStorage.removeItem('token');
-          console.groupEnd();
-          return null;
+          throw error;
         }
       },
 
@@ -193,43 +151,41 @@ const useAuthStore = create<AuthState>(
 
       login: async (login: string, password: string, code?: string) => {
         try {
-          console.log('Attempting login with:', { login, has2FACode: !!code });
+          const response = await authService.login(login, password, code);
           
-          const response = await authService.login({ login, password, code });
-          console.log('Login response:', response);
+          // Store token regardless of verification status
+          if (response.token) {
+            localStorage.setItem('token', response.token);
+          }
 
-          // If 2FA is required, return the response without setting auth state
-          if (response.requires_2fa) {
-            console.log('2FA required');
+          if (response.requires_verification) {
+            set({
+              token: response.token,
+              isAuthenticated: true,
+              requiresVerification: true,
+              user: {
+                email: response.email,
+                email_verified_at: null
+              }
+            });
             return response;
           }
 
-          // If we have a token and user data, set them
-          if (response.token && response.user) {
-            console.log('Login successful, setting auth state');
-            
-            // Persist token in localStorage
-            localStorage.setItem('token', response.token);
-            
-            set({
-              token: response.token,
-              user: response.user,
-              isAuthenticated: true,
-              theme: response.user.dark_mode ? 'dark' : 'light'
-            });
-
-            // Update theme in localStorage
-            localStorage.setItem('theme', response.user.dark_mode ? 'dark' : 'light');
-          }
+          set({
+            user: response.user,
+            token: response.token,
+            isAuthenticated: true,
+            requiresVerification: false
+          });
 
           return response;
         } catch (error) {
-          console.error('Login error:', error);
           // Clear auth state on error
-          set({ 
-            user: null, 
-            token: null, 
-            isAuthenticated: false 
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            requiresVerification: false
           });
           throw error;
         }
@@ -375,6 +331,28 @@ const useAuthStore = create<AuthState>(
           console.error('Failed to update preferences:', error);
           throw error;
         }
+      },
+
+      verifyEmail: async (code: string) => {
+        try {
+          const response = await authService.verifyEmail(code);
+          set({
+            user: response.user,
+            requiresVerification: false
+          });
+          return response;
+        } catch (error) {
+          throw error;
+        }
+      },
+
+      resendVerification: async () => {
+        try {
+          const response = await authService.resendVerification();
+          return response;
+        } catch (error) {
+          throw error;
+        }
       }
     }),
     {
@@ -383,7 +361,8 @@ const useAuthStore = create<AuthState>(
         user: state.user,
         token: state.token,
         theme: state.theme,
-        isAuthenticated: state.isAuthenticated
+        isAuthenticated: state.isAuthenticated,
+        requiresVerification: state.requiresVerification
       })
     }
   )

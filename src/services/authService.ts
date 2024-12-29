@@ -64,24 +64,24 @@ interface LoginResponse {
 }
 
 export const authService = {
-  async login(credentials: { login: string; password: string; code?: string }): Promise<LoginResponse> {
+  async login(login: string, password: string, code?: string): Promise<LoginResponse> {
     try {
-      // Validate input
-      if (!credentials || !credentials.login || !credentials.password) {
-        throw new Error('Invalid login credentials');
-      }
+      const response = await apiClient.post('/login', {
+        login,
+        password,
+        code
+      });
 
-      const response = await apiClient.post<LoginResponse>('login', credentials);
-      
-      console.log('Login response:', response.data);
       return response.data;
     } catch (error: any) {
-      console.error('Login error:', error);
-      
+      // Special handling for verification required response
+      if (error.response?.status === 403 && error.response?.data?.requires_verification) {
+        return error.response.data; // Return the response data instead of throwing
+      }
+
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
-      
       throw error;
     }
   },
@@ -153,66 +153,29 @@ export const authService = {
     }
   },
 
-  getCurrentUser(): Promise<UserData> {
-    const token = localStorage.getItem('token');
-    console.group('🔍 getCurrentUser');
-    console.log('Token from localStorage:', token);
-
-    if (!token) {
-      console.error('❌ No authentication token found');
-      console.groupEnd();
-      throw new Error('No authentication token found');
-    }
-
-    return fetch(`${API_URL}/user`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    }).then(async (response) => {
-      console.log('Response Status:', response.status, response.statusText);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Failed to fetch user data:', {
-          status: response.status,
-          statusText: response.statusText,
-          errorText
-        });
-
-        throw new Error(errorText || 'Failed to fetch user data');
-      }
-
-      try {
-        const userData = await response.json();
-        console.log('👤 Raw User Data:', userData);
-
-        const processedUserData = {
-          ...userData,
-          wallet_balance: Number(userData.wallet_balance || 0),
-          two_factor_enabled: userData.two_factor_enabled === 1 || userData.two_factor_enabled === true,
-          preferences: {
-            dark_mode: userData.dark_mode ?? false,
-            theme: userData.dark_mode ? 'dark' : 'light'
+  async getCurrentUser(): Promise<UserData> {
+    try {
+      const response = await apiClient.get<UserData>('/user');
+      return response.data;
+    } catch (error: any) {
+      console.log('Response Status:', error.response?.status, error.response?.statusText);
+      
+      // Special handling for verification required error
+      if (error.response?.status === 403 && error.response?.data?.requires_verification) {
+        throw {
+          ...error,
+          response: {
+            ...error.response,
+            data: {
+              ...error.response.data,
+              requires_verification: true
+            }
           }
         };
-
-        console.log('✅ Processed User Data:', processedUserData);
-        console.groupEnd();
-
-        return processedUserData;
-      } catch (parseError) {
-        console.error('❌ JSON Parsing Error:', parseError);
-        console.groupEnd();
-        throw new Error('Failed to parse user data');
       }
-    }).catch((error) => {
-      console.error('❌ getCurrentUser Error:', error);
-      console.groupEnd();
+      
       throw error;
-    });
+    }
   },
 
   getToken() {
@@ -290,6 +253,30 @@ export const authService = {
       return data.user;
     } catch (error) {
       console.error('Error updating user type:', error);
+      throw error;
+    }
+  },
+
+  async verifyEmail(code: string) {
+    try {
+      const response = await apiClient.post<{ user: UserData; message: string }>('email/verify', { code });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw error;
+    }
+  },
+
+  async resendVerification() {
+    try {
+      const response = await apiClient.post<{ message: string }>('email/resend');
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
       throw error;
     }
   },

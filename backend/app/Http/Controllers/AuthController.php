@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 use PragmaRX\Google2FA\Google2FA;
+use App\Services\EmailVerificationService;
 
 class AuthController extends Controller
 {
@@ -39,13 +40,58 @@ class AuthController extends Controller
             'last_name' => $request->last_name ?? null,
         ]);
 
+        // Create and send verification code
+        $verificationService = app(EmailVerificationService::class);
+        $verification = $verificationService->createVerification($user);
+        $verificationService->sendVerificationEmail($user, $verification);
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'user' => $user
+            'user' => $user,
+            'requires_verification' => true
         ], 201);
+    }
+
+    public function verifyEmail(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string|size:6'
+        ]);
+
+        $verificationService = app(EmailVerificationService::class);
+        $success = $verificationService->verify($request->user(), $request->code);
+
+        if (!$success) {
+            return response()->json([
+                'message' => 'Invalid or expired verification code'
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'Email verified successfully',
+            'user' => $request->user()
+        ]);
+    }
+
+    public function resendVerification(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->email_verified_at) {
+            return response()->json([
+                'message' => 'Email already verified'
+            ], 400);
+        }
+
+        $verificationService = app(EmailVerificationService::class);
+        $verification = $verificationService->resend($user);
+
+        return response()->json([
+            'message' => 'Verification email sent successfully'
+        ]);
     }
 
     public function login(Request $request)

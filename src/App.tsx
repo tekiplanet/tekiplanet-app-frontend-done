@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from '@/store/useAuthStore';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from 'sonner';
@@ -72,12 +72,19 @@ const PaymentConfirmation = React.lazy(() => import('@/pages/PaymentConfirmation
 const PaystackCallback = React.lazy(() => import('@/pages/PaystackCallback'));
 const ActivitiesPage = React.lazy(() => import('@/pages/dashboard/ActivitiesPage'));
 const CertificatesPage = lazy(() => import("@/pages/dashboard/CertificatesPage"));
+const EmailVerification = React.lazy(() => import('@/pages/EmailVerification'));
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const requiresVerification = useAuthStore((state) => state.requiresVerification);
+  const location = useLocation();
   
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
+  }
+
+  if (requiresVerification && location.pathname !== '/verify-email') {
+    return <Navigate to="/verify-email" />;
   }
 
   return children;
@@ -93,6 +100,7 @@ const AppContent = () => {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<EmailVerification />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
             <Route index element={<DashboardHome />} />
             <Route path="store" element={<Store />} />

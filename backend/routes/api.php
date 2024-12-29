@@ -65,80 +65,86 @@ Route::post('/login', [LoginController::class, 'login']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', [AuthController::class, 'user']);
-    Route::get('/user/wallet-balance', [UserController::class, 'getWalletBalance']);
-    Route::post('/logout', [LoginController::class, 'logout']);
-    Route::middleware(['auth:sanctum'])->group(function () {
-        Route::get('/transactions', [TransactionController::class, 'index']);
-        Route::get('/transactions/filter', [TransactionController::class, 'filter']);
-        Route::post('/transactions/export-statement', [TransactionController::class, 'exportStatement']);
-        Route::get('/transactions/{transactionId}', [TransactionController::class, 'getTransactionDetails']);
-        Route::get('/transactions/{transactionId}/receipt', [TransactionController::class, 'generateReceipt'])
-            ->middleware('auth:sanctum');
-        
-        // Wallet Funding Routes
-        Route::post('/wallet/bank-transfer', [WalletController::class, 'bankTransferPayment']);
-        Route::post('/wallet/initiate-paystack-payment', [WalletController::class, 'initiatePaystackPayment']);
-        Route::post('/wallet/verify-paystack-payment', [WalletController::class, 'verifyPaystackPayment']);
-        
-        // Quote Details and Messages
-        Route::get('/quotes/{id}', [QuoteController::class, 'show']);
-        Route::post('/quotes/{id}/messages', [QuoteController::class, 'sendMessage']);
-        Route::post('/quotes/{id}/mark-messages-read', [QuoteController::class, 'markMessagesAsRead']);
-        Route::get('/projects', [ProjectController::class, 'index']);
-        Route::get('/projects/{id}', [ProjectController::class, 'show']);
-        Route::get('/invoices/{id}/download', [InvoiceController::class, 'downloadPDF']);
-        Route::post('/invoices/{id}/process-payment', [InvoiceController::class, 'processPayment']);
-        Route::get('/invoices/{id}/receipt', [InvoiceController::class, 'viewReceipt']);
-        Route::get('/invoices/{id}/receipt/download', [InvoiceController::class, 'downloadReceipt']);
-        
-        // Cart Routes
-        Route::prefix('cart')->group(function () {
-            Route::get('/', [CartController::class, 'getCart']);
-            Route::post('/add', [CartController::class, 'addToCart']);
-            Route::put('/items/{itemId}', [CartController::class, 'updateQuantity']);
-            Route::delete('/items/{itemId}', [CartController::class, 'removeItem']);
-            Route::get('/count', [CartController::class, 'getCartCount']);
-        });
-        
-        // Wishlist Routes
-        Route::prefix('wishlist')->group(function () {
-            Route::get('/', [WishlistController::class, 'getWishlist']);
-            Route::get('/count', [WishlistController::class, 'getWishlistCount']);
-            Route::post('/toggle/{productId}', [WishlistController::class, 'toggleWishlistItem']);
-            Route::get('/check/{productId}', [WishlistController::class, 'checkWishlistStatus']);
-        });
-        
-        // Orders
-        Route::post('/orders', [OrderController::class, 'store']);
-        Route::get('/orders', [OrderController::class, 'index']);
-        Route::get('/orders/{id}', [OrderController::class, 'show']);
-        Route::get('/orders/{id}/tracking', [OrderController::class, 'tracking']);
-        Route::get('/orders/{id}/invoice', [OrderController::class, 'downloadInvoice']);
-        
-        // Workstation routes
-        Route::prefix('workstation')->group(function () {
-            Route::get('/plans', [WorkstationController::class, 'getPlans']);
-            Route::post('/subscriptions', [WorkstationController::class, 'createSubscription']);
-            Route::get('/subscription', [WorkstationController::class, 'getCurrentSubscription']);
-            Route::get('/subscriptions/history', [WorkstationController::class, 'getSubscriptionHistory']);
-            Route::post('/subscriptions/{subscription}/renew', [WorkstationController::class, 'renewSubscription']);
-            Route::post('/subscriptions/{subscription}/cancel', [WorkstationController::class, 'cancelSubscription']);
-            Route::get('/subscriptions/{subscription}/access-card', [WorkstationController::class, 'downloadAccessCard']);
-        });
-        
-        // Student Dashboard Route
-        Route::get('/student/dashboard', [StudentDashboardController::class, 'getDashboardData']);
-        
-        // Two Factor Authentication Routes
-        Route::prefix('auth/2fa')->group(function () {
-            Route::post('enable', [TwoFactorController::class, 'enable']);
-            Route::post('verify', [TwoFactorController::class, 'verify']);
-            Route::post('disable', [TwoFactorController::class, 'disable']);
-            Route::post('validate', [TwoFactorController::class, 'validate']);
-            Route::post('validate-recovery', [TwoFactorController::class, 'validateRecoveryCode']);
-            Route::post('recovery-codes', [TwoFactorController::class, 'generateRecoveryCodes']);
-            Route::get('recovery-codes', [TwoFactorController::class, 'getRecoveryCodes']);
+    Route::post('/email/verify', [AuthController::class, 'verifyEmail']);
+    Route::post('/email/resend', [AuthController::class, 'resendVerification']);
+    
+    // Add the email verification middleware to protected routes
+    Route::middleware('verified.email')->group(function () {
+        Route::get('/user', [AuthController::class, 'user']);
+        Route::get('/user/wallet-balance', [UserController::class, 'getWalletBalance']);
+        Route::post('/logout', [LoginController::class, 'logout']);
+        Route::middleware(['auth:sanctum'])->group(function () {
+            Route::get('/transactions', [TransactionController::class, 'index']);
+            Route::get('/transactions/filter', [TransactionController::class, 'filter']);
+            Route::post('/transactions/export-statement', [TransactionController::class, 'exportStatement']);
+            Route::get('/transactions/{transactionId}', [TransactionController::class, 'getTransactionDetails']);
+            Route::get('/transactions/{transactionId}/receipt', [TransactionController::class, 'generateReceipt'])
+                ->middleware('auth:sanctum');
+            
+            // Wallet Funding Routes
+            Route::post('/wallet/bank-transfer', [WalletController::class, 'bankTransferPayment']);
+            Route::post('/wallet/initiate-paystack-payment', [WalletController::class, 'initiatePaystackPayment']);
+            Route::post('/wallet/verify-paystack-payment', [WalletController::class, 'verifyPaystackPayment']);
+            
+            // Quote Details and Messages
+            Route::get('/quotes/{id}', [QuoteController::class, 'show']);
+            Route::post('/quotes/{id}/messages', [QuoteController::class, 'sendMessage']);
+            Route::post('/quotes/{id}/mark-messages-read', [QuoteController::class, 'markMessagesAsRead']);
+            Route::get('/projects', [ProjectController::class, 'index']);
+            Route::get('/projects/{id}', [ProjectController::class, 'show']);
+            Route::get('/invoices/{id}/download', [InvoiceController::class, 'downloadPDF']);
+            Route::post('/invoices/{id}/process-payment', [InvoiceController::class, 'processPayment']);
+            Route::get('/invoices/{id}/receipt', [InvoiceController::class, 'viewReceipt']);
+            Route::get('/invoices/{id}/receipt/download', [InvoiceController::class, 'downloadReceipt']);
+            
+            // Cart Routes
+            Route::prefix('cart')->group(function () {
+                Route::get('/', [CartController::class, 'getCart']);
+                Route::post('/add', [CartController::class, 'addToCart']);
+                Route::put('/items/{itemId}', [CartController::class, 'updateQuantity']);
+                Route::delete('/items/{itemId}', [CartController::class, 'removeItem']);
+                Route::get('/count', [CartController::class, 'getCartCount']);
+            });
+            
+            // Wishlist Routes
+            Route::prefix('wishlist')->group(function () {
+                Route::get('/', [WishlistController::class, 'getWishlist']);
+                Route::get('/count', [WishlistController::class, 'getWishlistCount']);
+                Route::post('/toggle/{productId}', [WishlistController::class, 'toggleWishlistItem']);
+                Route::get('/check/{productId}', [WishlistController::class, 'checkWishlistStatus']);
+            });
+            
+            // Orders
+            Route::post('/orders', [OrderController::class, 'store']);
+            Route::get('/orders', [OrderController::class, 'index']);
+            Route::get('/orders/{id}', [OrderController::class, 'show']);
+            Route::get('/orders/{id}/tracking', [OrderController::class, 'tracking']);
+            Route::get('/orders/{id}/invoice', [OrderController::class, 'downloadInvoice']);
+            
+            // Workstation routes
+            Route::prefix('workstation')->group(function () {
+                Route::get('/plans', [WorkstationController::class, 'getPlans']);
+                Route::post('/subscriptions', [WorkstationController::class, 'createSubscription']);
+                Route::get('/subscription', [WorkstationController::class, 'getCurrentSubscription']);
+                Route::get('/subscriptions/history', [WorkstationController::class, 'getSubscriptionHistory']);
+                Route::post('/subscriptions/{subscription}/renew', [WorkstationController::class, 'renewSubscription']);
+                Route::post('/subscriptions/{subscription}/cancel', [WorkstationController::class, 'cancelSubscription']);
+                Route::get('/subscriptions/{subscription}/access-card', [WorkstationController::class, 'downloadAccessCard']);
+            });
+            
+            // Student Dashboard Route
+            Route::get('/student/dashboard', [StudentDashboardController::class, 'getDashboardData']);
+            
+            // Two Factor Authentication Routes
+            Route::prefix('auth/2fa')->group(function () {
+                Route::post('enable', [TwoFactorController::class, 'enable']);
+                Route::post('verify', [TwoFactorController::class, 'verify']);
+                Route::post('disable', [TwoFactorController::class, 'disable']);
+                Route::post('validate', [TwoFactorController::class, 'validate']);
+                Route::post('validate-recovery', [TwoFactorController::class, 'validateRecoveryCode']);
+                Route::post('recovery-codes', [TwoFactorController::class, 'generateRecoveryCodes']);
+                Route::get('recovery-codes', [TwoFactorController::class, 'getRecoveryCodes']);
+            });
         });
     });
 });

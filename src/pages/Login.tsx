@@ -24,34 +24,33 @@ const Login = () => {
 
   // Redirect to dashboard if already authenticated
   React.useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !authStore.requiresVerification) {
       navigate('/dashboard', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, authStore.requiresVerification, navigate]);
 
   const handleLogin = async (data: LoginFormData) => {
     try {
       const { login, password } = data;
-      console.log('Attempting login with:', { login });
-      
       const response = await authStore.login(login, password);
-      console.log('Login response:', response);
+
+      if (response.requires_verification) {
+        toast.info('Please verify your email address');
+        navigate('/verify-email');
+        return;
+      }
 
       if (response.requires_2fa) {
-        console.log('2FA required, showing dialog');
         setLoginCredentials(data);
         setShow2FA(true);
         return;
       }
 
-      console.log('No 2FA required, proceeding with login');
-      // Only show success and navigate if 2FA is not required
       toast.success('Login successful!');
       navigate('/dashboard');
     } catch (error: any) {
-      const errorMessage = error.message || 'Login failed';
-      toast.error(errorMessage);
-      console.error('Login error details:', error);
+      console.error('Login error:', error);
+      toast.error(error.message || 'Login failed');
     }
   };
 
@@ -76,8 +75,8 @@ const Login = () => {
   };
 
   // Only render login form if not authenticated
-  if (isAuthenticated) {
-    return null; // Prevents flashing of login form before redirect
+  if (isAuthenticated && !authStore.requiresVerification) {
+    return null;
   }
 
   return (
