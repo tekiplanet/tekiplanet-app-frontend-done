@@ -68,12 +68,13 @@ export function TwoFactorSettings() {
   const handleVerify2FA = async () => {
     try {
       setLoading(true);
-      await twoFactorService.verify(verificationCode);
+      const response = await twoFactorService.verifySetup(verificationCode);
       setIsVerified(true);
-      toast.success('Verification successful! Please save your recovery codes.');
+      toast.success('Two-factor authentication enabled successfully');
     } catch (error: any) {
-      toast.error('Failed to verify 2FA code', {
-        description: error.message
+      console.error('2FA Setup Error:', error);
+      toast.error('Invalid verification code', {
+        description: error.message || 'Please check the code and try again'
       });
     } finally {
       setLoading(false);

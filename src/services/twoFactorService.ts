@@ -12,6 +12,21 @@ export const twoFactorService = {
     return response.data;
   },
 
+  async verifySetup(code: string) {
+    try {
+      console.log('Sending 2FA setup verification:', { code });
+      const response = await apiClient.post('/auth/2fa/verify-setup', { code });
+      return response.data;
+    } catch (error: any) {
+      console.error('2FA Setup Verification Error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.response?.data?.message
+      });
+      throw new Error(error.response?.data?.message || 'Failed to verify 2FA code');
+    }
+  },
+
   async verify(code: string) {
     const response = await apiClient.post('/auth/2fa/verify', { code });
     return response.data;

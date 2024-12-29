@@ -138,6 +138,7 @@ Route::middleware('auth:sanctum')->group(function () {
             // Two Factor Authentication Routes
             Route::prefix('auth/2fa')->group(function () {
                 Route::post('enable', [TwoFactorController::class, 'enable']);
+                Route::post('verify-setup', [TwoFactorController::class, 'verifySetup']);
                 Route::post('verify', [TwoFactorController::class, 'verify']);
                 Route::post('disable', [TwoFactorController::class, 'disable']);
                 Route::post('validate', [TwoFactorController::class, 'validate']);

@@ -208,4 +208,40 @@ class TwoFactorController extends Controller
             'recovery_codes' => $user->two_factor_recovery_codes
         ]);
     }
+
+    public function verifySetup(Request $request)
+    {
+        \Log::info('2FA Setup Verification Request:', [
+            'code' => $request->code,
+            'user' => $request->user(),
+            'secret' => $request->user()->two_factor_secret,
+            'endpoint' => 'verifySetup'
+        ]);
+
+        $request->validate([
+            'code' => 'required|string|size:6'
+        ]);
+
+        $user = $request->user();
+        $valid = $this->google2fa->verifyKey($user->two_factor_secret, $request->code);
+
+        \Log::info('2FA Setup Verification Result:', [
+            'valid' => $valid,
+            'code' => $request->code,
+            'secret' => $user->two_factor_secret
+        ]);
+
+        if (!$valid) {
+            return response()->json([
+                'message' => 'Invalid authentication code'
+            ], 422);
+        }
+
+        $user->two_factor_enabled = true;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Two-factor authentication enabled successfully'
+        ]);
+    }
 }
