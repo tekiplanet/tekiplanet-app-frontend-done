@@ -1,37 +1,49 @@
 import axios from 'axios';
+import { useAuthStore } from '@/store/useAuthStore';
 
-// Export the apiClient instance
-export const apiClient = axios.create({
-    baseURL: import.meta.env.VITE_API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    },
-    withCredentials: true
+const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
+  withCredentials: true,
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+  }
 });
 
-// We should use the same instance for all requests
-export const axiosInstance = apiClient;
+// Request interceptor
+apiClient.interceptors.request.use(
+  (config) => {
+    // Try getting token from localStorage first
+    let token = localStorage.getItem('token');
+    
+    // If no token in localStorage, try getting from store
+    if (!token) {
+      const authStore = useAuthStore.getState();
+      token = authStore.token;
+    }
 
-// Add request interceptor to include token
-apiClient.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
     if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
-});
-
-// Add response interceptor to handle errors
-apiClient.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        // Don't treat verification required as an error
-        if (error.response?.status === 403 && error.response?.data?.requires_verification) {
-            return Promise.reject(error); // Let the service handle it
-        }
-
-        console.error('API Error:', error);
-        return Promise.reject(error);
-    }
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
 );
+
+// Response interceptor
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      // Clear auth state on 401
+      localStorage.removeItem('token');
+      useAuthStore.getState().logout();
+    }
+    return Promise.reject(error);
+  }
+);
+
+export { apiClient };

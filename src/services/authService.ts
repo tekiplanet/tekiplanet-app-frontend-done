@@ -72,6 +72,11 @@ export const authService = {
         code
       });
 
+      // Store token if provided
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+      }
+
       return response.data;
     } catch (error: any) {
       // Special handling for verification required response

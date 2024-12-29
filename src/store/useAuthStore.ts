@@ -69,6 +69,22 @@ const useAuthStore = create<AuthState>(
 
       initialize: async () => {
         try {
+          // Check for token first
+          const token = localStorage.getItem('token');
+          if (!token) {
+            console.log('No token found during initialization');
+            set({
+              user: null,
+              token: null,
+              isAuthenticated: false,
+              requiresVerification: false
+            });
+            return null;
+          }
+
+          // Set token in store before getting user data
+          set({ token });
+
           const userData = await authService.getCurrentUser();
           
           set({
@@ -80,14 +96,10 @@ const useAuthStore = create<AuthState>(
 
           return userData;
         } catch (error: any) {
-          if (error.response?.status === 403 && error.response?.data?.requires_verification) {
-            set(state => ({
-              ...state,
-              requiresVerification: true
-            }));
-            return null;
-          }
-
+          console.error('Initialization error:', error);
+          
+          // Clear everything on error
+          localStorage.removeItem('token');
           set({
             user: null,
             token: null,
@@ -95,7 +107,6 @@ const useAuthStore = create<AuthState>(
             requiresVerification: false
           });
           
-          localStorage.removeItem('token');
           throw error;
         }
       },
@@ -153,34 +164,32 @@ const useAuthStore = create<AuthState>(
         try {
           const response = await authService.login(login, password, code);
           
-          // Store token regardless of verification status
+          // Check if 2FA is required
+          if (response.requires_2fa) {
+            set({
+              isAuthenticated: false,
+              requiresVerification: false,
+              user: null,
+              token: null
+            });
+            return response; // Return early to show 2FA prompt
+          }
+
+          // If we get here, either 2FA was successful or not required
           if (response.token) {
             localStorage.setItem('token', response.token);
-          }
-
-          if (response.requires_verification) {
             set({
+              user: response.user,
               token: response.token,
               isAuthenticated: true,
-              requiresVerification: true,
-              user: {
-                email: response.email,
-                email_verified_at: null
-              }
+              requiresVerification: false
             });
-            return response;
           }
-
-          set({
-            user: response.user,
-            token: response.token,
-            isAuthenticated: true,
-            requiresVerification: false
-          });
 
           return response;
         } catch (error) {
-          // Clear auth state on error
+          console.error('Login error:', error);
+          localStorage.removeItem('token');
           set({
             user: null,
             token: null,
