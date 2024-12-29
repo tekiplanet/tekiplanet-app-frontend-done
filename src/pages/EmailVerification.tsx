@@ -76,11 +76,13 @@ const EmailVerification = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white shadow-lg rounded-lg p-8">
-          <h1 className="text-2xl font-bold text-center mb-2">Verify Your Email</h1>
-          <p className="text-gray-600 text-center mb-6">
+        <div className="bg-card shadow-lg rounded-lg p-8">
+          <h1 className="text-2xl font-bold text-center mb-2 text-foreground">
+            Verify Your Email
+          </h1>
+          <p className="text-muted-foreground text-center mb-6">
             Please enter the verification code sent to {user?.email}
           </p>
 
@@ -88,11 +90,11 @@ const EmailVerification = () => {
             <div className="space-y-2">
               <Input
                 type="text"
-                placeholder="Enter 6-digit code"
+                placeholder="Enter code"
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 maxLength={6}
-                className="text-center text-2xl tracking-[0.5em] font-mono"
+                className="text-center text-xl md:text-2xl tracking-[0.25em] md:tracking-[0.5em] font-mono px-2 md:px-4"
                 disabled={loading}
               />
             </div>
